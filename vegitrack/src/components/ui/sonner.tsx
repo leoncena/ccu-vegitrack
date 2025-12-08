@@ -7,6 +7,7 @@ const sharedToastStyles = {
     color: 'var(--color-text)',
     border: '1px solid var(--color-border)',
     fontFamily: 'var(--font-body)',
+    padding: 'calc(var(--spacing-card) * 0.5)',
   },
   className: 'shadow-sm',
 }

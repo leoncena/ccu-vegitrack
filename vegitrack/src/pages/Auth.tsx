@@ -119,7 +119,7 @@ export default function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
+            <div>
               <Label
                 htmlFor="email"
                 className="text-sm"
@@ -143,16 +143,20 @@ export default function Auth() {
                 style={{
                   fontFamily: 'var(--font-body)',
                   backgroundColor: 'transparent',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
                 }}
               />
             </div>
 
-            <div className="space-y-2">
+            <div>
               <Label
                 htmlFor="password"
                 className="text-sm"
                 style={{
                   fontFamily: 'var(--font-body)',
+                  marginTop: 'calc(var(--spacing-section) * 1.2)',
                   color: 'var(--color-primary)',
                   letterSpacing: '-0.2px',
                 }}
@@ -172,6 +176,9 @@ export default function Auth() {
                 style={{
                   fontFamily: 'var(--font-body)',
                   backgroundColor: 'transparent',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
                 }}
               />
               <div className="flex justify-end">
@@ -184,6 +191,7 @@ export default function Auth() {
                   style={{
                     fontFamily: 'var(--font-body)',
                     color: 'rgba(23, 78, 5, 0.6)',
+                    marginTop: 'var(--spacing-card)',
                   }}
                   disabled={loading}
                 >
@@ -218,7 +226,12 @@ export default function Auth() {
               </div>
             )}
 
-            <div className="flex justify-center pt-1">
+            <div 
+              className="flex justify-center"
+              style={{
+                marginTop: 'calc(var(--spacing-section) * 2.375)',
+              }}
+            >
               <Button
                 type="submit"
                 variant="primary"
@@ -238,49 +251,62 @@ export default function Auth() {
             </div>
           </form>
 
-          <div className="mt-12 flex items-center gap-4 text-xs">
-            <span className="h-px flex-1 bg-primary/60" />
-            <span
-              className="text-[11px]"
+          <div 
+            className="flex flex-col"
+            style={{ 
+              marginTop: 'calc(var(--spacing-section) * 2.375)',
+            }}
+          >
+            <div className="flex items-center gap-4 text-xs">
+              <span className="h-px flex-1 bg-primary/60" />
+              <span
+                className="text-[11px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  color: 'rgba(23, 78, 5, 0.7)',
+                }}
+              >
+                OR
+              </span>
+              <span className="h-px flex-1 bg-primary/60" />
+            </div>
+
+            <div 
+              className="grid grid-cols-3 justify-items-center gap-4"
               style={{
-                fontFamily: 'var(--font-body)',
-                color: 'rgba(23, 78, 5, 0.7)',
+                marginTop: 'calc(var(--spacing-section) * 2.6875)',
               }}
             >
-              OR
-            </span>
-            <span className="h-px flex-1 bg-primary/60" />
-          </div>
-
-          <div className="mt-6 grid grid-cols-3 justify-items-center gap-4">
-            <SocialButton
-              label="Google"
-              icon={<img src={googleIcon} alt="Google" className="h-6 w-6" />}
-              onClick={() => handleSocialClick('Google')}
-              disabled={loading}
-            />
-            <SocialButton
-              label="Facebook"
-              icon={<img src={facebookIcon} alt="Facebook" className="h-6 w-6" />}
-              onClick={() => handleSocialClick('Facebook')}
-              disabled={loading}
-            />
-            <SocialButton
-              label="Apple"
-              icon={<img src={appleIcon} alt="Apple" className="h-6 w-6" />}
-              onClick={() => handleSocialClick('Apple')}
-              disabled={loading}
-            />
+              <SocialButton
+                label="Google"
+                icon={<img src={googleIcon} alt="Google" className="h-6 w-6" />}
+                onClick={() => handleSocialClick('Google')}
+                disabled={loading}
+              />
+              <SocialButton
+                label="Facebook"
+                icon={<img src={facebookIcon} alt="Facebook" className="h-6 w-6" />}
+                onClick={() => handleSocialClick('Facebook')}
+                disabled={loading}
+              />
+              <SocialButton
+                label="Apple"
+                icon={<img src={appleIcon} alt="Apple" className="h-6 w-6" />}
+                onClick={() => handleSocialClick('Apple')}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <p
-            className="mt-8 text-center text-xs"
+            className="text-center text-xs"
             style={{
+              marginTop: 'calc(var(--spacing-section) * 1.2)',
               fontFamily: 'var(--font-body)',
               color: 'rgba(23, 78, 5, 0.7)',
             }}
           >
-            {isSignin ? "Don't have an account?" : 'Already have an account?'}
+            {isSignin ? "Don't have an account? " : 'Already have an account? '}
             <button
               type="button"
               onClick={toggleMode}

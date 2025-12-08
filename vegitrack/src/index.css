@@ -184,3 +184,24 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Toast (Sonner) spacing customizations */
+/* Add padding to toast container */
+[data-sonner-toast] {
+  padding: calc(var(--spacing-card) * 0.5) !important;
+}
+
+/* Add margin around icon (info icon) so it doesn't touch borders */
+[data-sonner-toast] [data-icon],
+[data-sonner-toast] svg[data-icon],
+[data-sonner-toast] > div:first-child svg {
+  margin: calc(var(--spacing-card) * 0.5) !important;
+}
+
+/* Add vertical padding to text content */
+[data-sonner-toast] [data-content],
+[data-sonner-toast] [data-title],
+[data-sonner-toast] > div:last-child {
+  padding-top: calc(var(--spacing-card) * 0.5) !important;
+  padding-bottom: calc(var(--spacing-card) * 0.5) !important;
+}
