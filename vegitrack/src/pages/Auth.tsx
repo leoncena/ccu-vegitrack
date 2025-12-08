@@ -157,8 +157,8 @@ export default function Auth() {
               <div 
                 className="p-3 rounded-md text-sm"
                 style={{
-                  backgroundColor: '#fee2e2',
-                  color: '#dc2626',
+                  backgroundColor: 'var(--color-error-surface)',
+                  color: 'var(--color-error)',
                   fontFamily: 'var(--font-body)',
                 }}
               >
@@ -171,8 +171,8 @@ export default function Auth() {
               <div 
                 className="p-3 rounded-md text-sm"
                 style={{
-                  backgroundColor: '#d1fae5',
-                  color: '#065f46',
+                  backgroundColor: 'var(--color-success-surface)',
+                  color: 'var(--color-success)',
                   fontFamily: 'var(--font-body)',
                 }}
               >
