@@ -3,6 +3,7 @@ import { createBrowserRouter } from 'react-router-dom'
 // Pages
 import Landing from '../pages/Landing'
 import Start from '../pages/Start'
+import Auth from '../pages/Auth'
 import Scanning from '../pages/Scanning'
 import FoodPassport from '../pages/FoodPassport'
 import OriginTransport from '../pages/details/OriginTransport'
@@ -19,6 +20,10 @@ export const router = createBrowserRouter([
   {
     path: '/start',
     element: <Start />,
+  },
+  {
+    path: '/auth',
+    element: <Auth />,
   },
   {
     path: '/scan',

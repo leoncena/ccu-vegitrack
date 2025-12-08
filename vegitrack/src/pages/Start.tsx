@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 // Mock stores data
 const MOCK_STORES = [
@@ -11,6 +12,7 @@ const MOCK_STORES = [
 
 export default function Start() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
   const [showStores, setShowStores] = useState(false)
 
@@ -146,20 +148,35 @@ export default function Start() {
         Start Scanning
       </button>
 
-      {/* Login link */}
-      <button
-        className="mb-8 underline"
-        style={{ 
-          fontFamily: 'var(--font-body)',
-          fontSize: '12px',
-          color: 'var(--color-text)',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer'
-        }}
-      >
-        Login/Register
-      </button>
+      {/* Login/User info */}
+      {user ? (
+        <div className="mb-8 text-center">
+          <p 
+            style={{ 
+              fontFamily: 'var(--font-body)',
+              fontSize: '12px',
+              color: 'var(--color-text-light)',
+            }}
+          >
+            Signed in as {user.email}
+          </p>
+        </div>
+      ) : (
+        <button
+          onClick={() => navigate('/auth', { state: { from: '/start' } })}
+          className="mb-8 underline"
+          style={{ 
+            fontFamily: 'var(--font-body)',
+            fontSize: '12px',
+            color: 'var(--color-text)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Login/Register
+        </button>
+      )}
     </div>
   )
 }
