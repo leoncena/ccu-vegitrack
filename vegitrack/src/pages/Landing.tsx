@@ -1,7 +1,48 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 export default function Landing() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    // Handle Supabase auth redirects that might land on the root URL
+    // Check for hash fragments with auth tokens
+    const hashParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = hashParams.get('access_token')
+    const refreshToken = hashParams.get('refresh_token')
+    const type = hashParams.get('type')
+
+    console.log('Landing page - checking for auth redirect:', {
+      hasHash: !!window.location.hash,
+      hasTokens: !!(accessToken && refreshToken),
+      type,
+    })
+
+    if (accessToken && refreshToken) {
+      // Supabase has redirected here with session tokens
+      console.log('Setting session from hash fragments')
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      }).then(({ error }) => {
+        if (error) {
+          console.error('Error setting session:', error)
+          navigate('/auth?error=session_error', { replace: true })
+          return
+        }
+        
+        // Redirect based on type
+        if (type === 'recovery') {
+          console.log('Recovery flow - redirecting to update password')
+          navigate('/auth/update-password', { replace: true })
+        } else {
+          console.log('Standard flow - redirecting to start')
+          navigate('/start', { replace: true })
+        }
+      })
+    }
+  }, [navigate])
 
   return (
     <div 

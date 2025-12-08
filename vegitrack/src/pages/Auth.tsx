@@ -256,18 +256,18 @@ export default function Auth() {
             }}
           >
             <div className="flex items-center gap-4 text-xs">
-              <span className="h-px flex-1 bg-primary/60" />
-              <span
-                className="text-[11px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  color: 'rgba(23, 78, 5, 0.7)',
-                }}
-              >
-                OR
-              </span>
-              <span className="h-px flex-1 bg-primary/60" />
-            </div>
+            <span className="h-px flex-1 bg-primary/60" />
+            <span
+              className="text-[11px]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                color: 'rgba(23, 78, 5, 0.7)',
+              }}
+            >
+              OR
+            </span>
+            <span className="h-px flex-1 bg-primary/60" />
+          </div>
 
             <div 
               className="grid grid-cols-3 justify-items-center gap-4"
@@ -275,24 +275,24 @@ export default function Auth() {
                 marginTop: 'calc(var(--spacing-section) * 2.6875)',
               }}
             >
-              <SocialButton
-                label="Google"
-                icon={<img src={googleIcon} alt="Google" className="h-6 w-6" />}
-                onClick={() => handleSocialClick('Google')}
-                disabled={loading}
-              />
-              <SocialButton
-                label="Facebook"
-                icon={<img src={facebookIcon} alt="Facebook" className="h-6 w-6" />}
-                onClick={() => handleSocialClick('Facebook')}
-                disabled={loading}
-              />
-              <SocialButton
-                label="Apple"
-                icon={<img src={appleIcon} alt="Apple" className="h-6 w-6" />}
-                onClick={() => handleSocialClick('Apple')}
-                disabled={loading}
-              />
+            <SocialButton
+              label="Google"
+              icon={<img src={googleIcon} alt="Google" className="h-6 w-6" />}
+              onClick={() => handleSocialClick('Google')}
+              disabled={loading}
+            />
+            <SocialButton
+              label="Facebook"
+              icon={<img src={facebookIcon} alt="Facebook" className="h-6 w-6" />}
+              onClick={() => handleSocialClick('Facebook')}
+              disabled={loading}
+            />
+            <SocialButton
+              label="Apple"
+              icon={<img src={appleIcon} alt="Apple" className="h-6 w-6" />}
+              onClick={() => handleSocialClick('Apple')}
+              disabled={loading}
+            />
             </div>
           </div>
 

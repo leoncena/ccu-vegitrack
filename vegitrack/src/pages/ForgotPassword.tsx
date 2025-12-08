@@ -21,8 +21,11 @@ export default function ForgotPassword() {
     setLoading(true)
 
     try {
-      // Use current origin (works for both localhost and production)
-      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`
+      // Use current origin with callback path
+      // Supabase will redirect here after verifying the token
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`.trim()
+      
+      console.log('Sending password reset with redirectTo:', redirectTo)
       
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
