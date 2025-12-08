@@ -1,39 +1,28 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { DebugFooter } from '../../components/layout'
+import { useParams } from 'react-router-dom'
+import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
 
 export default function OriginTransport() {
   const { id } = useParams()
-  const navigate = useNavigate()
 
   return (
     <div 
       className="min-h-screen"
-      style={{ backgroundColor: 'var(--color-surface)', paddingBottom: '60px' }}
+      style={{ 
+        backgroundColor: 'var(--color-surface)', 
+        paddingTop: '20px',
+        paddingBottom: '60px',
+        paddingLeft: '10%',
+        paddingRight: '10%',
+      }}
     >
-      {/* Header */}
-      <div className="flex items-center gap-4 px-6 pt-16 pb-4">
-        <button 
-          onClick={() => navigate(`/product/${id}`)}
-          className="p-1"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Title */}
-      <h1 
-        className="text-center text-xl mb-6"
-        style={{ fontFamily: 'var(--font-body)', letterSpacing: '-0.66px' }}
-      >
-        Origin & Transportation
-      </h1>
+      <PageHeaderWithBack 
+        title="Origin & Transport"
+        backTo={`/product/${id}`}
+      />
 
       {/* Map placeholder */}
       <div 
-        className="mx-6 h-48 mb-6 flex items-center justify-center"
+        className="h-48 mb-6 flex items-center justify-center"
         style={{ 
           backgroundColor: 'var(--color-card)',
           borderRadius: 'var(--radius-card)',
@@ -44,7 +33,7 @@ export default function OriginTransport() {
       </div>
 
       {/* Supply chain timeline placeholder */}
-      <div className="px-6">
+      <div>
         <h2 
           className="text-base mb-3"
           style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}

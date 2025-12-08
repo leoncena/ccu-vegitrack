@@ -25,8 +25,12 @@ export default function Start() {
 
   return (
     <div 
-      className="min-h-screen flex flex-col px-6 pt-16"
-      style={{ backgroundColor: 'var(--color-background)' }}
+      className="min-h-screen flex flex-col pt-16"
+      style={{ 
+        backgroundColor: 'var(--color-background)',
+        paddingLeft: '10%',
+        paddingRight: '10%',
+      }}
     >
       {/* Header */}
       <div className="flex justify-end mb-8">

@@ -5,13 +5,13 @@ import { useAuth } from '../contexts/AuthContext'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { PageWrapper } from '../components/layout/PageWrapper'
-import { PageHeader } from '../components/layout/PageHeader'
+import { PageWrapper, PageHeaderWithBack } from '../components/layout'
 import { SocialButton } from '../components/ui/SocialButton'
 import { toast } from '../components/ui/sonner'
-import googleIcon from '../assets/social/google.svg'
-import facebookIcon from '../assets/social/facebook.svg'
-import appleIcon from '../assets/social/apple.svg'
+
+const googleIcon = new URL('../assets/social/google.svg', import.meta.url).href
+const facebookIcon = new URL('../assets/social/facebook.svg', import.meta.url).href
+const appleIcon = new URL('../assets/social/apple.svg', import.meta.url).href
 
 type AuthMode = 'signin' | 'signup'
 
@@ -87,27 +87,17 @@ export default function Auth() {
 
   return (
     <PageWrapper className="flex flex-col" style={{ backgroundColor: 'var(--color-background)' }}>
-      <div className="text-(--color-primary)">
-        <PageHeader backTo="/start" />
-      </div>
+      <div
+        className="w-full pb-12"
+        style={{ paddingTop: '20px', paddingLeft: '10%', paddingRight: '10%' }}
+      >
+        <div className="w-full">
+          <PageHeaderWithBack
+            title="VegiTrack"
+          />
 
-      <div className="flex-1 px-6 pb-10">
-        <div className="mx-auto w-full max-w-sm">
-          <div className="mb-6 flex flex-col items-center gap-2">
+          <div className="space-y-2 text-center">
             <h1
-              className="text-4xl tracking-tight"
-              style={{
-                fontFamily: 'var(--font-brand)',
-                color: 'var(--color-primary)',
-                fontWeight: 700,
-              }}
-            >
-              <span className="text-5xl">V</span>egi<span className="text-5xl">T</span>rack
-            </h1>
-          </div>
-
-          <div className="mb-8 space-y-1 text-center">
-            <h2
               className="text-[32px] leading-tight"
               style={{
                 fontFamily: 'var(--font-brand)',
@@ -116,9 +106,9 @@ export default function Auth() {
               }}
             >
               {isSignin ? 'Welcome' : 'Create account'}
-            </h2>
+            </h1>
             <p
-              className="text-xs"
+              className="text-sm"
               style={{
                 fontFamily: 'var(--font-body)',
                 color: 'var(--color-text-light)',
@@ -128,7 +118,7 @@ export default function Auth() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label
                 htmlFor="email"
@@ -149,7 +139,7 @@ export default function Auth() {
                 placeholder="you@example.com"
                 required
                 disabled={loading}
-                className="h-11 rounded-[10px] border-[1.5px] border-(--color-primary) text-text placeholder:text-text-light"
+                className="h-[42px] rounded-[8px] border-[1.5px] border-(--color-primary) text-text placeholder:text-text-light"
                 style={{
                   fontFamily: 'var(--font-body)',
                   backgroundColor: 'transparent',
@@ -178,7 +168,7 @@ export default function Auth() {
                 required
                 disabled={loading}
                 minLength={6}
-                className="h-11 rounded-[10px] border-[1.5px] border-(--color-primary) text-text placeholder:text-text-light"
+                className="h-[42px] rounded-[8px] border-[1.5px] border-(--color-primary) text-text placeholder:text-text-light"
                 style={{
                   fontFamily: 'var(--font-body)',
                   backgroundColor: 'transparent',
@@ -190,7 +180,7 @@ export default function Auth() {
                   onClick={() =>
                     toast.info('Password reset is not available in this demo. Please use email authentication.')
                   }
-                  className="text-[11px] underline-offset-2"
+                  className="text-[12px] underline-offset-2"
                   style={{
                     fontFamily: 'var(--font-body)',
                     color: 'rgba(23, 78, 5, 0.6)',
@@ -228,26 +218,27 @@ export default function Auth() {
               </div>
             )}
 
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              disabled={loading}
-              className="h-12 text-lg"
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontWeight: 500,
-                backgroundColor: 'var(--color-primary)',
-                color: '#e8ece3',
-                borderRadius: '30px',
-                marginTop: '0.5rem',
-              }}
-            >
-              {loading ? (isSignin ? 'Signing in...' : 'Creating account...') : isSignin ? 'Log In' : 'Create Account'}
-            </Button>
+            <div className="flex justify-center pt-1">
+              <Button
+                type="submit"
+                variant="primary"
+                fullWidth={false}
+                disabled={loading}
+                className="h-[56px] w-[216px] text-[18px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontWeight: 500,
+                  backgroundColor: 'var(--color-primary)',
+                  color: '#e8ece3',
+                  borderRadius: '30px',
+                }}
+              >
+                {loading ? (isSignin ? 'Signing in...' : 'Creating account...') : isSignin ? 'Log In' : 'Create Account'}
+              </Button>
+            </div>
           </form>
 
-          <div className="mt-8 flex items-center gap-4 text-xs">
+          <div className="mt-12 flex items-center gap-4 text-xs">
             <span className="h-px flex-1 bg-primary/60" />
             <span
               className="text-[11px]"
@@ -261,7 +252,7 @@ export default function Auth() {
             <span className="h-px flex-1 bg-primary/60" />
           </div>
 
-          <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="mt-6 grid grid-cols-3 justify-items-center gap-4">
             <SocialButton
               label="Google"
               icon={<img src={googleIcon} alt="Google" className="h-6 w-6" />}
@@ -283,7 +274,7 @@ export default function Auth() {
           </div>
 
           <p
-            className="mt-6 text-center text-xs"
+            className="mt-8 text-center text-xs"
             style={{
               fontFamily: 'var(--font-body)',
               color: 'rgba(23, 78, 5, 0.7)',

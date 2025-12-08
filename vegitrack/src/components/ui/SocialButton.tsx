@@ -14,7 +14,7 @@ export const SocialButton = forwardRef<HTMLButtonElement, SocialButtonProps>(
         type="button"
         aria-label={label}
         className={cn(
-          'flex h-12 w-full items-center justify-center rounded-lg border border-transparent bg-[#e8ece3] transition-transform active:scale-[0.98]',
+          'flex h-[42px] w-[78px] items-center justify-center rounded-[8px] border border-transparent bg-[#e8ece3] transition-transform active:scale-[0.98]',
           className
         )}
         style={{ fontFamily: 'var(--font-body)' }}
