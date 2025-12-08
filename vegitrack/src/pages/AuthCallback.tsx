@@ -14,6 +14,11 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Log the full URL for debugging
+        console.log('Auth callback URL:', window.location.href)
+        console.log('Search params:', Object.fromEntries(searchParams.entries()))
+        console.log('Hash:', window.location.hash)
+
         // Get token_hash and type from URL query params
         const tokenHash = searchParams.get('token_hash')
         const type = searchParams.get('type') as EmailOtpType | null
@@ -34,8 +39,9 @@ export default function AuthCallback() {
 
           // After successful verification, redirect based on type
           if (type === 'recovery') {
-            // Password recovery - redirect to update password page
-            navigate('/auth/update-password', { replace: true })
+            // Password recovery - redirect to update password page (or use next param)
+            const nextUrl = searchParams.get('next') || '/auth/update-password'
+            navigate(nextUrl, { replace: true })
           } else if (type === 'email') {
             // Email confirmation - redirect to auth page with success
             navigate('/auth?confirmed=true', { replace: true })
@@ -44,10 +50,11 @@ export default function AuthCallback() {
             navigate(next, { replace: true })
           }
         } else {
-          // Check hash params (PKCE flow)
+          // Check hash params (PKCE flow) - Supabase often uses hash fragments
           const hashParams = new URLSearchParams(window.location.hash.substring(1))
           const accessToken = hashParams.get('access_token')
           const refreshToken = hashParams.get('refresh_token')
+          const hashType = hashParams.get('type')
 
           if (accessToken && refreshToken) {
             const { error: sessionError } = await supabase.auth.setSession({
@@ -61,11 +68,23 @@ export default function AuthCallback() {
               return
             }
 
-            // Check if this is a recovery flow by listening for PASSWORD_RECOVERY event
-            // The event will be handled by AuthContext, but we can redirect here
-            navigate('/auth/update-password', { replace: true })
+            // Check if this is a recovery flow
+            if (hashType === 'recovery') {
+              navigate('/auth/update-password', { replace: true })
+            } else {
+              const nextUrl = searchParams.get('next') || '/start'
+              navigate(nextUrl, { replace: true })
+            }
           } else {
+            // No auth parameters found - might be direct redirect to update-password
+            // Check if we're already at update-password or should redirect there
+            if (window.location.pathname.includes('update-password')) {
+              // Already at update-password, let it handle the verification
+              return
+            }
+            
             // No auth parameters found
+            console.warn('No auth parameters found in callback URL')
             navigate('/auth?error=missing_token', { replace: true })
           }
         }

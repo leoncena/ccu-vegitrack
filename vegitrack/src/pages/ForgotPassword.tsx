@@ -21,8 +21,11 @@ export default function ForgotPassword() {
     setLoading(true)
 
     try {
+      // Use current origin (works for both localhost and production)
+      const redirectTo = `${window.location.origin}/auth/callback?next=/auth/update-password`
+      
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo,
       })
 
       if (resetError) {

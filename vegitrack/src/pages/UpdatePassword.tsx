@@ -21,10 +21,48 @@ export default function UpdatePassword() {
 
   useEffect(() => {
     const verifyToken = async () => {
-      // Check if we have token_hash in URL (from email link)
+      // Check if we have token_hash in URL query params (from email link)
       const tokenHash = searchParams.get('token_hash')
       const type = searchParams.get('type') as EmailOtpType | null
 
+      // Also check hash params (Supabase might use hash fragments)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const hashTokenHash = hashParams.get('token_hash')
+      const hashType = hashParams.get('type')
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
+
+      // Log for debugging
+      console.log('UpdatePassword - URL:', window.location.href)
+      console.log('UpdatePassword - Query params:', { tokenHash, type })
+      console.log('UpdatePassword - Hash params:', { hashTokenHash, hashType, hasTokens: !!(accessToken && refreshToken) })
+      console.log('UpdatePassword - Session:', !!session)
+
+      // Handle hash-based redirect (PKCE flow)
+      if (accessToken && refreshToken) {
+        try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          })
+
+          if (sessionError) {
+            setError('Invalid or expired reset link. Please request a new password reset.')
+            setVerifying(false)
+            return
+          }
+
+          // Session established successfully
+          setVerifying(false)
+          return
+        } catch (err) {
+          setError('Error verifying reset link. Please try again.')
+          setVerifying(false)
+          return
+        }
+      }
+
+      // Handle token_hash in query params
       if (tokenHash && type === 'recovery') {
         // Verify the OTP token according to Supabase docs
         try {
@@ -45,13 +83,36 @@ export default function UpdatePassword() {
           setError('Error verifying reset link. Please try again.')
           setVerifying(false)
         }
+      } else if (hashTokenHash && hashType === 'recovery') {
+        // Try verifying with hash params
+        try {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            type: 'recovery',
+            token_hash: hashTokenHash,
+          })
+
+          if (verifyError) {
+            setError('Invalid or expired reset link. Please request a new password reset.')
+            setVerifying(false)
+            return
+          }
+
+          setVerifying(false)
+        } catch (err) {
+          setError('Error verifying reset link. Please try again.')
+          setVerifying(false)
+        }
       } else if (session) {
         // Already have a session (from callback or direct access)
         setVerifying(false)
       } else {
-        // No token and no session
-        setError('Invalid or missing reset link. Please request a new password reset.')
-        setVerifying(false)
+        // No token and no session - wait a bit for session to load
+        setTimeout(() => {
+          if (!session) {
+            setError('Invalid or missing reset link. Please request a new password reset.')
+            setVerifying(false)
+          }
+        }, 1000)
       }
     }
 

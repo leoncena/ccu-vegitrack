@@ -14,59 +14,77 @@ import CertificationsQuality from '../pages/details/CertificationsQuality'
 import FarmingPractices from '../pages/details/FarmingPractices'
 import FarmerStories from '../pages/details/FarmerStories'
 import Recipes from '../pages/details/Recipes'
+import ErrorPage from '../pages/ErrorPage'
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Landing />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/start',
     element: <Start />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/auth',
     element: <Auth />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/auth/callback',
     element: <AuthCallback />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/auth/forgot-password',
     element: <ForgotPassword />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/auth/update-password',
     element: <UpdatePassword />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/scan',
     element: <Scanning />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id',
     element: <FoodPassport />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id/origin',
     element: <OriginTransport />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id/certifications',
     element: <CertificationsQuality />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id/farming',
     element: <FarmingPractices />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id/farmer',
     element: <FarmerStories />,
+    errorElement: <ErrorPage />,
   },
   {
     path: '/product/:id/recipes',
     element: <Recipes />,
+    errorElement: <ErrorPage />,
+  },
+  {
+    path: '*',
+    element: <ErrorPage />,
   },
 ])
 
