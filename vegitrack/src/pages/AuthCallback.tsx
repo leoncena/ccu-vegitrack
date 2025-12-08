@@ -21,7 +21,7 @@ export default function AuthCallback() {
 
         if (tokenHash && type) {
           // Verify the OTP token according to Supabase docs
-          const { data, error } = await supabase.auth.verifyOtp({
+          const { error } = await supabase.auth.verifyOtp({
             type,
             token_hash: tokenHash,
           })
