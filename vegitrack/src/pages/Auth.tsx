@@ -184,9 +184,7 @@ export default function Auth() {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() =>
-                    toast.info('Password reset is not available in this demo. Please use email authentication.')
-                  }
+                  onClick={() => navigate('/auth/forgot-password')}
                   className="text-[12px] underline-offset-2"
                   style={{
                     fontFamily: 'var(--font-body)',
