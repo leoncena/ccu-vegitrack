@@ -60,13 +60,13 @@ export default function OriginTransport() {
           }}
         >
           <p className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-body)' }}>
-            📍 Quinta do Sol
+            📍 hxQuintaDoSol
           </p>
           <p className="text-xs opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-            Nov 18, 2025 • 230 km away
+            06 July 2025 • 67 km away
           </p>
           <p className="text-xs opacity-60 mt-1" style={{ fontFamily: 'var(--font-body)' }}>
-            Harvested at peak ripeness at dawn
+            hxHarvestedAtPeakRipenessAtDawn
           </p>
         </div>
 
@@ -86,10 +86,10 @@ export default function OriginTransport() {
           }}
         >
           <p className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-body)' }}>
-            📦 Packaging Center
+            📦 hxPackagingCenter
           </p>
           <p className="text-xs opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-            Nov 18, 2025 • 157 km away
+            06 July 2025 • 67 km away
           </p>
         </div>
 
@@ -101,10 +101,10 @@ export default function OriginTransport() {
           }}
         >
           <p className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-body)' }}>
-            🚚 Distribution Center
+            🚚 hxDistributionCenter
           </p>
           <p className="text-xs opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-            Nov 19, 2025 • 80 km away
+            06 July 2025 • 67 km away
           </p>
         </div>
 
@@ -116,10 +116,10 @@ export default function OriginTransport() {
           }}
         >
           <p className="text-sm font-medium mb-1" style={{ fontFamily: 'var(--font-body)' }}>
-            🛒 My Auchan - Largo da Graça
+            🛒 hxMyAuchanLargoDaGraca
           </p>
           <p className="text-xs opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-            Nov 20, 2025 • Ready for you!
+            06 July 2025 • hxReadyForYou
           </p>
         </div>
       </div>

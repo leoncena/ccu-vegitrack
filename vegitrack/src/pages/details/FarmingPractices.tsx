@@ -2,51 +2,51 @@ import { useParams, useNavigate } from 'react-router-dom'
 
 const PRACTICES = [
   {
-    category: 'Soil & Inputs',
+    category: 'hxSoilAndInputs',
     icon: '🌿',
     items: [
-      'No synthetic pesticides',
-      'Organic fertilizer only',
-      'Crop rotation to maintain soil health',
-      'Natural composting methods'
+      'hxNoSyntheticPesticides',
+      'hxOrganicFertilizerOnly',
+      'hxCropRotationToMaintainSoilHealth',
+      'hxNaturalCompostingMethods'
     ]
   },
   {
-    category: 'Water Management',
+    category: 'hxWaterManagement',
     icon: '💧',
     items: [
-      'Drip irrigation system',
-      'Water-saving methods in place',
-      'Rainwater collection',
-      'Efficient scheduling to minimize waste'
+      'hxDripIrrigationSystem',
+      'hxWaterSavingMethodsInPlace',
+      'hxRainwaterCollection',
+      'hxEfficientSchedulingToMinimizeWaste'
     ]
   },
   {
-    category: 'Pest Control',
+    category: 'hxPestControl',
     icon: '🐛',
     items: [
-      'Biological pest control',
-      'Natural predators encouraged',
-      'No chemical sprays',
-      'Companion planting strategy'
+      'hxBiologicalPestControl',
+      'hxNaturalPredatorsEncouraged',
+      'hxNoChemicalSprays',
+      'hxCompanionPlantingStrategy'
     ]
   },
   {
-    category: 'Biodiversity',
+    category: 'hxBiodiversity',
     icon: '🦋',
     items: [
-      'Wildflower strips for pollinators',
-      'Native hedgerows maintained',
-      'Bird nesting boxes installed'
+      'hxWildflowerStripsForPollinators',
+      'hxNativeHedgerowsMaintained',
+      'hxBirdNestingBoxesInstalled'
     ]
   },
   {
-    category: 'Labor & Working Conditions',
+    category: 'hxLaborAndWorkingConditions',
     icon: '👨‍🌾',
     items: [
-      'Seasonal workers hired under documented contracts',
-      'Safety training required for greenhouse entry',
-      'Verified in Fair Labor Audit (2025-02-18)'
+      'hxSeasonalWorkersHiredUnderDocumentedContracts',
+      'hxSafetyTrainingRequiredForGreenhouseEntry',
+      'hxVerifiedInFairLaborAudit(06 July 2025)'
     ]
   }
 ]

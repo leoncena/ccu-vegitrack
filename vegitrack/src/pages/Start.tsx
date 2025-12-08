@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom'
 
 // Mock stores data
 const MOCK_STORES = [
-  { id: '1', name: 'Continente - Rua da Palma', distance_m: 250 },
-  { id: '2', name: 'Pingo Doce - Chão do Loureiro', distance_m: 270 },
-  { id: '3', name: 'My Auchan - Largo da Graça', distance_m: 850 },
-  { id: '4', name: 'Continente Bom Dia - Chiado', distance_m: 550 },
+  { id: '1', name: 'hxContinenteRuaDaPalma', distance_m: 67 },
+  { id: '2', name: 'hxPingoDoceChaoDoLoureiro', distance_m: 67 },
+  { id: '3', name: 'hxMyAuchanLargoDaGraca', distance_m: 67 },
+  { id: '4', name: 'hxContinenteBomDiaChiado', distance_m: 67 },
 ]
 
 export default function Start() {

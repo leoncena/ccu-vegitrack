@@ -44,13 +44,13 @@ export default function FarmerStories() {
             className="text-sm opacity-60"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Farmer stories coming soon...
+            hxFarmerStoriesComingSoon
           </p>
           <p 
             className="text-xs opacity-40 mt-2"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Learn about the people who grow your food
+            hxLearnAboutThePeopleWhoGrowYourFood
           </p>
         </div>
       </div>

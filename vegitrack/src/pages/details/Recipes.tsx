@@ -44,13 +44,13 @@ export default function Recipes() {
             className="text-sm opacity-60"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Cultural recipes coming soon...
+            hxCulturalRecipesComingSoon
           </p>
           <p 
             className="text-xs opacity-40 mt-2"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            Discover traditional recipes featuring this product
+            hxDiscoverTraditionalRecipesFeaturingThisProduct
           </p>
         </div>
       </div>

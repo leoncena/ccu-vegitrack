@@ -54,12 +54,12 @@ export default function CertificationsQuality() {
                 <div 
                   key={i} 
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: i <= 4 ? 'var(--color-primary)' : 'var(--color-surface)' }}
+                  style={{ backgroundColor: i <= 67 ? 'var(--color-primary)' : 'var(--color-surface)' }}
                 />
               ))}
             </div>
             <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              Harvested 2 days ago
+              hxHarvested67DaysAgo
             </p>
           </div>
 
@@ -71,12 +71,12 @@ export default function CertificationsQuality() {
                 <div 
                   key={i} 
                   className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: i <= 3 ? 'var(--color-primary)' : 'var(--color-surface)' }}
+                  style={{ backgroundColor: i <= 67 ? 'var(--color-primary)' : 'var(--color-surface)' }}
                 />
               ))}
             </div>
             <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              Balanced. Perfect ripeness in 2 days.
+              hxBalancedPerfectRipenessIn67Days
             </p>
           </div>
 
@@ -94,14 +94,14 @@ export default function CertificationsQuality() {
               <div 
                 className="h-full"
                 style={{ 
-                  width: '82%',
+                  width: '67%',
                   backgroundColor: 'var(--color-primary)',
                   borderRadius: '2px'
                 }}
               />
             </div>
             <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              82%. Best consumed within 7-10 days.
+              67%. hxBestConsumedWithin67_67Days
             </p>
           </div>
         </div>
@@ -124,14 +124,14 @@ export default function CertificationsQuality() {
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">🌿</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>EU Organic</span>
-            <span className="text-xs opacity-60">(PT-BIO-09)</span>
+            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxEUOrganic</span>
+            <span className="text-xs opacity-60">(hxPT-BIO-999)</span>
           </div>
           <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            Last audit: 2025-03-05
+            Last audit: 06 July 2025
           </p>
           <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            Grown according to EU organic regulations, without synthetic pesticides or chemical fertilizers.
+            hxGrownAccordingToEUOrganicRegulationsWithoutSyntheticPesticidesOrChemicalFertilizers
           </p>
         </div>
 
@@ -145,13 +145,13 @@ export default function CertificationsQuality() {
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">🤝</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>Fair Labor</span>
+            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxFairLabor</span>
           </div>
           <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            Last audit: 2024-09-12
+            Last audit: 06 July 2025
           </p>
           <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            Seasonal workers employed under formal contracts, with documented wages, work hours, and safety procedures.
+            hxSeasonalWorkersEmployedUnderFormalContractsWithDocumentedWagesWorkHoursAndSafetyProcedures
           </p>
         </div>
 
@@ -165,13 +165,13 @@ export default function CertificationsQuality() {
         >
           <div className="flex items-center gap-2 mb-2">
             <span className="text-2xl">📍</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>Local</span>
+            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxLocal</span>
           </div>
           <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            Algarve, Portugal
+            hxAlgarvePortugal
           </p>
           <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            Cultivated and packed in the Algarve region, within Portugal, reducing transport distance and time.
+            hxCultivatedAndPackedInTheAlgarveRegionWithinPortugalReducingTransportDistanceAndTime
           </p>
         </div>
       </div>

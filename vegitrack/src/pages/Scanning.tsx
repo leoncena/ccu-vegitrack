@@ -39,7 +39,7 @@ export default function Scanning() {
           className="text-sm opacity-70"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          LIDL Delft
+          hxLIDLDelft
         </span>
       </div>
 
