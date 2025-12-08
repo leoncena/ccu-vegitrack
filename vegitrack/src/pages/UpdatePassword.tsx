@@ -1,5 +1,5 @@
 import { useState, type FormEvent, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { Input } from '../components/ui/input'
@@ -7,22 +7,56 @@ import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/Button'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
 import { toast } from '../components/ui/sonner'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 export default function UpdatePassword() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { session } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if we have a valid recovery session
-    // When Supabase redirects after password reset, the user will have a session
-    if (!session) {
-      setError('Invalid or expired reset link. Please request a new password reset.')
+    const verifyToken = async () => {
+      // Check if we have token_hash in URL (from email link)
+      const tokenHash = searchParams.get('token_hash')
+      const type = searchParams.get('type') as EmailOtpType | null
+
+      if (tokenHash && type === 'recovery') {
+        // Verify the OTP token according to Supabase docs
+        try {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            type: 'recovery',
+            token_hash: tokenHash,
+          })
+
+          if (verifyError) {
+            setError('Invalid or expired reset link. Please request a new password reset.')
+            setVerifying(false)
+            return
+          }
+
+          // Verification successful - user now has a session
+          setVerifying(false)
+        } catch (err) {
+          setError('Error verifying reset link. Please try again.')
+          setVerifying(false)
+        }
+      } else if (session) {
+        // Already have a session (from callback or direct access)
+        setVerifying(false)
+      } else {
+        // No token and no session
+        setError('Invalid or missing reset link. Please request a new password reset.')
+        setVerifying(false)
+      }
     }
-  }, [session])
+
+    verifyToken()
+  }, [searchParams, session])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -89,6 +123,13 @@ export default function UpdatePassword() {
             </p>
           </div>
 
+          {verifying ? (
+            <div className="text-center">
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
+                Verifying reset link...
+              </p>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <Label
@@ -192,6 +233,7 @@ export default function UpdatePassword() {
               </Button>
             </div>
           </form>
+          )}
         </div>
       </div>
     </PageWrapper>

@@ -1,10 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import type { EmailOtpType } from '@supabase/supabase-js'
 
 /**
  * Handles Supabase auth callbacks (email confirmation, password recovery, etc.)
- * Supabase redirects here after verifying tokens, then we redirect to the appropriate page
+ * Based on Supabase docs: https://supabase.com/docs/guides/auth/auth-email-templates
  */
 export default function AuthCallback() {
   const navigate = useNavigate()
@@ -13,53 +14,60 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        // Get the hash from URL (Supabase adds this)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const accessToken = hashParams.get('access_token')
-        const refreshToken = hashParams.get('refresh_token')
-        const type = hashParams.get('type')
-
-        // Also check query params (some flows use these)
-        const queryType = searchParams.get('type')
+        // Get token_hash and type from URL query params
         const tokenHash = searchParams.get('token_hash')
+        const type = searchParams.get('type') as EmailOtpType | null
+        const next = searchParams.get('next') || '/start'
 
-        // If we have tokens in the hash, exchange them for a session
-        if (accessToken && refreshToken) {
-          const { error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
+        if (tokenHash && type) {
+          // Verify the OTP token according to Supabase docs
+          const { data, error } = await supabase.auth.verifyOtp({
+            type,
+            token_hash: tokenHash,
           })
 
-          if (sessionError) {
-            console.error('Error setting session:', sessionError)
+          if (error) {
+            console.error('Error verifying OTP:', error)
             navigate('/auth?error=invalid_token', { replace: true })
             return
           }
 
-          // Check the type to determine where to redirect
-          const authType = type || queryType
-
-          if (authType === 'recovery') {
+          // After successful verification, redirect based on type
+          if (type === 'recovery') {
             // Password recovery - redirect to update password page
             navigate('/auth/update-password', { replace: true })
-          } else if (authType === 'email') {
+          } else if (type === 'email') {
             // Email confirmation - redirect to auth page with success
             navigate('/auth?confirmed=true', { replace: true })
           } else {
-            // Default: redirect to start page
-            navigate('/start', { replace: true })
-          }
-        } else if (tokenHash) {
-          // If we have token_hash but no tokens, Supabase needs to verify it
-          // This should be handled by Supabase automatically, but if not, redirect to update password
-          if (queryType === 'recovery') {
-            navigate('/auth/update-password', { replace: true })
-          } else {
-            navigate('/auth?error=invalid_token', { replace: true })
+            // Default: redirect to next URL or start page
+            navigate(next, { replace: true })
           }
         } else {
-          // No auth parameters found
-          navigate('/auth?error=missing_token', { replace: true })
+          // Check hash params (PKCE flow)
+          const hashParams = new URLSearchParams(window.location.hash.substring(1))
+          const accessToken = hashParams.get('access_token')
+          const refreshToken = hashParams.get('refresh_token')
+
+          if (accessToken && refreshToken) {
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            })
+
+            if (sessionError) {
+              console.error('Error setting session:', sessionError)
+              navigate('/auth?error=invalid_token', { replace: true })
+              return
+            }
+
+            // Check if this is a recovery flow by listening for PASSWORD_RECOVERY event
+            // The event will be handled by AuthContext, but we can redirect here
+            navigate('/auth/update-password', { replace: true })
+          } else {
+            // No auth parameters found
+            navigate('/auth?error=missing_token', { replace: true })
+          }
         }
       } catch (error) {
         console.error('Auth callback error:', error)
