@@ -5,4 +5,8 @@ export { Tag } from './Tag'
 export { IconButton, BackIcon, CloseIcon, BookmarkIcon, ChevronRightIcon } from './IconButton'
 export { ScoreIndicator, ProgressBar } from './ScoreIndicator'
 export { StatItem, StatGrid } from './StatItem'
+export { SocialButton } from './SocialButton'
+export { Input } from './input'
+export { Label } from './label'
+export { Toaster, toast } from './sonner'
 
