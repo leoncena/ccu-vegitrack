@@ -1,33 +1,86 @@
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { getProductById, getProductByDisplayId, getProductLabels, getAlternativeProducts } from '../lib/api'
+import { supabase } from '../lib/supabase'
+import type { Product, ProductLabel, Farm } from '../types/database'
+import { Tag } from '../components/ui'
+import { PageWrapper, PageHeader } from '../components/layout'
 
-// Mock product data (matches Figma design)
-const MOCK_PRODUCT = {
-  id: 'sample-tomatoes-001',
-  display_id: '3345667',
-  name: "Solanum lycopersicum 'Trust' Cluster Tomatoes",
-  origin_country: 'Portugal',
-  origin_region: 'Algarve',
-  farm_name: 'Quinta do Sol',
-  distance_km: 230,
-  harvest_days_ago: 2,
-  transport_km: 350,
-  emissions_co2e: 1.8,
-  price_per_kg: 2.99,
-  image_url: null, // TODO: Add image
-  labels: [
-    { name: 'Organic', color: '#174E05' },
-    { name: 'Local', color: '#386A27' },
-    { name: 'Greenhouse Grown', color: '#174E05' },
-    { name: 'Freshly Harvested', color: '#386A27' },
-  ],
+interface ProductWithFarm extends Product {
+  farm?: Farm | null
 }
 
 export default function FoodPassport() {
   const { id } = useParams()
   const navigate = useNavigate()
-  
-  // In real app, fetch product by ID
-  const product = MOCK_PRODUCT
+  const [product, setProduct] = useState<ProductWithFarm | null>(null)
+  const [labels, setLabels] = useState<ProductLabel[]>([])
+  const [alternatives, setAlternatives] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchProduct() {
+      if (!id) return
+      
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Try to fetch by UUID first, then by display_id
+        let productData = await getProductById(id)
+        
+        if (!productData) {
+          productData = await getProductByDisplayId(id)
+        }
+
+        if (!productData) {
+          setError('Product not found')
+          setLoading(false)
+          return
+        }
+
+        // Fetch farm info if farm_id exists
+        let farmData = null
+        if (productData.farm_id) {
+          const { data } = await supabase
+            .from('farms')
+            .select('*')
+            .eq('id', productData.farm_id)
+            .single()
+          farmData = data
+        }
+
+        setProduct({ ...productData, farm: farmData })
+
+        // Fetch labels and alternatives in parallel
+        const [labelsData, alternativesData] = await Promise.all([
+          getProductLabels(productData.id),
+          getAlternativeProducts(productData.id),
+        ])
+
+        setLabels(labelsData)
+        setAlternatives(alternativesData)
+      } catch (err) {
+        console.error('Error fetching product:', err)
+        setError('Failed to load product')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [id])
+
+  // Calculate days since harvest
+  const getDaysSinceHarvest = () => {
+    if (!product?.harvest_date) return null
+    const harvest = new Date(product.harvest_date)
+    const today = new Date()
+    const diffTime = Math.abs(today.getTime() - harvest.getTime())
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
 
   const detailSections = [
     { path: 'origin', label: 'Origin & Transportation', icon: '📍' },
@@ -37,46 +90,85 @@ export default function FoodPassport() {
     { path: 'recipes', label: 'Cultural Recipes', icon: '🍳' },
   ]
 
+  if (loading) {
+    return (
+      <PageWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-4xl mb-4 animate-pulse">🍅</div>
+            <p style={{ fontFamily: 'var(--font-body)' }}>Loading product...</p>
+          </div>
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <PageWrapper>
+        <PageHeader backTo="/scan" closeButton />
+        <div className="flex flex-col items-center justify-center px-6 pt-20">
+          <div className="text-6xl mb-4">🔍</div>
+          <h1 
+            className="text-xl mb-2"
+            style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
+          >
+            Product Not Found
+          </h1>
+          <p 
+            className="text-sm opacity-60 text-center mb-6"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
+            {error || 'We couldn\'t find this product. Please try scanning again.'}
+          </p>
+          <button
+            onClick={() => navigate('/scan')}
+            className="px-6 py-3"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'white',
+              borderRadius: 'var(--radius-button)',
+              fontFamily: 'var(--font-body)',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            Back to Scanner
+          </button>
+        </div>
+      </PageWrapper>
+    )
+  }
+
+  const daysSinceHarvest = getDaysSinceHarvest()
+
   return (
-    <div 
-      className="min-h-screen pb-8"
-      style={{ backgroundColor: 'var(--color-background)' }}
-    >
+    <PageWrapper>
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-16 pb-4">
-        <button 
-          onClick={() => navigate(-1)}
-          className="p-1"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <span 
-          className="text-sm opacity-60"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          ID {product.display_id}
-        </span>
-        <button 
-          className="p-1"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      </div>
+      <PageHeader 
+        backTo="/scan" 
+        closeButton 
+        center={`ID ${product.display_id}`}
+        showBookmark
+      />
 
       {/* Product Image */}
       <div className="flex justify-center mb-4">
-        <div 
-          className="w-48 h-48 flex items-center justify-center text-8xl"
-          style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-card)' }}
-        >
-          🍅
-        </div>
+        {product.image_url ? (
+          <img 
+            src={product.image_url} 
+            alt={product.name}
+            className="w-48 h-48 object-cover"
+            style={{ borderRadius: 'var(--radius-card)' }}
+          />
+        ) : (
+          <div 
+            className="w-48 h-48 flex items-center justify-center text-8xl"
+            style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-card)' }}
+          >
+            🍅
+          </div>
+        )}
       </div>
 
       {/* Product Name */}
@@ -84,37 +176,39 @@ export default function FoodPassport() {
         className="text-center text-lg px-8 mb-2"
         style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
       >
-        {product.name}
+        {product.scientific_name ? `${product.scientific_name} '${product.variety}'` : ''} {product.name}
       </h1>
 
       {/* Origin & Farm */}
       <div 
-        className="flex justify-center items-center gap-4 text-sm mb-4"
+        className="flex justify-center items-center gap-2 text-sm mb-4 flex-wrap px-6"
         style={{ fontFamily: 'var(--font-body)' }}
       >
-        <span>📍 {product.origin_country}, {product.origin_region}</span>
-        <span className="opacity-30">|</span>
-        <span>{product.farm_name}</span>
-        <span className="opacity-30">|</span>
-        <span>{product.distance_km} km</span>
+        <span>📍 {product.origin_country}{product.origin_region ? `, ${product.origin_region}` : ''}</span>
+        {product.farm && (
+          <>
+            <span className="opacity-30">|</span>
+            <span>{product.farm.name}</span>
+          </>
+        )}
+        {product.transport_distance_km && (
+          <>
+            <span className="opacity-30">|</span>
+            <span>{product.transport_distance_km} km</span>
+          </>
+        )}
       </div>
 
       {/* Labels */}
-      <div className="flex flex-wrap justify-center gap-2 px-6 mb-6">
-        {product.labels.map((label, i) => (
-          <span
-            key={i}
-            className="px-3 py-1 text-xs"
-            style={{ 
-              backgroundColor: 'var(--color-card)',
-              borderRadius: '15px',
-              fontFamily: 'var(--font-body)'
-            }}
-          >
-            {label.name}
-          </span>
-        ))}
-      </div>
+      {labels.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2 px-6 mb-6">
+          {labels.map((label) => (
+            <Tag key={label.id} color={label.label_color || undefined}>
+              {label.label_name}
+            </Tag>
+          ))}
+        </div>
+      )}
 
       {/* Stats Row */}
       <div 
@@ -127,25 +221,25 @@ export default function FoodPassport() {
         <div className="text-center">
           <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Harvested</p>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.harvest_days_ago} days ago
+            {daysSinceHarvest !== null ? `${daysSinceHarvest}d ago` : '—'}
           </p>
         </div>
         <div className="text-center">
           <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Transport</p>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.transport_km} km
+            {product.transport_distance_km ? `${product.transport_distance_km} km` : '—'}
           </p>
         </div>
         <div className="text-center">
           <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Emissions</p>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.emissions_co2e} kgCO₂e/kg
+            {product.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg` : '—'}
           </p>
         </div>
         <div className="text-center">
           <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Price</p>
           <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            €{product.price_per_kg}/kg
+            {product.price_per_kg ? `€${product.price_per_kg}/kg` : '—'}
           </p>
         </div>
       </div>
@@ -166,7 +260,7 @@ export default function FoodPassport() {
           {detailSections.map((section) => (
             <Link
               key={section.path}
-              to={`/product/${id}/${section.path}`}
+              to={`/product/${product.id}/${section.path}`}
               className="p-4 flex flex-col items-start"
               style={{ 
                 backgroundColor: 'var(--color-card)',
@@ -196,22 +290,69 @@ export default function FoodPassport() {
           Alternatives
         </h2>
         
-        <div 
-          className="p-4"
-          style={{ 
-            backgroundColor: 'var(--color-card)',
-            borderRadius: 'var(--radius-card)'
-          }}
-        >
-          <p 
-            className="text-sm opacity-60"
-            style={{ fontFamily: 'var(--font-body)' }}
+        {alternatives.length > 0 ? (
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {alternatives.map((alt) => (
+              <Link
+                key={alt.id}
+                to={`/product/${alt.id}`}
+                className="flex-shrink-0 w-32 p-3"
+                style={{ 
+                  backgroundColor: 'var(--color-card)',
+                  borderRadius: 'var(--radius-card)',
+                  textDecoration: 'none',
+                  color: 'inherit'
+                }}
+              >
+                {alt.image_url ? (
+                  <img 
+                    src={alt.image_url} 
+                    alt={alt.name}
+                    className="w-full h-20 object-cover mb-2"
+                    style={{ borderRadius: 'var(--radius-sm)' }}
+                  />
+                ) : (
+                  <div 
+                    className="w-full h-20 flex items-center justify-center text-3xl mb-2"
+                    style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}
+                  >
+                    🍅
+                  </div>
+                )}
+                <p 
+                  className="text-xs font-medium line-clamp-2"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {alt.name}
+                </p>
+                {alt.price_per_kg && (
+                  <p 
+                    className="text-xs opacity-60 mt-1"
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    €{alt.price_per_kg}/kg
+                  </p>
+                )}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div 
+            className="p-4"
+            style={{ 
+              backgroundColor: 'var(--color-card)',
+              borderRadius: 'var(--radius-card)'
+            }}
           >
-            Alternative products will appear here...
-          </p>
-        </div>
+            <p 
+              className="text-sm opacity-60"
+              style={{ fontFamily: 'var(--font-body)' }}
+            >
+              No alternatives available
+            </p>
+          </div>
+        )}
       </div>
-    </div>
+    </PageWrapper>
   )
 }
-

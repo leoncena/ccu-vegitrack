@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { PageWrapper, PageHeader } from '../components/layout'
+import { Button } from '../components/ui'
 
-// Sample product ID for debug mode
-const SAMPLE_PRODUCT_ID = 'sample-tomatoes-001'
+// Real product UUID from the seeded database
+const SAMPLE_PRODUCT_ID = '11111111-2222-3333-4444-555555555555'
+// Also works with display_id
+const SAMPLE_DISPLAY_ID = '3345667'
 
 export default function Scanning() {
   const navigate = useNavigate()
   const [manualId, setManualId] = useState('')
 
   const handleDebugScan = () => {
+    // Navigate using the real UUID from the database
     navigate(`/product/${SAMPLE_PRODUCT_ID}`)
   }
 
@@ -18,33 +23,29 @@ export default function Scanning() {
     }
   }
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleManualLookup()
+    }
+  }
+
   return (
-    <div 
-      className="min-h-screen flex flex-col"
-      style={{ backgroundColor: 'var(--color-background)' }}
-    >
+    <PageWrapper>
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 pt-16 pb-4">
-        <button 
-          onClick={() => navigate(-1)}
-          className="p-1"
-          style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-        </button>
+      <PageHeader backTo="/start" />
+      
+      <div className="px-6">
         <span 
-          className="text-base"
+          className="text-sm opacity-70"
           style={{ fontFamily: 'var(--font-body)' }}
         >
-          My Auchan - Largo da Graça
+          LIDL Delft
         </span>
       </div>
 
       {/* Title */}
       <h1 
-        className="text-center text-2xl mb-8"
+        className="text-center text-2xl mb-8 mt-4"
         style={{ fontFamily: 'var(--font-body)', letterSpacing: '-0.66px' }}
       >
         Scan a Product
@@ -94,21 +95,14 @@ export default function Scanning() {
           </p>
           
           {/* Quick scan button */}
-          <button
+          <Button
             onClick={handleDebugScan}
-            className="w-full py-3 mb-3"
-            style={{ 
-              backgroundColor: 'var(--color-primary)',
-              color: 'white',
-              borderRadius: 'var(--radius-md)',
-              fontFamily: 'var(--font-body)',
-              fontSize: '14px',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            fullWidth
+            className="mb-3"
+            style={{ borderRadius: 'var(--radius-md)' }}
           >
             Open Sample Product (Tomatoes)
-          </button>
+          </Button>
 
           {/* Manual ID input */}
           <div className="flex gap-2">
@@ -116,7 +110,8 @@ export default function Scanning() {
               type="text"
               value={manualId}
               onChange={(e) => setManualId(e.target.value)}
-              placeholder="Enter product ID..."
+              onKeyDown={handleKeyPress}
+              placeholder={`Try: ${SAMPLE_DISPLAY_ID}`}
               className="flex-1 px-3 py-2 text-sm"
               style={{ 
                 borderRadius: 'var(--radius-sm)',
@@ -124,20 +119,56 @@ export default function Scanning() {
                 fontFamily: 'var(--font-body)'
               }}
             />
-            <button
+            <Button
               onClick={handleManualLookup}
-              className="px-4 py-2"
-              style={{ 
-                backgroundColor: 'var(--color-primary-light)',
-                color: 'white',
-                borderRadius: 'var(--radius-sm)',
-                fontFamily: 'var(--font-body)',
-                fontSize: '14px',
-                border: 'none',
-                cursor: 'pointer'
-              }}
+              variant="secondary"
+              size="md"
+              style={{ borderRadius: 'var(--radius-sm)' }}
             >
               Go
+            </Button>
+          </div>
+
+          {/* Quick ID hints */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setManualId(SAMPLE_DISPLAY_ID)}
+              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
+              style={{ 
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)'
+              }}
+            >
+              {SAMPLE_DISPLAY_ID}
+            </button>
+            <button
+              onClick={() => setManualId('3345668')}
+              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
+              style={{ 
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)'
+              }}
+            >
+              3345668 (Cherry)
+            </button>
+            <button
+              onClick={() => setManualId('3345669')}
+              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
+              style={{ 
+                backgroundColor: 'var(--color-surface)',
+                borderRadius: '4px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-body)'
+              }}
+            >
+              3345669 (Roma)
             </button>
           </div>
         </div>
@@ -150,7 +181,6 @@ export default function Scanning() {
           🍅 Look for this kind of QR code on product packaging or displays.
         </p>
       </div>
-    </div>
+    </PageWrapper>
   )
 }
-
