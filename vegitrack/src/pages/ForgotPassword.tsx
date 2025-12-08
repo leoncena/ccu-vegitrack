@@ -35,7 +35,7 @@ export default function ForgotPassword() {
         setError(resetError.message)
       } else {
         setMessage('Check your email for the password reset link!')
-        toast.success('Password reset email sent!')
+        toast.success('Password reset email sent! Please also check the spam folder and wait some minutes. Some emails can take longer to arrive.')
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An unexpected error occurred')
