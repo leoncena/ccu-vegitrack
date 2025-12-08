@@ -4,6 +4,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import Landing from '../pages/Landing'
 import Start from '../pages/Start'
 import Auth from '../pages/Auth'
+import AuthCallback from '../pages/AuthCallback'
 import ForgotPassword from '../pages/ForgotPassword'
 import UpdatePassword from '../pages/UpdatePassword'
 import Scanning from '../pages/Scanning'
@@ -26,6 +27,10 @@ export const router = createBrowserRouter([
   {
     path: '/auth',
     element: <Auth />,
+  },
+  {
+    path: '/auth/callback',
+    element: <AuthCallback />,
   },
   {
     path: '/auth/forgot-password',

@@ -1,6 +1,7 @@
 import { useState, type FormEvent, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/Button'
@@ -9,21 +10,19 @@ import { toast } from '../components/ui/sonner'
 
 export default function UpdatePassword() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const { session } = useAuth()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if we have the required hash params from email link
-    const tokenHash = searchParams.get('token_hash')
-    const type = searchParams.get('type')
-
-    if (!tokenHash || type !== 'recovery') {
-      setError('Invalid or missing reset link. Please request a new password reset.')
+    // Check if we have a valid recovery session
+    // When Supabase redirects after password reset, the user will have a session
+    if (!session) {
+      setError('Invalid or expired reset link. Please request a new password reset.')
     }
-  }, [searchParams])
+  }, [session])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
