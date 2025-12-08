@@ -4,7 +4,7 @@ import { getProductById, getProductByDisplayId, getProductLabels, getAlternative
 import { supabase } from '../lib/supabase'
 import type { Product, ProductLabel, Farm } from '../types/database'
 import { Tag } from '../components/ui'
-import { PageWrapper, PageHeader } from '../components/layout'
+import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
 
 interface ProductWithFarm extends Product {
   farm?: Farm | null
@@ -143,7 +143,7 @@ export default function FoodPassport() {
   const daysSinceHarvest = getDaysSinceHarvest()
 
   return (
-    <PageWrapper>
+    <PageWrapper style={{ paddingBottom: '60px' }}>
       {/* Header */}
       <PageHeader 
         backTo="/scan" 
@@ -353,6 +353,9 @@ export default function FoodPassport() {
           </div>
         )}
       </div>
+      
+      {/* Debug Footer */}
+      <DebugFooter />
     </PageWrapper>
   )
 }

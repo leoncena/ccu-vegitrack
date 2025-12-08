@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { DebugFooter } from '../../components/layout'
 
 const PRACTICES = [
   {
@@ -58,7 +59,7 @@ export default function FarmingPractices() {
   return (
     <div 
       className="min-h-screen pb-8"
-      style={{ backgroundColor: 'var(--color-surface)' }}
+      style={{ backgroundColor: 'var(--color-surface)', paddingBottom: '60px' }}
     >
       {/* Header */}
       <div className="flex items-center gap-4 px-6 pt-16 pb-4">
@@ -128,6 +129,9 @@ export default function FarmingPractices() {
           </div>
         ))}
       </div>
+      
+      {/* Debug Footer */}
+      <DebugFooter />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageWrapper, PageHeader } from '../components/layout'
+import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
 import { Button } from '../components/ui'
 
 // Real product UUID from the seeded database
@@ -30,7 +30,7 @@ export default function Scanning() {
   }
 
   return (
-    <PageWrapper>
+    <PageWrapper style={{ paddingBottom: '60px' }}>
       {/* Header */}
       <PageHeader backTo="/start" />
       
@@ -181,6 +181,9 @@ export default function Scanning() {
           🍅 Look for this kind of QR code on product packaging or displays.
         </p>
       </div>
+      
+      {/* Debug Footer */}
+      <DebugFooter />
     </PageWrapper>
   )
 }

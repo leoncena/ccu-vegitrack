@@ -12,11 +12,16 @@ const MOCK_STORES = [
 
 export default function Start() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
   const [showStores, setShowStores] = useState(false)
 
   const selectedStoreData = MOCK_STORES.find(s => s.id === selectedStore)
+
+  const handleLogout = async () => {
+    await signOut()
+    navigate('/start', { replace: true })
+  }
 
   return (
     <div 
@@ -158,7 +163,21 @@ export default function Start() {
               color: 'var(--color-text-light)',
             }}
           >
-            Signed in as {user.email}
+            Signed in as {user.email}{' '}
+            <button
+              onClick={handleLogout}
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '12px',
+                color: 'var(--color-primary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+              }}
+            >
+              (Click to logout)
+            </button>
           </p>
         </div>
       ) : (

@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { DebugFooter } from '../../components/layout'
 
 export default function OriginTransport() {
   const { id } = useParams()
@@ -7,7 +8,7 @@ export default function OriginTransport() {
   return (
     <div 
       className="min-h-screen"
-      style={{ backgroundColor: 'var(--color-surface)' }}
+      style={{ backgroundColor: 'var(--color-surface)', paddingBottom: '60px' }}
     >
       {/* Header */}
       <div className="flex items-center gap-4 px-6 pt-16 pb-4">
@@ -123,6 +124,9 @@ export default function OriginTransport() {
           </p>
         </div>
       </div>
+      
+      {/* Debug Footer */}
+      <DebugFooter />
     </div>
   )
 }
