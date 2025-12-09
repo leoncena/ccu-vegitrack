@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
 import { SocialButton } from '../components/ui/SocialButton'
 import { toast } from '../components/ui/sonner'
+import { Spinner } from '../components/ui/spinner'
 
 const googleIcon = new URL('../assets/social/google.svg', import.meta.url).href
 const facebookIcon = new URL('../assets/social/facebook.svg', import.meta.url).href
@@ -244,6 +245,7 @@ export default function Auth() {
                   borderRadius: '30px',
                 }}
               >
+                {loading && <Spinner className="size-4 mr-2" />}
                 {loading ? (isSignin ? 'Signing in...' : 'Creating account...') : isSignin ? 'Log In' : 'Create Account'}
               </Button>
             </div>

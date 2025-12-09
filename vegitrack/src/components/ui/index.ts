@@ -9,4 +9,5 @@ export { SocialButton } from './SocialButton'
 export { Input } from './input'
 export { Label } from './label'
 export { Toaster, toast } from './sonner'
+export { Spinner } from './spinner'
 

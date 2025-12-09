@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/Button'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
 import { toast } from '../components/ui/sonner'
+import { Spinner } from '../components/ui/spinner'
 
 export default function UpdatePassword() {
   const navigate = useNavigate()
@@ -149,7 +150,8 @@ export default function UpdatePassword() {
           </div>
 
           {verifying ? (
-            <div className="text-center">
+            <div className="flex flex-col items-center justify-center text-center" style={{ minHeight: '50vh' }}>
+              <Spinner className="size-6 mb-4" style={{ color: 'var(--color-primary)' }} />
               <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
                 Verifying reset link...
               </p>
@@ -254,6 +256,7 @@ export default function UpdatePassword() {
                   borderRadius: '30px',
                 }}
               >
+                {loading && <Spinner className="size-4 mr-2" />}
                 {loading ? 'Updating...' : 'Update Password'}
               </Button>
             </div>

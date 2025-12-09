@@ -6,6 +6,7 @@ import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/Button'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
 import { toast } from '../components/ui/sonner'
+import { Spinner } from '../components/ui/spinner'
 
 export default function ForgotPassword() {
   const navigate = useNavigate()
@@ -153,6 +154,7 @@ export default function ForgotPassword() {
                   borderRadius: '30px',
                 }}
               >
+                {loading && <Spinner className="size-4 mr-2" />}
                 {loading ? 'Sending...' : 'Send Reset Link'}
               </Button>
             </div>

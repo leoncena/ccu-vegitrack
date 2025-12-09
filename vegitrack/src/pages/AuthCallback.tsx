@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { EmailOtpType } from '@supabase/supabase-js'
+import { Spinner } from '../components/ui/spinner'
 
 /**
  * Handles Supabase auth callbacks (email confirmation, password recovery, etc.)
@@ -100,12 +101,14 @@ export default function AuthCallback() {
     <div
       style={{
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
         fontFamily: 'var(--font-body)',
       }}
     >
+      <Spinner className="size-8 mb-4" style={{ color: 'var(--color-primary)' }} />
       <p>Processing...</p>
     </div>
   )

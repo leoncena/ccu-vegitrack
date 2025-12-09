@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { getProductById, getProductByDisplayId, getProductLabels, getAlternativeProducts } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { Product, ProductLabel, Farm } from '../types/database'
-import { Tag } from '../components/ui'
+import { Tag, Spinner } from '../components/ui'
 import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
 
 interface ProductWithFarm extends Product {
@@ -94,8 +94,8 @@ export default function FoodPassport() {
     return (
       <PageWrapper>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-4xl mb-4 animate-pulse">🍅</div>
+          <div className="flex flex-col items-center justify-center text-center">
+            <Spinner className="size-8 mb-4" style={{ color: 'var(--color-primary)' }} />
             <p style={{ fontFamily: 'var(--font-body)' }}>Loading product...</p>
           </div>
         </div>
