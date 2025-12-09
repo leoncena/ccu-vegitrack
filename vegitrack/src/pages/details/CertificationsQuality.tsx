@@ -28,8 +28,8 @@ export default function CertificationsQuality() {
     {
       type: 'progress',
       label: 'Shelf-Life Remaining',
-      value: 82,
-      description: '82% Best consumed within 7-10 days.'
+      value: 67,
+      description: '67% Best consumed within 6-7 days.'
     }
   ]
 

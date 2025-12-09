@@ -26,7 +26,8 @@ export function QualityIndicatorCard({ indicators }: QualityIndicatorCardProps) 
                 className="text-sm mb-1.5"
                 style={{ 
                   fontFamily: 'var(--font-body)',
-                  color: 'var(--color-text)'
+                  color: 'var(--color-text)',
+                  marginTop: 'calc(0.25 * var(--spacing-card))'
                 }}
               >
                 {indicator.label}
