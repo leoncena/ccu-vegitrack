@@ -12,4 +12,6 @@ export { Toaster, toast } from './sonner'
 export { Spinner } from './spinner'
 export { Progress } from './progress'
 export { ShelfLifeIndicator } from './ShelfLifeIndicator'
+export { Rating } from './rating'
+export { QualityRating } from './QualityRating'
 

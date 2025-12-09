@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
-import { ShelfLifeIndicator } from '../../components/ui'
+import { ShelfLifeIndicator, QualityRating } from '../../components/ui'
 
 export default function CertificationsQuality() {
   const { id } = useParams()
@@ -38,38 +38,18 @@ export default function CertificationsQuality() {
           }}
         >
           {/* Freshness */}
-          <div className="mb-4">
-            <p className="text-sm mb-1" style={{ fontFamily: 'var(--font-body)' }}>Freshness</p>
-            <div className="flex gap-1 mb-1">
-              {[1,2,3,4,5].map(i => (
-                <div 
-                  key={i} 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: i <= 67 ? 'var(--color-primary)' : 'var(--color-surface)' }}
-                />
-              ))}
-            </div>
-            <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              hxHarvested67DaysAgo
-            </p>
-          </div>
+          <QualityRating 
+            value={4}
+            label="Freshness"
+            description="hxHarvested67DaysAgo"
+          />
 
           {/* Ripeness */}
-          <div className="mb-4">
-            <p className="text-sm mb-1" style={{ fontFamily: 'var(--font-body)' }}>Ripeness</p>
-            <div className="flex gap-1 mb-1">
-              {[1,2,3,4,5].map(i => (
-                <div 
-                  key={i} 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: i <= 67 ? 'var(--color-primary)' : 'var(--color-surface)' }}
-                />
-              ))}
-            </div>
-            <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              hxBalancedPerfectRipenessIn67Days
-            </p>
-          </div>
+          <QualityRating 
+            value={5}
+            label="Ripeness"
+            description="hxBalancedPerfectRipenessIn67Days"
+          />
 
           {/* Shelf Life */}
           <ShelfLifeIndicator 
