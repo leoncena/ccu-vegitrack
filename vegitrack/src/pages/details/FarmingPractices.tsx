@@ -1,59 +1,126 @@
 import { useParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
+import { 
+  FarmingPracticeCard, 
+  FarmingHighlight,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '../../components/ui'
+
+const HIGHLIGHTS = [
+  {
+    icon: '🌿',
+    iconType: 'emoji' as const,
+    title: 'Soil & Inputs'
+  },
+  {
+    icon: '💧',
+    iconType: 'emoji' as const,
+    title: 'Water Management'
+  },
+  {
+    icon: '🐛',
+    iconType: 'emoji' as const,
+    title: 'Pest Control'
+  },
+  {
+    icon: '🦋',
+    iconType: 'emoji' as const,
+    title: 'Biodiversity'
+  },
+  {
+    icon: '👨‍🌾',
+    iconType: 'emoji' as const,
+    title: 'Labor & Working Conditions'
+  },
+  {
+    icon: '🌱',
+    iconType: 'emoji' as const,
+    title: 'Sustainable Practices'
+  }
+]
 
 const PRACTICES = [
   {
-    category: 'hxSoilAndInputs',
+    category: 'Soil & Inputs',
     icon: '🌿',
     items: [
-      'hxNoSyntheticPesticides',
-      'hxOrganicFertilizerOnly',
-      'hxCropRotationToMaintainSoilHealth',
-      'hxNaturalCompostingMethods'
+      'No synthetic pesticides',
+      'Organic fertilizer only',
+      'Crop rotation to maintain soil health',
+      'Natural composting methods'
     ]
   },
   {
-    category: 'hxWaterManagement',
+    category: 'Water Management',
     icon: '💧',
     items: [
-      'hxDripIrrigationSystem',
-      'hxWaterSavingMethodsInPlace',
-      'hxRainwaterCollection',
-      'hxEfficientSchedulingToMinimizeWaste'
+      'Drip irrigation system',
+      'Water saving methods in place',
+      'Rainwater collection',
+      'Efficient scheduling to minimize waste'
     ]
   },
   {
-    category: 'hxPestControl',
+    category: 'Pest Control',
     icon: '🐛',
     items: [
-      'hxBiologicalPestControl',
-      'hxNaturalPredatorsEncouraged',
-      'hxNoChemicalSprays',
-      'hxCompanionPlantingStrategy'
+      'Biological pest control',
+      'Natural predators encouraged',
+      'No chemical sprays',
+      'Companion planting strategy'
     ]
   },
   {
-    category: 'hxBiodiversity',
+    category: 'Biodiversity',
     icon: '🦋',
     items: [
-      'hxWildflowerStripsForPollinators',
-      'hxNativeHedgerowsMaintained',
-      'hxBirdNestingBoxesInstalled'
+      'Wildflower strips for pollinators',
+      'Native hedgerows maintained',
+      'Bird nesting boxes installed and regularly maintained to support local bird populations throughout the year'
     ]
   },
   {
-    category: 'hxLaborAndWorkingConditions',
+    category: 'Labor & Working Conditions',
     icon: '👨‍🌾',
     items: [
-      'hxSeasonalWorkersHiredUnderDocumentedContracts',
-      'hxSafetyTrainingRequiredForGreenhouseEntry',
-      'hxVerifiedInFairLaborAudit(06 July 2025)'
+      'Seasonal workers hired under documented contracts',
+      'Safety training required for greenhouse entry',
+      'Verified in Fair Labor audit (06 July 2025)'
     ]
   }
 ]
 
 export default function FarmingPractices() {
   const { id } = useParams()
+  const [api, setApi] = useState<CarouselApi>()
+  const [canScrollPrev, setCanScrollPrev] = useState(false)
+  const [canScrollNext, setCanScrollNext] = useState(false)
+
+  useEffect(() => {
+    if (!api) {
+      return
+    }
+
+    const updateScrollState = () => {
+      setCanScrollPrev(api.canScrollPrev())
+      setCanScrollNext(api.canScrollNext())
+    }
+
+    updateScrollState()
+    api.on('select', updateScrollState)
+    api.on('reInit', updateScrollState)
+
+    return () => {
+      api.off('select', updateScrollState)
+      api.off('reInit', updateScrollState)
+    }
+  }, [api])
 
   return (
     <div 
@@ -71,51 +138,72 @@ export default function FarmingPractices() {
         backTo={`/product/${id}`}
       />
 
-      {/* Practice icons row */}
-      <div className="flex justify-center gap-4 mb-6">
-        {['🌿', '💧', '🐛', '🦋'].map((icon, i) => (
-          <div 
-            key={i}
-            className="w-12 h-12 flex items-center justify-center text-xl"
-            style={{ 
-              backgroundColor: 'var(--color-card)',
-              borderRadius: '50%'
+      {/* Farming Highlights Carousel */}
+      <div 
+        style={{ 
+          marginBottom: 'calc(2 * var(--spacing-card))',
+          position: 'relative'
+        }}
+      >
+        <Carousel
+          setApi={setApi}
+          opts={{
+            align: 'start',
+          }}
+          className="w-full"
+          style={{
+            paddingLeft: 'calc(0.25 * var(--spacing-card))',
+            paddingRight: 'calc(0.25 * var(--spacing-card))'
+          }}
+        >
+          <CarouselContent 
+            style={{
+              marginLeft: `calc(-1 * var(--spacing-card))`
             }}
           >
-            {icon}
-          </div>
-        ))}
+            {HIGHLIGHTS.map((highlight, i) => (
+              <CarouselItem 
+                key={i} 
+                className="basis-1/3"
+                style={{
+                  paddingLeft: 'var(--spacing-card)'
+                }}
+              >
+                <FarmingHighlight
+                  icon={highlight.icon}
+                  iconType={highlight.iconType}
+                  title={highlight.title}
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          {HIGHLIGHTS.length > 3 && (
+            <>
+              {canScrollPrev && (
+                <CarouselPrevious 
+                  style={{ left: '-12px', opacity: 0.5 }}
+                />
+              )}
+              {canScrollNext && (
+                <CarouselNext 
+                  style={{ right: '-12px', opacity: 0.5 }}
+                />
+              )}
+            </>
+          )}
+        </Carousel>
       </div>
 
-      {/* Practice sections */}
-      <div>
-        {PRACTICES.map((section, i) => (
-          <div 
+      {/* Practice cards */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
+        {PRACTICES.map((practice, i) => (
+          <FarmingPracticeCard
             key={i}
-            className="p-4 mb-4"
-            style={{ 
-              backgroundColor: 'var(--color-card)',
-              borderRadius: 'var(--radius-card)'
-            }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">{section.icon}</span>
-              <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-                {section.category}
-              </span>
-            </div>
-            <ul className="list-disc pl-6">
-              {section.items.map((item, j) => (
-                <li 
-                  key={j}
-                  className="text-sm mb-1"
-                  style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
+            title={practice.category}
+            icon={practice.icon}
+            iconType="emoji"
+            items={practice.items}
+          />
         ))}
       </div>
       

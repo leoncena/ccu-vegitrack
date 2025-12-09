@@ -16,4 +16,14 @@ export { Rating } from './rating'
 export { QualityRating } from './QualityRating'
 export { QualityIndicatorCard, type QualityIndicator } from './QualityIndicatorCard'
 export { CertificationCard, type CertificationInfo } from './CertificationCard'
+export { FarmingPracticeCard, type FarmingPracticeCardProps } from './FarmingPracticeCard'
+export { FarmingHighlight, type FarmingHighlightProps } from './FarmingHighlight'
+export {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselPrevious,
+  CarouselNext,
+  type CarouselApi,
+} from './carousel'
 
