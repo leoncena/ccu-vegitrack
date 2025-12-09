@@ -143,7 +143,7 @@ export default function Start() {
       {/* Start Scanning Button */}
       <button
         onClick={() => navigate('/scan')}
-        className="w-full py-4 mb-4"
+        className="w-full py-4"
         style={{ 
           backgroundColor: 'var(--color-primary)',
           color: 'var(--color-card)',
@@ -151,7 +151,8 @@ export default function Start() {
           fontFamily: 'var(--font-body)',
           fontSize: '18px',
           border: 'none',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          marginBottom: 'var(--spacing-card)'
         }}
       >
         Start Scanning
@@ -159,7 +160,7 @@ export default function Start() {
 
       {/* Login/User info */}
       {user ? (
-        <div className="mb-8 text-center">
+        <div className="text-center" style={{ marginBottom: 'calc(5 * var(--spacing-card) + env(safe-area-inset-bottom))' }}>
           <p 
             style={{ 
               fontFamily: 'var(--font-body)',
@@ -187,14 +188,15 @@ export default function Start() {
       ) : (
         <button
           onClick={() => navigate('/auth', { state: { from: '/start' } })}
-          className="mb-8 underline"
+          className="underline"
           style={{ 
             fontFamily: 'var(--font-body)',
             fontSize: '12px',
             color: 'var(--color-text)',
             background: 'none',
             border: 'none',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            marginBottom: 'calc(3 * var(--spacing-card) + env(safe-area-inset-bottom))'
           }}
         >
           Login/Register
