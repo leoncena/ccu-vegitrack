@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
+import { ShelfLifeIndicator } from '../../components/ui'
 
 export default function CertificationsQuality() {
   const { id } = useParams()
@@ -71,29 +72,10 @@ export default function CertificationsQuality() {
           </div>
 
           {/* Shelf Life */}
-          <div>
-            <p className="text-sm mb-1" style={{ fontFamily: 'var(--font-body)' }}>Shelf-Life Remaining</p>
-            <div 
-              className="h-4 mb-1"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '2px',
-                border: '1px solid var(--color-primary)'
-              }}
-            >
-              <div 
-                className="h-full"
-                style={{ 
-                  width: '67%',
-                  backgroundColor: 'var(--color-primary)',
-                  borderRadius: '2px'
-                }}
-              />
-            </div>
-            <p className="text-xs italic opacity-60" style={{ fontFamily: 'var(--font-body)' }}>
-              67%. hxBestConsumedWithin67_67Days
-            </p>
-          </div>
+          <ShelfLifeIndicator 
+            percentage={67}
+            description="67%. hxBestConsumedWithin67_67Days"
+          />
         </div>
 
         {/* Certifications */}

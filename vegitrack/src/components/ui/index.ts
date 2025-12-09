@@ -10,4 +10,6 @@ export { Input } from './input'
 export { Label } from './label'
 export { Toaster, toast } from './sonner'
 export { Spinner } from './spinner'
+export { Progress } from './progress'
+export { ShelfLifeIndicator } from './ShelfLifeIndicator'
 
