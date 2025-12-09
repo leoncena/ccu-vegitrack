@@ -1,47 +1,56 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { Menu, MapPin } from 'lucide-react'
+import { Combobox, type ComboboxOption } from '../components/ui/combobox'
+import { Button } from '../components/ui/Button'
+import { IconButton } from '../components/ui/IconButton'
+
+// Import produce icons
+import carrotIcon from '../assets/wallpaper/carrot.svg'
+import asparagusIcon from '../assets/wallpaper/asparagus.svg'
+import lemonIcon from '../assets/wallpaper/Lemon.svg'
+import tomatoIcon from '../assets/wallpaper/tomato.svg'
 
 // Mock stores data
 const MOCK_STORES = [
-  { id: '1', name: 'hxContinenteRuaDaPalma', distance_m: 67 },
-  { id: '2', name: 'hxPingoDoceChaoDoLoureiro', distance_m: 67 },
-  { id: '3', name: 'hxMyAuchanLargoDaGraca', distance_m: 67 },
-  { id: '4', name: 'hxContinenteBomDiaChiado', distance_m: 67 },
+  { id: '1', name: 'Continente - Rua da Palma', distance_m: 250 },
+  { id: '2', name: 'Pingo Doce - Chão do Loureiro', distance_m: 270 },
+  { id: '3', name: 'My Auchan - Largo da Graça', distance_m: 850 },
+  { id: '4', name: 'Continente Bom Dia - Chiado', distance_m: 550 },
 ]
 
 export default function Start() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
-  const [selectedStore, setSelectedStore] = useState<string | null>(null)
-  const [showStores, setShowStores] = useState(false)
-
-  const selectedStoreData = MOCK_STORES.find(s => s.id === selectedStore)
+  const [selectedStore, setSelectedStore] = useState<string>(MOCK_STORES[0]?.id || '')
 
   const handleLogout = async () => {
     await signOut()
     navigate('/start', { replace: true })
   }
 
+  const storeOptions: ComboboxOption[] = MOCK_STORES.map(store => ({
+    value: store.id,
+    label: `${store.name} (${store.distance_m}m)`,
+  }))
+
   return (
     <div 
-      className="min-h-screen flex flex-col pt-16"
+      className="min-h-screen flex flex-col"
       style={{ 
         backgroundColor: 'var(--color-background)',
-        paddingLeft: '10%',
-        paddingRight: '10%',
+        paddingLeft: 'var(--spacing-page)',
+        paddingRight: 'var(--spacing-page)',
+        paddingTop: 'var(--spacing-page)',
+        paddingBottom: 'calc(3 * var(--spacing-card) + env(safe-area-inset-bottom))',
       }}
     >
       {/* Header */}
-      <div className="flex justify-end mb-8">
-        <button className="p-2" style={{ color: 'var(--color-primary)' }}>
-          {/* Menu icon placeholder */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
+      <div className="flex justify-end mb-6">
+        <IconButton label="Menu" style={{ color: 'var(--color-primary)' }}>
+          <Menu size={24} />
+        </IconButton>
       </div>
 
       {/* Logo */}
@@ -54,26 +63,46 @@ export default function Start() {
             fontWeight: 700 
           }}
         >
-          <span className="text-5xl">V</span>egi<span className="text-5xl">T</span>rack
+          VegiTrack
         </h1>
         <p 
-          className="text-sm mt-1"
+          className="text-sm"
           style={{ 
             fontFamily: 'var(--font-body)', 
-            color: 'var(--color-primary)' 
+            color: 'var(--color-primary)',
+            marginTop: 'var(--spacing-card)',
+            marginBottom: 'calc(2 * var(--spacing-card))',
           }}
         >
           Know your veggies
         </p>
       </div>
 
-      {/* Veggie icons row placeholder */}
-      <div className="flex justify-center gap-2 mb-8 h-12">
-        {/* TODO: Add veggie icons */}
+      {/* Veggie icons row */}
+      <div className="flex justify-center gap-4 mb-6">
+        <img src={carrotIcon} alt="Carrot" className="h-12 w-auto" />
+        <img src={asparagusIcon} alt="Asparagus" className="h-12 w-auto" />
+        <img src={lemonIcon} alt="Lemon" className="h-12 w-auto" />
+        <img src={tomatoIcon} alt="Tomato" className="h-12 w-auto" />
       </div>
 
+      {/* Descriptive text */}
+      <p 
+        className="text-center"
+        style={{ 
+          fontFamily: 'var(--font-body)',
+          fontSize: '14px',
+          color: 'var(--color-text)',
+          lineHeight: '1.5',
+          marginTop: 'calc(2 * var(--spacing-card))',
+          marginBottom: 'calc(2 * var(--spacing-card))',
+        }}
+      >
+        Scan fresh fruits and vegetables to explore its Food Passport – origin, transport, quality and sustainability aspects.
+      </p>
+
       {/* Store Selection */}
-      <div className="mb-8">
+      <div className="mb-6">
         <p 
           className="text-sm mb-2"
           style={{ 
@@ -84,83 +113,39 @@ export default function Start() {
           Select your Store:
         </p>
         
-        <button
-          onClick={() => setShowStores(!showStores)}
-          className="w-full p-3 text-left flex justify-between items-center"
-          style={{ 
-            backgroundColor: 'var(--color-background)',
-            border: '1px solid var(--color-primary)',
-            borderRadius: 'var(--radius-md)',
-            fontFamily: 'var(--font-body)'
+        <Combobox
+          options={storeOptions}
+          value={selectedStore}
+          onValueChange={setSelectedStore}
+          placeholder="Select a store..."
+          searchPlaceholder="Search stores..."
+          emptyText="No store found."
+          rightIcon={MapPin}
+          getDisplayValue={(option) => {
+            if (!option) return ''
+            const store = MOCK_STORES.find(s => s.id === option.value)
+            return store ? store.name : option.label
           }}
-        >
-          <span className="flex items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
-            {selectedStoreData?.name || 'Select a store...'}
-          </span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </button>
-
-        {/* Store dropdown */}
-        {showStores && (
-          <div 
-            className="mt-1 overflow-hidden"
-            style={{ 
-              backgroundColor: 'var(--color-card)',
-              borderRadius: 'var(--radius-sm)'
-            }}
-          >
-            {MOCK_STORES.map(store => (
-              <button
-                key={store.id}
-                onClick={() => {
-                  setSelectedStore(store.id)
-                  setShowStores(false)
-                }}
-                className="w-full p-3 text-left flex justify-between items-center hover:opacity-80"
-                style={{ 
-                  fontFamily: 'var(--font-body)',
-                  fontSize: '13px',
-                  borderBottom: '1px solid var(--color-surface)'
-                }}
-              >
-                <span>{store.name}</span>
-                <span className="text-xs opacity-60">{store.distance_m}m</span>
-              </button>
-            ))}
-          </div>
-        )}
+        />
       </div>
 
       {/* Spacer */}
       <div className="flex-1" />
 
       {/* Start Scanning Button */}
-      <button
-        onClick={() => navigate('/scan')}
-        className="w-full py-4"
-        style={{ 
-          backgroundColor: 'var(--color-primary)',
-          color: 'var(--color-card)',
-          borderRadius: 'var(--radius-button)',
-          fontFamily: 'var(--font-body)',
-          fontSize: '18px',
-          border: 'none',
-          cursor: 'pointer',
-          marginBottom: 'var(--spacing-card)'
-        }}
-      >
-        Start Scanning
-      </button>
+      <div className="flex justify-center" style={{ marginBottom: 'var(--spacing-card)' }}>
+        <Button
+          onClick={() => navigate('/scan')}
+          variant="primary"
+          className="h-[56px] w-[216px] text-[18px]"
+        >
+          Start Scanning
+        </Button>
+      </div>
 
       {/* Login/User info */}
       {user ? (
-        <div className="text-center" style={{ marginBottom: 'calc(5 * var(--spacing-card) + env(safe-area-inset-bottom))' }}>
+        <div className="text-center">
           <p 
             style={{ 
               fontFamily: 'var(--font-body)',
@@ -188,7 +173,7 @@ export default function Start() {
       ) : (
         <button
           onClick={() => navigate('/auth', { state: { from: '/start' } })}
-          className="underline"
+          className="text-center underline"
           style={{ 
             fontFamily: 'var(--font-body)',
             fontSize: '12px',
@@ -196,7 +181,7 @@ export default function Start() {
             background: 'none',
             border: 'none',
             cursor: 'pointer',
-            marginBottom: 'calc(3 * var(--spacing-card) + env(safe-area-inset-bottom))'
+            width: '100%',
           }}
         >
           Login/Register
