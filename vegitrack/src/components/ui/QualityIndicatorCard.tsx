@@ -24,7 +24,10 @@ export function QualityIndicatorCard({ indicators }: QualityIndicatorCardProps) 
               {/* Label */}
               <p 
                 className="text-sm mb-1.5"
-                style={{ fontFamily: 'var(--font-body)' }}
+                style={{ 
+                  fontFamily: 'var(--font-body)',
+                  color: 'var(--color-text)'
+                }}
               >
                 {indicator.label}
               </p>
