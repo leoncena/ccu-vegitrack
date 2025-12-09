@@ -59,7 +59,7 @@ export default function FarmingPractices() {
     <div 
       className="min-h-screen pb-8"
       style={{ 
-        backgroundColor: 'var(--color-surface)', 
+        backgroundColor: 'var(--color-surface-light-green-back)', 
         paddingTop: '20px',
         paddingBottom: '60px',
         paddingLeft: '10%',

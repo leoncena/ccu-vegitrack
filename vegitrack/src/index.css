@@ -14,7 +14,10 @@
   --color-primary-light: #2f7c1a;
   --color-background: #fffcf6;
   --color-surface: #f4f0e6;
+  --color-surface-light-green-back:#f3f5ef;
   --color-card: #e8e1d4;
+  --color-card-foreground: #e8ece3;
+  --color-card-stroke: #c3cbbc;
   --color-accent: #f49b45;
   --color-accent-soft: #fff3e0;
   --color-success: #2f7c1a;
@@ -112,7 +115,7 @@ body {
   --background: #fffcf6;
   --foreground: #1f2215;
   --card: #f4f0e6;
-  --card-foreground: #1f2215;
+  --card-foreground: #e8ece3;
   --popover: #fffcf6;
   --popover-foreground: #1f2215;
   --primary: #1d5d0a;

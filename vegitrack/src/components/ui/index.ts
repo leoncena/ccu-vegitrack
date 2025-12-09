@@ -1,6 +1,6 @@
 // UI Components barrel export
 export { Button } from './Button'
-export { Card } from './Card'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, CardAction } from './card'
 export { Tag } from './Tag'
 export { IconButton, BackIcon, CloseIcon, BookmarkIcon, ChevronRightIcon } from './IconButton'
 export { ScoreIndicator, ProgressBar } from './ScoreIndicator'
@@ -14,4 +14,6 @@ export { Progress } from './progress'
 export { ShelfLifeIndicator } from './ShelfLifeIndicator'
 export { Rating } from './rating'
 export { QualityRating } from './QualityRating'
+export { QualityIndicatorCard, type QualityIndicator } from './QualityIndicatorCard'
+export { CertificationCard, type CertificationInfo } from './CertificationCard'
 

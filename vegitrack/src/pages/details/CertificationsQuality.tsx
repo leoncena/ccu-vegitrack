@@ -1,15 +1,43 @@
 import { useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
-import { ShelfLifeIndicator, QualityRating } from '../../components/ui'
+import { 
+  QualityIndicatorCard, 
+  CertificationCard,
+  type QualityIndicator 
+} from '../../components/ui'
 
 export default function CertificationsQuality() {
   const { id } = useParams()
+
+  // Quality indicators data
+  const qualityIndicators: QualityIndicator[] = [
+    {
+      type: 'rating',
+      label: 'Freshness',
+      value: 4,
+      max: 5,
+      description: 'Harvested 2 days ago'
+    },
+    {
+      type: 'rating',
+      label: 'Ripeness',
+      value: 3,
+      max: 5,
+      description: 'Balanced. Perfect ripeness in 2 days.'
+    },
+    {
+      type: 'progress',
+      label: 'Shelf-Life Remaining',
+      value: 82,
+      description: '82% Best consumed within 7-10 days.'
+    }
+  ]
 
   return (
     <div 
       className="min-h-screen pb-8"
       style={{ 
-        backgroundColor: 'var(--color-surface)', 
+        backgroundColor: 'var(--color-surface-light-green-back)', 
         paddingTop: '20px',
         paddingBottom: '60px',
         paddingLeft: '10%',
@@ -17,7 +45,7 @@ export default function CertificationsQuality() {
       }}
     >
       <PageHeaderWithBack 
-        title="Certifications"
+        title="Certifications & Quality"
         backTo={`/product/${id}`}
       />
 
@@ -30,101 +58,61 @@ export default function CertificationsQuality() {
           Quality Indicators
         </h2>
 
-        <div 
-          className="p-4 mb-6"
-          style={{ 
-            backgroundColor: 'var(--color-card)',
-            borderRadius: 'var(--radius-card)'
-          }}
-        >
-          {/* Freshness */}
-          <QualityRating 
-            value={4}
-            label="Freshness"
-            description="hxHarvested67DaysAgo"
-          />
-
-          {/* Ripeness */}
-          <QualityRating 
-            value={5}
-            label="Ripeness"
-            description="hxBalancedPerfectRipenessIn67Days"
-          />
-
-          {/* Shelf Life */}
-          <ShelfLifeIndicator 
-            percentage={67}
-            description="67%. hxBestConsumedWithin67_67Days"
-          />
-        </div>
+        <QualityIndicatorCard indicators={qualityIndicators} />
 
         {/* Certifications */}
         <h2 
           className="text-base mb-3"
-          style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
+          style={{ 
+            fontFamily: 'var(--font-body)', 
+            fontWeight: 500,
+            marginTop: 'calc(1 * var(--spacing-card))'
+          }}
         >
           Certifications
         </h2>
 
-        {/* EU Organic */}
-        <div 
-          className="p-4 mb-4"
-          style={{ 
-            backgroundColor: 'var(--color-card)',
-            borderRadius: 'var(--radius-card)'
-          }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🌿</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxEUOrganic</span>
-            <span className="text-xs opacity-60">(hxPT-BIO-999)</span>
-          </div>
-          <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            Last audit: 06 July 2025
-          </p>
-          <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            hxGrownAccordingToEUOrganicRegulationsWithoutSyntheticPesticidesOrChemicalFertilizers
-          </p>
-        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
+          {/* EU Organic */}
+          <CertificationCard
+            logo="🌿"
+            logoType="emoji"
+            name="EU Organic"
+            code="(PT-BIO-09)"
+            info="Last audit: 2025-03-05"
+            description="Grown according to EU organic regulations, without synthetic pesticides or chemical fertilizers."
+            footerItems={[
+              { label: 'Certifying body', value: 'PT-BIO-09' },
+              { label: 'Certificate ID', value: 'QDS-ORG-2025-117' }
+            ]}
+          />
 
-        {/* Fair Labor */}
-        <div 
-          className="p-4 mb-4"
-          style={{ 
-            backgroundColor: 'var(--color-card)',
-            borderRadius: 'var(--radius-card)'
-          }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">🤝</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxFairLabor</span>
-          </div>
-          <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            Last audit: 06 July 2025
-          </p>
-          <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            hxSeasonalWorkersEmployedUnderFormalContractsWithDocumentedWagesWorkHoursAndSafetyProcedures
-          </p>
-        </div>
+          {/* Fair Labor */}
+          <CertificationCard
+            logo="🤝"
+            logoType="emoji"
+            name="Fair Labor"
+            info="Last audit: 2024-09-12"
+            description="Seasonal workers employed under formal contracts, with documented wages, work hours, and safety procedures."
+            footerItems={[
+              { label: 'Audit', value: 'Independent social compliance audit' },
+              { label: 'Auditor', value: 'AgroSocial Consultores' },
+              { label: 'Findings', value: 'No major non-compliance reported' }
+            ]}
+          />
 
-        {/* Local */}
-        <div 
-          className="p-4"
-          style={{ 
-            backgroundColor: 'var(--color-card)',
-            borderRadius: 'var(--radius-card)'
-          }}
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl">📍</span>
-            <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>hxLocal</span>
-          </div>
-          <p className="text-xs opacity-60 mb-2" style={{ fontFamily: 'var(--font-body)' }}>
-            hxAlgarvePortugal
-          </p>
-          <p className="text-sm" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.4 }}>
-            hxCultivatedAndPackedInTheAlgarveRegionWithinPortugalReducingTransportDistanceAndTime
-          </p>
+          {/* Local */}
+          <CertificationCard
+            logo="📍"
+            logoType="emoji"
+            name="Local"
+            info="Algarve, Portugal"
+            description="Cultivated and packed in the Algarve region, within Portugal, reducing transport distance and time from farm to store."
+            footerItems={[
+              { label: 'Farm', value: 'Quinta do Sol, Lagos, Algarve' },
+              { label: 'Distance to this store', value: '~280 km by road' }
+            ]}
+          />
         </div>
       </div>
       
