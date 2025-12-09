@@ -136,7 +136,7 @@ export default function Start() {
       <div className="flex justify-center" style={{ marginBottom: 'var(--spacing-card)' }}>
         <Button
           onClick={() => navigate('/scan')}
-          variant="primary"
+          variant="default"
           className="h-[56px] w-[216px] text-[18px]"
         >
           Start Scanning

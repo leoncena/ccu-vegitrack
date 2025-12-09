@@ -142,8 +142,7 @@ export default function ForgotPassword() {
             >
               <Button
                 type="submit"
-                variant="primary"
-                fullWidth={false}
+                variant="default"
                 disabled={loading}
                 className="h-[56px] w-[216px] text-[18px]"
                 style={{

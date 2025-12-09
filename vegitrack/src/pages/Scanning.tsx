@@ -97,8 +97,7 @@ export default function Scanning() {
           {/* Quick scan button */}
           <Button
             onClick={handleDebugScan}
-            fullWidth
-            className="mb-3"
+            className="w-full mb-3"
             style={{ borderRadius: 'var(--radius-md)' }}
           >
             Open Sample Product (Tomatoes)
@@ -122,7 +121,6 @@ export default function Scanning() {
             <Button
               onClick={handleManualLookup}
               variant="secondary"
-              size="md"
               style={{ borderRadius: 'var(--radius-sm)' }}
             >
               Go
