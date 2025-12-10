@@ -49,6 +49,7 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const inputRef = React.useRef<HTMLInputElement>(null)
   const [popoverWidth, setPopoverWidth] = React.useState<number | undefined>(undefined)
 
   const selectedOption = options.find((option) => option.value === value)
@@ -66,6 +67,25 @@ export function Combobox({
   React.useEffect(() => {
     if (triggerRef.current) {
       setPopoverWidth(triggerRef.current.offsetWidth)
+    }
+  }, [open])
+
+  // Blur the input when popover opens to prevent mobile keyboard from appearing
+  React.useEffect(() => {
+    if (open && inputRef.current) {
+      // Use a small delay to ensure the input is rendered and focused before blurring
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.blur()
+          // Also prevent focus on the next frame in case cmdk tries to focus again
+          requestAnimationFrame(() => {
+            if (inputRef.current) {
+              inputRef.current.blur()
+            }
+          })
+        }
+      }, 10)
+      return () => clearTimeout(timer)
     }
   }, [open])
 
@@ -104,7 +124,11 @@ export function Combobox({
         style={{ width: popoverWidth ? `${popoverWidth}px` : undefined }}
       >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} autoFocus={false} />
+          <CommandInput 
+            ref={inputRef}
+            placeholder={searchPlaceholder} 
+            autoFocus={false}
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
