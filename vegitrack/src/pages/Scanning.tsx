@@ -1,187 +1,213 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
+import { PageHeaderWithBack, DebugFooter } from '../components/layout'
 import { Button } from '../components/ui'
+import { Combobox, type ComboboxOption } from '../components/ui/combobox'
+import qrSampleImage from '../assets/scanner/qr_sample.svg'
+import tomatoQrImage from '../assets/scanner/tomato_qr.svg'
 
-// Real product UUID from the seeded database
-const SAMPLE_PRODUCT_ID = '11111111-2222-3333-4444-555555555555'
-// Also works with display_id
-const SAMPLE_DISPLAY_ID = '3345667'
+// Available products for selection
+const PRODUCT_OPTIONS: ComboboxOption[] = [
+  { value: '11111111-2222-3333-4444-555555555555', label: 'Cluster Tomatoes (3345667)' },
+  { value: '22222222-3333-4444-5555-666666666666', label: 'Cherry Tomatoes (3345668)' },
+  { value: '33333333-4444-5555-6666-777777777777', label: 'Roma Tomatoes (3345669)' },
+]
 
 export default function Scanning() {
   const navigate = useNavigate()
-  const [manualId, setManualId] = useState('')
+  const [selectedProductId, setSelectedProductId] = useState<string>('')
 
-  const handleDebugScan = () => {
-    // Navigate using the real UUID from the database
-    navigate(`/product/${SAMPLE_PRODUCT_ID}`)
-  }
-
-  const handleManualLookup = () => {
-    if (manualId.trim()) {
-      navigate(`/product/${manualId.trim()}`)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleManualLookup()
+  const handleOpenProduct = () => {
+    if (selectedProductId) {
+      navigate(`/product/${selectedProductId}`)
     }
   }
 
   return (
-    <PageWrapper style={{ paddingBottom: '60px' }}>
-      {/* Header */}
-      <PageHeader backTo="/start" />
-      
-      <div className="px-6">
-        <span 
-          className="text-sm opacity-70"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          hxLIDLDelft
-        </span>
-      </div>
+    <div 
+      className="min-h-screen pb-8"
+      style={{ 
+        backgroundColor: 'var(--color-background)', 
+        paddingTop: '20px',
+        paddingBottom: '60px',
+        paddingLeft: '10%',
+        paddingRight: '10%',
+      }}
+    >
+      {/* Header - using PageHeaderWithBack like detail pages */}
+      <PageHeaderWithBack 
+        title={
+          <span style={{ color: 'var(--color-text-light)' }}>
+            hxLIDLDelft
+          </span>
+        }
+        backTo="/start"
+        marginBottom={`calc(2 * 1.125em - var(--spacing-card))`}
+      />
 
       {/* Title */}
       <h1 
-        className="text-center text-2xl mb-8 mt-4"
-        style={{ fontFamily: 'var(--font-body)', letterSpacing: '-0.66px' }}
+        className="text-center"
+        style={{ 
+          fontFamily: 'var(--font-body)',
+          fontSize: '24px',
+          fontWeight: 500,
+          letterSpacing: '-0.66px',
+          color: 'var(--color-text)',
+          marginBottom: 'calc(2 * var(--spacing-card))'
+        }}
       >
         Scan a Product
       </h1>
 
-      {/* Scanner area placeholder */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
+      <div className="flex-1 flex flex-col items-center">
+        {/* Scanner frame */}
         <div 
-          className="w-72 h-72 flex items-center justify-center mb-8"
+          className="w-full max-w-xs flex items-center justify-center relative"
           style={{ 
-            backgroundColor: 'rgba(23, 78, 5, 0.1)',
+            aspectRatio: '1',
+            backgroundColor: 'var(--color-background-frame)',
             border: '1.5px solid var(--color-primary)',
-            borderRadius: 'var(--radius-md)'
+            borderRadius: 'var(--radius-md)',
+            marginBottom: 'calc(2 * var(--spacing-card))',
+            padding: 'calc(var(--spacing-card) * 2)'
           }}
         >
-          {/* Scanner frame corners */}
-          <div className="relative w-full h-full p-8">
-            {/* Tomato icon placeholder */}
-            <div 
-              className="absolute inset-0 flex items-center justify-center text-6xl opacity-50"
-              style={{ color: 'var(--color-primary)' }}
-            >
-              🍅
-            </div>
-            
-            {/* Corner brackets */}
-            <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2" style={{ borderColor: 'var(--color-primary)' }} />
-            <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2" style={{ borderColor: 'var(--color-primary)' }} />
-            <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2" style={{ borderColor: 'var(--color-primary)' }} />
-            <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2" style={{ borderColor: 'var(--color-primary)' }} />
-          </div>
+          {/* Overlay with 10% opacity green fill */}
+          <div 
+            className="absolute inset-0"
+            style={{ 
+              backgroundColor: 'rgba(23, 78, 5, 0.1)',
+              borderRadius: 'var(--radius-md)',
+              zIndex: 0
+            }}
+          />
+
+          {/* Tomato QR code in the center */}
+          <img 
+            src={tomatoQrImage} 
+            alt="Tomato QR code" 
+            className="absolute"
+            style={{ 
+              width: '58px',
+              height: '56px',
+              zIndex: 2
+            }}
+          />
+          
+          {/* Corner brackets - centered scanning frame in the middle (70% from center) */}
+          <div 
+            className="absolute w-8 h-8 border-t-2 border-l-2" 
+            style={{ 
+              borderColor: 'var(--color-primary)',
+              top: 'calc(50% - 70px)',
+              left: 'calc(50% - 70px)',
+              zIndex: 1
+            }} 
+          />
+          <div 
+            className="absolute w-8 h-8 border-t-2 border-r-2" 
+            style={{ 
+              borderColor: 'var(--color-primary)',
+              top: 'calc(50% - 70px)',
+              left: 'calc(50% + 38px)',
+              zIndex: 1
+            }} 
+          />
+          <div 
+            className="absolute w-8 h-8 border-b-2 border-l-2" 
+            style={{ 
+              borderColor: 'var(--color-primary)',
+              top: 'calc(50% + 38px)',
+              left: 'calc(50% - 70px)',
+              zIndex: 1
+            }} 
+          />
+          <div 
+            className="absolute w-8 h-8 border-b-2 border-r-2" 
+            style={{ 
+              borderColor: 'var(--color-primary)',
+              top: 'calc(50% + 38px)',
+              left: 'calc(50% + 38px)',
+              zIndex: 1
+            }} 
+          />
         </div>
 
-        {/* Debug controls */}
+        {/* Info div with QR sample image and text */}
         <div 
-          className="w-full max-w-xs p-4 mb-4"
+          className="w-full max-w-xs flex items-center gap-3"
           style={{ 
+            marginBottom: 'calc(2 * var(--spacing-card))'
+          }}
+        >
+          <img 
+            src={qrSampleImage} 
+            alt="QR code example" 
+            style={{ 
+              width: '67px',
+              height: '67px',
+              flexShrink: 0
+            }}
+          />
+          <p 
+            className="text-sm flex-1"
+            style={{ 
+              fontFamily: 'var(--font-body)',
+              color: 'var(--color-text)'
+            }}
+          >
+            🍅 Look for this kind of QR code on product packaging or displays.
+          </p>
+        </div>
+
+        {/* Debug Mode Section */}
+        <div 
+          className="w-full max-w-xs"
+          style={{ 
+            padding: 'calc(var(--spacing-card) * 1.5)',
             backgroundColor: 'var(--color-card)',
             borderRadius: 'var(--radius-card)'
           }}
         >
           <p 
             className="text-sm mb-3 text-center font-medium"
-            style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}
+            style={{ 
+              fontFamily: 'var(--font-body)', 
+              color: 'var(--color-primary)'
+            }}
           >
-            Debug Mode
+            Find your product without QR code
           </p>
           
-          {/* Quick scan button */}
-          <Button
-            onClick={handleDebugScan}
-            className="w-full mb-3"
-            style={{ borderRadius: 'var(--radius-md)' }}
-          >
-            Open Sample Product (Tomatoes)
-          </Button>
-
-          {/* Manual ID input */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={manualId}
-              onChange={(e) => setManualId(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder={`Try: ${SAMPLE_DISPLAY_ID}`}
-              className="flex-1 px-3 py-2 text-sm"
-              style={{ 
-                borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--color-primary)',
-                fontFamily: 'var(--font-body)'
-              }}
+          {/* Product selection combobox */}
+          <div style={{ marginBottom: 'var(--spacing-card)' }}>
+            <Combobox
+              options={PRODUCT_OPTIONS}
+              value={selectedProductId}
+              onValueChange={setSelectedProductId}
+              placeholder="Select a product..."
+              searchPlaceholder="Search products..."
+              emptyText="No products found."
             />
-            <Button
-              onClick={handleManualLookup}
-              variant="secondary"
-              style={{ borderRadius: 'var(--radius-sm)' }}
-            >
-              Go
-            </Button>
           </div>
 
-          {/* Quick ID hints */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              onClick={() => setManualId(SAMPLE_DISPLAY_ID)}
-              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '4px',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)'
-              }}
-            >
-              {SAMPLE_DISPLAY_ID}
-            </button>
-            <button
-              onClick={() => setManualId('3345668')}
-              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '4px',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)'
-              }}
-            >
-              3345668 (Cherry)
-            </button>
-            <button
-              onClick={() => setManualId('3345669')}
-              className="text-xs px-2 py-1 opacity-70 hover:opacity-100"
-              style={{ 
-                backgroundColor: 'var(--color-surface)',
-                borderRadius: '4px',
-                border: 'none',
-                cursor: 'pointer',
-                fontFamily: 'var(--font-body)'
-              }}
-            >
-              3345669 (Roma)
-            </button>
-          </div>
+          {/* Open selected product button */}
+          <Button
+            onClick={handleOpenProduct}
+            className="w-full"
+            disabled={!selectedProductId}
+            style={{ 
+              borderRadius: 'var(--radius-md)'
+            }}
+          >
+            Open selected product
+          </Button>
         </div>
-
-        {/* Help text */}
-        <p 
-          className="text-center text-sm px-8 opacity-70"
-          style={{ fontFamily: 'var(--font-body)' }}
-        >
-          🍅 Look for this kind of QR code on product packaging or displays.
-        </p>
       </div>
       
       {/* Debug Footer */}
       <DebugFooter />
-    </PageWrapper>
+    </div>
   )
 }
