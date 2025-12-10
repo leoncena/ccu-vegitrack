@@ -104,7 +104,7 @@ export function Combobox({
         style={{ width: popoverWidth ? `${popoverWidth}px` : undefined }}
       >
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={searchPlaceholder} autoFocus={false} />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
