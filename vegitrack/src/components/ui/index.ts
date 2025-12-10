@@ -18,6 +18,11 @@ export { QualityIndicatorCard, type QualityIndicator } from './QualityIndicatorC
 export { CertificationCard, type CertificationInfo } from './CertificationCard'
 export { FarmingPracticeCard, type FarmingPracticeCardProps } from './FarmingPracticeCard'
 export { FarmingHighlight, type FarmingHighlightProps } from './FarmingHighlight'
+export { FarmerBioCard, type FarmerBioCardProps } from './FarmerBioCard'
+export { StoryCard, type StoryCardProps } from './StoryCard'
+export { StoryBulletCard, type StoryBulletCardProps } from './StoryBulletCard'
+export { StoryTextCard, type StoryTextCardProps } from './StoryTextCard'
+export { FarmPicturesCarousel, type FarmPicturesCarouselProps } from './FarmPicturesCarousel'
 export {
   Carousel,
   CarouselContent,
