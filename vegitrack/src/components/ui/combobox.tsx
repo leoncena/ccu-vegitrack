@@ -121,7 +121,14 @@ export function Combobox({
       <PopoverContent 
         className="p-0" 
         align="start"
-        style={{ width: popoverWidth ? `${popoverWidth}px` : undefined }}
+        side="top"
+        sideOffset={8}
+        style={{ 
+          width: popoverWidth ? `${popoverWidth}px` : undefined,
+          maxHeight: 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 100px)',
+          marginTop: 'env(safe-area-inset-top)',
+          marginBottom: 'env(safe-area-inset-bottom)'
+        }}
       >
         <Command>
           <CommandInput 
