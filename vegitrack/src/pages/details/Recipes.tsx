@@ -33,9 +33,9 @@ export default function Recipes() {
     <div
       className="min-h-screen pb-8"
       style={{
-        backgroundColor: 'var(--color-surface)',
-        paddingTop: 'calc(var(--spacing-page) * 0.8)',
-        paddingBottom: 'calc(var(--spacing-page) * 2.5)',
+        backgroundColor: 'var(--color-surface-light-green-back)',
+        paddingTop: '20px',
+        paddingBottom: '60px',
         paddingLeft: '10%',
         paddingRight: '10%',
       }}
@@ -112,7 +112,7 @@ export default function Recipes() {
                 style={{
                   width: '100%',
                   textAlign: 'left',
-                  backgroundColor: 'var(--color-card)',
+                  backgroundColor: 'var(--color-card-foreground)',
                   borderRadius: 'var(--radius-card)',
                   padding: 'calc(var(--spacing-section) * 0.75)',
                   display: 'flex',

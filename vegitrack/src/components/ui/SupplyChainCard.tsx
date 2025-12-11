@@ -155,3 +155,4 @@ export function SupplyChainCard({ data, icon }: SupplyChainCardProps) {
     </Card>
   )
 }
+
