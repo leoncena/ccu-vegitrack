@@ -1,10 +1,12 @@
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
+import { useEffect, useState, useMemo } from 'react'
 import { getProductById, getProductByDisplayId, getProductLabels, getAlternativeProducts } from '../lib/api'
 import { supabase } from '../lib/supabase'
 import type { Product, ProductLabel, Farm } from '../types/database'
 import { Tag, Spinner } from '../components/ui'
 import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
+import { useUserData } from '../contexts/UserDataContext'
+import { useTranslation } from '../lib/i18n'
 
 interface ProductWithFarm extends Product {
   farm?: Farm | null
@@ -13,11 +15,14 @@ interface ProductWithFarm extends Product {
 export default function FoodPassport() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const [product, setProduct] = useState<ProductWithFarm | null>(null)
   const [labels, setLabels] = useState<ProductLabel[]>([])
   const [alternatives, setAlternatives] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { addRecentProduct, toggleFavoriteProduct, isProductFavorite } = useUserData()
+  const { t, language } = useTranslation()
 
   useEffect(() => {
     async function fetchProduct() {
@@ -72,6 +77,16 @@ export default function FoodPassport() {
     fetchProduct()
   }, [id])
 
+  useEffect(() => {
+    if (!product) return
+    addRecentProduct({
+      id: product.id,
+      name: product.name,
+      displayId: product.display_id,
+      imageUrl: product.image_url,
+    })
+  }, [addRecentProduct, product])
+
   // Calculate days since harvest
   const getDaysSinceHarvest = () => {
     if (!product?.harvest_date) return null
@@ -82,13 +97,83 @@ export default function FoodPassport() {
     return diffDays
   }
 
-  const detailSections = [
-    { path: 'origin', label: 'Origin & Transportation', icon: '📍' },
-    { path: 'certifications', label: 'Certifications & Quality', icon: '✓' },
-    { path: 'farming', label: 'Farming Practices', icon: '🌱' },
-    { path: 'farmer', label: 'Farmer Story', icon: '👨‍🌾' },
-    { path: 'recipes', label: 'Cultural Recipes', icon: '🍳' },
-  ]
+  const relativeTimeFormatter = useMemo(() => {
+    try {
+      return new Intl.RelativeTimeFormat(language, { numeric: 'auto' })
+    } catch (error) {
+      console.warn('RelativeTimeFormat not supported', error)
+      return null
+    }
+  }, [language])
+
+  const detailSections = useMemo(
+    () => [
+      { path: 'origin', label: t('food.section.origin'), icon: '📍' },
+      { path: 'certifications', label: t('food.section.certifications'), icon: '✓' },
+      { path: 'farming', label: t('food.section.farming'), icon: '🌱' },
+      { path: 'farmer', label: t('food.section.farmer'), icon: '👨‍🌾' },
+      { path: 'recipes', label: t('food.section.recipes'), icon: '🍳' },
+    ],
+    [t],
+  )
+
+  const daysSinceHarvest = getDaysSinceHarvest()
+
+  const stats = useMemo(
+    () => [
+      {
+        label: t('food.stat.harvested'),
+        value:
+          daysSinceHarvest !== null
+            ? relativeTimeFormatter?.format(-daysSinceHarvest, 'day') ?? `${daysSinceHarvest}d ago`
+            : '—',
+      },
+      {
+        label: t('food.stat.transport'),
+        value: product?.transport_distance_km ? `${product.transport_distance_km} km` : '—',
+      },
+      {
+        label: t('food.stat.emissions'),
+        value: product?.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg` : '—',
+      },
+      {
+        label: t('food.stat.price'),
+        value: product?.price_per_kg ? `€${product.price_per_kg}/kg` : '—',
+      },
+    ],
+    [
+      daysSinceHarvest,
+      product?.transport_distance_km,
+      product?.emissions_co2e_per_kg,
+      product?.price_per_kg,
+      relativeTimeFormatter,
+      t,
+    ],
+  )
+
+  const palette = {
+    background: '#FFFEFC',
+    surface: '#F3F5EF',
+    card: '#E8ECE3',
+    cardBorder: '#C3CBBC',
+    accent: '#174E05',
+    tagBg: 'rgba(23, 78, 5, 0.20)',
+    tagBorder: '#A4B99B',
+    statBg: '#C7D4C0',
+  }
+
+  const fromProductId = (location.state as { fromProductId?: string } | null)?.fromProductId || null
+  const isBookmarked = product ? isProductFavorite(product.id) : false
+
+  const handleBookmark = () => {
+    if (!product) return
+    toggleFavoriteProduct({
+      id: product.id,
+      name: product.name,
+      displayId: product.display_id,
+      imageUrl: product.image_url,
+    })
+  }
 
   if (loading) {
     return (
@@ -96,7 +181,7 @@ export default function FoodPassport() {
         <div className="min-h-screen flex items-center justify-center">
           <div className="flex flex-col items-center justify-center text-center">
             <Spinner className="size-8 mb-4" style={{ color: 'var(--color-primary)' }} />
-            <p style={{ fontFamily: 'var(--font-body)' }}>Loading product...</p>
+            <p style={{ fontFamily: 'var(--font-body)' }}>{t('food.loading')}</p>
           </div>
         </div>
       </PageWrapper>
@@ -113,13 +198,13 @@ export default function FoodPassport() {
             className="text-xl mb-2"
             style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
           >
-            Product Not Found
+            {t('food.notFoundTitle')}
           </h1>
           <p 
             className="text-sm opacity-60 text-center mb-6"
             style={{ fontFamily: 'var(--font-body)' }}
           >
-            {error || 'We couldn\'t find this product. Please try scanning again.'}
+            {error || t('food.notFoundBody')}
           </p>
           <button
             onClick={() => navigate('/scan')}
@@ -133,228 +218,423 @@ export default function FoodPassport() {
               cursor: 'pointer',
             }}
           >
-            Back to Scanner
+            {t('food.backToScanner')}
           </button>
         </div>
       </PageWrapper>
     )
   }
 
-  const daysSinceHarvest = getDaysSinceHarvest()
-
   return (
-    <PageWrapper style={{ paddingBottom: '60px' }}>
-      {/* Header */}
-      <PageHeader 
-        backTo="/scan" 
-        closeButton 
-        center={`ID ${product.display_id}`}
+    <PageWrapper
+      style={{
+        backgroundColor: palette.background,
+        paddingBottom: 'calc(var(--spacing-page) * 2.5)',
+      }}
+    >
+      <PageHeader
+        backTo={fromProductId ? `/product/${fromProductId}` : '/scan'}
+        closeButton={!fromProductId}
+        center={t('food.productId', { id: product.display_id })}
         showBookmark
+        isBookmarked={isBookmarked}
+        onBookmarkClick={handleBookmark}
       />
 
-      {/* Product Image */}
-      <div className="flex justify-center mb-4">
-        {product.image_url ? (
-          <img 
-            src={product.image_url} 
-            alt={product.name}
-            className="w-48 h-48 object-cover"
-            style={{ borderRadius: 'var(--radius-card)' }}
-          />
-        ) : (
-          <div 
-            className="w-48 h-48 flex items-center justify-center text-8xl"
-            style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-card)' }}
-          >
-            🍅
-          </div>
-        )}
-      </div>
-
-      {/* Product Name */}
-      <h1 
-        className="text-center text-lg px-8 mb-2"
-        style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
+      <div
+        className="relative flex justify-center w-full"
+        style={{ marginTop: 'calc(var(--spacing-section) * 1.25)' }}
       >
-        {product.scientific_name ? `${product.scientific_name} '${product.variety}'` : ''} {product.name}
-      </h1>
+        <div
+          style={{
+            position: 'absolute',
+            width: '100%',
+            maxWidth: '480px',
+            height: 'calc(var(--spacing-page) * 51)',
+            backgroundColor: palette.surface,
+            borderRadius: 'calc(var(--spacing-page) * 13)',
+            border: '1px solid rgba(23, 78, 5, 0.20)',
+            top: 'calc(var(--spacing-page) * 14.5)',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 0,
+          }}
+        />
 
-      {/* Origin & Farm */}
-      <div 
-        className="flex justify-center items-center gap-2 text-sm mb-4 flex-wrap px-6"
-        style={{ fontFamily: 'var(--font-body)' }}
-      >
-        <span>📍 {product.origin_country}{product.origin_region ? `, ${product.origin_region}` : ''}</span>
-        {product.farm && (
-          <>
-            <span className="opacity-30">|</span>
-            <span>{product.farm.name}</span>
-          </>
-        )}
-        {product.transport_distance_km && (
-          <>
-            <span className="opacity-30">|</span>
-            <span>{product.transport_distance_km} km</span>
-          </>
-        )}
-      </div>
-
-      {/* Labels */}
-      {labels.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-2 px-6 mb-6">
-          {labels.map((label) => (
-            <Tag key={label.id} color={label.label_color || undefined}>
-              {label.label_name}
-            </Tag>
-          ))}
-        </div>
-      )}
-
-      {/* Stats Row */}
-      <div 
-        className="grid grid-cols-4 gap-2 mx-6 p-4 mb-6"
-        style={{ 
-          backgroundColor: 'var(--color-card)',
-          borderRadius: 'var(--radius-card)'
-        }}
-      >
-        <div className="text-center">
-          <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Harvested</p>
-          <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {daysSinceHarvest !== null ? `${daysSinceHarvest}d ago` : '—'}
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Transport</p>
-          <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.transport_distance_km ? `${product.transport_distance_km} km` : '—'}
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Emissions</p>
-          <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg` : '—'}
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-xs opacity-60 mb-1" style={{ fontFamily: 'var(--font-body)' }}>Price</p>
-          <p className="text-sm font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-            {product.price_per_kg ? `€${product.price_per_kg}/kg` : '—'}
-          </p>
-        </div>
-      </div>
-
-      {/* Details Section */}
-      <div className="px-6">
-        <h2 
-          className="text-base mb-3"
-          style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
+        <div
+          className="relative w-full"
+          style={{
+            maxWidth: '402px',
+            paddingInline: 'calc(var(--spacing-card) * 1.25)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'calc(var(--spacing-section) * 1.25)',
+            zIndex: 1,
+          }}
         >
-          Details
-        </h2>
-        
-        <div className="h-px bg-gray-200 mb-4" />
-
-        {/* Detail navigation grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {detailSections.map((section) => (
-            <Link
-              key={section.path}
-              to={`/product/${product.id}/${section.path}`}
-              className="p-4 flex flex-col items-start"
-              style={{ 
-                backgroundColor: 'var(--color-card)',
-                borderRadius: 'var(--radius-card)',
-                textDecoration: 'none',
-                color: 'inherit'
-              }}
-            >
-              <span className="text-2xl mb-2">{section.icon}</span>
-              <span 
-                className="text-sm"
-                style={{ fontFamily: 'var(--font-body)' }}
-              >
-                {section.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Alternatives Section */}
-      <div className="px-6 mt-8">
-        <h2 
-          className="text-base mb-3"
-          style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}
-        >
-          Alternatives
-        </h2>
-        
-        {alternatives.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {alternatives.map((alt) => (
-              <Link
-                key={alt.id}
-                to={`/product/${alt.id}`}
-                className="flex-shrink-0 w-32 p-3"
-                style={{ 
-                  backgroundColor: 'var(--color-card)',
-                  borderRadius: 'var(--radius-card)',
-                  textDecoration: 'none',
-                  color: 'inherit'
-                }}
-              >
-                {alt.image_url ? (
-                  <img 
-                    src={alt.image_url} 
-                    alt={alt.name}
-                    className="w-full h-20 object-cover mb-2"
-                    style={{ borderRadius: 'var(--radius-sm)' }}
-                  />
-                ) : (
-                  <div 
-                    className="w-full h-20 flex items-center justify-center text-3xl mb-2"
-                    style={{ backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-sm)' }}
-                  >
-                    🍅
-                  </div>
-                )}
-                <p 
-                  className="text-xs font-medium line-clamp-2"
-                  style={{ fontFamily: 'var(--font-body)' }}
-                >
-                  {alt.name}
-                </p>
-                {alt.price_per_kg && (
-                  <p 
-                    className="text-xs opacity-60 mt-1"
-                    style={{ fontFamily: 'var(--font-body)' }}
-                  >
-                    €{alt.price_per_kg}/kg
-                  </p>
-                )}
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div 
-            className="p-4"
-            style={{ 
-              backgroundColor: 'var(--color-card)',
-              borderRadius: 'var(--radius-card)'
+          <div
+            className="relative"
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 'calc(var(--spacing-card) * 1.1)',
+              paddingTop: 'calc(var(--spacing-card) * 1.2)',
             }}
           >
-            <p 
-              className="text-sm opacity-60"
-              style={{ fontFamily: 'var(--font-body)' }}
+            <div
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '13px',
+                color: palette.accent,
+                fontWeight: 400,
+                letterSpacing: '0.2px',
+              }}
             >
-              No alternatives available
-            </p>
+            </div>
+
+            <div
+              style={{
+                width: 'calc(var(--spacing-page) * 8.7)',
+                height: 'calc(var(--spacing-page) * 9.5)',
+                borderRadius: 'var(--radius-card)',
+                overflow: 'hidden',
+                boxShadow: '0 16px 38px rgba(0,0,0,0.12)',
+                backgroundColor: 'var(--color-surface)',
+              }}
+            >
+              {product.image_url ? (
+                <img
+                  src={product.image_url}
+                  alt={product.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center"
+                  style={{ fontSize: '48px' }}
+                >
+                  🍅
+                </div>
+              )}
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'calc(var(--spacing-card) * 0.6)',
+                textAlign: 'center',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'calc(var(--spacing-card) * 0.2)',
+                  alignItems: 'center',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '18px',
+                    fontWeight: 400,
+                    color: 'var(--color-text)',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {product.name}
+                </span>
+                {product.scientific_name && (
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '13px',
+                      fontWeight: 300,
+                      color: 'var(--color-text)',
+                      opacity: 0.65,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {product.scientific_name}
+                    {product.variety ? ` '${product.variety}'` : ''}
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 'calc(var(--spacing-card) * 0.8)',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '14px',
+                  color: 'var(--color-text)',
+                  fontWeight: 300,
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span>
+                  {product.origin_country}
+                  {product.origin_region ? `, ${product.origin_region}` : ''}
+                </span>
+                {product.farm && (
+                  <>
+                    <span style={{ width: '1px', height: 'calc(var(--spacing-card) * 2)', backgroundColor: palette.accent, opacity: 0.6 }} />
+                    <span>{product.farm.name}</span>
+                  </>
+                )}
+                {product.transport_distance_km && (
+                  <>
+                    <span style={{ width: '1px', height: 'calc(var(--spacing-card) * 2)', backgroundColor: palette.accent, opacity: 0.6 }} />
+                    <span>{product.transport_distance_km} km</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {labels.length > 0 && (
+              <div
+                className="flex flex-wrap justify-center gap-2"
+                style={{ paddingTop: 'calc(var(--spacing-card) * 0.5)' }}
+              >
+                {labels.map((label) => (
+                  <Tag
+                    key={label.id}
+                    color={label.label_color || undefined}
+                    style={{
+                      backgroundColor: palette.tagBg,
+                      border: `1px solid ${palette.tagBorder}`,
+                      borderRadius: 'var(--radius-button)',
+                      fontWeight: 300,
+                      padding: 'calc(var(--spacing-card) * 0.35) calc(var(--spacing-card) * 0.9)',
+                      fontSize: '12px',
+                    }}
+                  >
+                    {label.label_name}
+                  </Tag>
+                ))}
+              </div>
+            )}
+
+            <div
+              className="grid grid-cols-4 gap-2 w-full"
+              style={{ marginTop: 'calc(var(--spacing-section) * 0.3)' }}
+            >
+              {stats.map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    backgroundColor: palette.statBg,
+                    borderRadius: 'calc(var(--spacing-page) * 1.2)',
+                    minHeight: 'calc(var(--spacing-section) * 3.5)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 'calc(var(--spacing-card) * 0.55)',
+                    gap: 'calc(var(--spacing-card) * 0.25)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '12px',
+                      color: palette.accent,
+                      fontWeight: 400,
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '16px',
+                      fontWeight: 500,
+                      color: palette.accent,
+                      lineHeight: 1.3,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {item.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                width: 'calc(var(--spacing-page) * 3.2)',
+                height: 1,
+                backgroundColor: palette.accent,
+                marginTop: 'calc(var(--spacing-section) * 0.75)',
+                opacity: 0.6,
+              }}
+            />
           </div>
-        )}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 1)' }}>
+            <h2
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '16px',
+                fontWeight: 400,
+                color: 'var(--color-text)',
+              }}
+            >
+              {t('food.details')}
+            </h2>
+
+            <div
+              className="grid grid-cols-2 gap-3"
+              style={{ marginTop: 'calc(var(--spacing-card) * 0.4)' }}
+            >
+              {detailSections.map((section) => (
+                <Link
+                  key={section.path}
+                  to={`/product/${product.id}/${section.path}`}
+                  style={{
+                    backgroundColor: palette.card,
+                    border: `1px solid ${palette.cardBorder}`,
+                    borderRadius: 'var(--radius-card)',
+                    textDecoration: 'none',
+                    color: palette.accent,
+                    minHeight: 'calc(var(--spacing-section) * 5.6)',
+                    padding: 'calc(var(--spacing-card) * 1)',
+                    display: 'flex',
+                    gap: 'calc(var(--spacing-card) * 0.8)',
+                    alignItems: 'center',
+                  }}
+                >
+                  <span style={{ fontSize: '22px' }}>{section.icon}</span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '14px',
+                      fontWeight: 400,
+                      color: palette.accent,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {section.label}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 1)' }}>
+            <h2
+              style={{
+                fontFamily: 'var(--font-body)',
+                fontSize: '16px',
+                fontWeight: 400,
+                color: 'var(--color-text)',
+              }}
+            >
+              {t('food.alternatives')}
+            </h2>
+
+            {alternatives.length > 0 ? (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 'calc(var(--spacing-card) * 1)',
+                }}
+              >
+                {alternatives.map((alt) => (
+                  <Link
+                    key={alt.id}
+                    to={`/product/${alt.id}`}
+                    state={{ fromProductId: product.id }}
+                    style={{
+                      width: '100%',
+                      backgroundColor: palette.card,
+                      border: `1px solid ${palette.cardBorder}`,
+                      borderRadius: 'var(--radius-card)',
+                      padding: 'calc(var(--spacing-card) * 1)',
+                      textDecoration: 'none',
+                      color: palette.accent,
+                      display: 'grid',
+                      gridTemplateColumns: 'auto 1fr',
+                      gap: 'calc(var(--spacing-card) * 1)',
+                      alignItems: 'center',
+                    }}
+                  >
+                    {alt.image_url ? (
+                      <img
+                        src={alt.image_url}
+                        alt={alt.name}
+                        style={{
+                          width: 'calc(var(--spacing-section) * 3.5)',
+                          height: 'calc(var(--spacing-section) * 3.5)',
+                          objectFit: 'cover',
+                          borderRadius: 'var(--radius-card)',
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className="flex items-center justify-center"
+                        style={{
+                          width: 'calc(var(--spacing-section) * 3.5)',
+                          height: 'calc(var(--spacing-section) * 3.5)',
+                          backgroundColor: 'var(--color-background)',
+                          borderRadius: 'var(--radius-card)',
+                          fontSize: '28px',
+                        }}
+                      >
+                        🍅
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.35)' }}>
+                      <span
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          fontSize: '14px',
+                          fontWeight: 500,
+                          color: 'var(--color-text)',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {alt.name}
+                      </span>
+                      {alt.price_per_kg && (
+                        <span
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            fontSize: '13px',
+                            fontWeight: 300,
+                            color: 'var(--color-text)',
+                            opacity: 0.8,
+                          }}
+                        >
+                          €{alt.price_per_kg}/kg
+                        </span>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '13px',
+                  color: 'var(--color-text)',
+                  opacity: 0.75,
+                }}
+              >
+                {t('food.noAlternatives')}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
-      
-      {/* Debug Footer */}
+
       <DebugFooter />
     </PageWrapper>
   )

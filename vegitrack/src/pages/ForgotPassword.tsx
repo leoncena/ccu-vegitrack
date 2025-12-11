@@ -5,6 +5,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Button } from '../components/ui/Button'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 import { toast } from '../components/ui/sonner'
 import { Spinner } from '../components/ui/spinner'
 
@@ -52,7 +53,7 @@ export default function ForgotPassword() {
         style={{ paddingTop: '20px', paddingLeft: '10%', paddingRight: '10%' }}
       >
         <div className="w-full">
-          <PageHeaderWithBack title="Reset Password" />
+          <PageHeaderWithBack title="Reset Password" rightActions={<MenuToggleButton size="sm" />} />
 
           <div className="space-y-2 text-center">
             <h1

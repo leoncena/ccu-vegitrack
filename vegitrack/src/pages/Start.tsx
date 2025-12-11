@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Menu, MapPin } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { Combobox, type ComboboxOption } from '../components/ui/combobox'
 import { Button } from '../components/ui/Button'
-import { IconButton } from '../components/ui/IconButton'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
+import { useTranslation } from '../lib/i18n'
 
 // Import produce icons
 import carrotIcon from '../assets/wallpaper/carrot.svg'
@@ -23,6 +24,7 @@ const MOCK_STORES = [
 export default function Start() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
+  const { t } = useTranslation()
   const [selectedStore, setSelectedStore] = useState<string>(MOCK_STORES[0]?.id || '')
 
   const handleLogout = async () => {
@@ -48,9 +50,7 @@ export default function Start() {
     >
       {/* Header */}
       <div className="flex justify-end mb-6">
-        <IconButton label="Menu" style={{ color: 'var(--color-primary)' }}>
-          <Menu size={24} />
-        </IconButton>
+        <MenuToggleButton color="var(--color-primary)" />
       </div>
 
       {/* Logo */}
@@ -63,7 +63,7 @@ export default function Start() {
             fontWeight: 700 
           }}
         >
-          VegiTrack
+          {t('start.title')}
         </h1>
         <p 
           className="text-sm"
@@ -74,7 +74,7 @@ export default function Start() {
             marginBottom: 'calc(2 * var(--spacing-card))',
           }}
         >
-          Know your veggies
+          {t('start.tagline')}
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export default function Start() {
           marginBottom: 'calc(2 * var(--spacing-card))',
         }}
       >
-        Scan fresh fruits and vegetables to explore its Food Passport – origin, transport, quality and sustainability aspects.
+        {t('start.description')}
       </p>
 
       {/* Store Selection */}
@@ -110,16 +110,16 @@ export default function Start() {
             color: 'var(--color-primary)' 
           }}
         >
-          Select your Store:
+          {t('start.selectStore')}
         </p>
         
         <Combobox
           options={storeOptions}
           value={selectedStore}
           onValueChange={setSelectedStore}
-          placeholder="Select a store..."
-          searchPlaceholder="Search stores..."
-          emptyText="No store found."
+          placeholder={t('start.storePlaceholder')}
+          searchPlaceholder={t('start.storeSearchPlaceholder')}
+          emptyText={t('start.storeEmpty')}
           rightIcon={MapPin}
           getDisplayValue={(option) => {
             if (!option) return ''
@@ -139,7 +139,7 @@ export default function Start() {
           variant="default"
           className="h-[56px] w-[216px] text-[18px]"
         >
-          Start Scanning
+          {t('start.cta')}
         </Button>
       </div>
 
@@ -153,7 +153,7 @@ export default function Start() {
               color: 'var(--color-text-light)',
             }}
           >
-            Signed in as {user.email}{' '}
+            {t('start.signedInAs', { email: user.email })}{' '}
             <button
               onClick={handleLogout}
               style={{
@@ -166,7 +166,7 @@ export default function Start() {
                 textDecoration: 'underline',
               }}
             >
-              (Click to logout)
+              {t('start.logout')}
             </button>
           </p>
         </div>
@@ -184,7 +184,7 @@ export default function Start() {
             width: '100%',
           }}
         >
-          Login/Register
+          {t('start.loginRegister')}
         </button>
       )}
     </div>

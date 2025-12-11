@@ -14,6 +14,8 @@ interface PageHeaderWithBackProps {
   style?: React.CSSProperties
   /** Optional margin bottom. Defaults to responsive spacing */
   marginBottom?: string
+  /** Optional right side content (e.g., menu button) */
+  rightActions?: React.ReactNode
 }
 
 export function PageHeaderWithBack({
@@ -23,6 +25,7 @@ export function PageHeaderWithBack({
   className = '',
   style,
   marginBottom = 'calc(2 * 1.125em)',
+  rightActions,
 }: PageHeaderWithBackProps) {
   const navigate = useNavigate()
 
@@ -60,7 +63,9 @@ export function PageHeaderWithBack({
       >
         {title}
       </div>
-      <div className="w-10" />
+      <div className="w-10 flex items-center justify-end gap-2">
+        {rightActions}
+      </div>
     </div>
   )
 }

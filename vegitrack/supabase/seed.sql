@@ -4,24 +4,26 @@
 -- ============================================
 -- Store: LIDL Delft
 -- ============================================
-INSERT INTO stores (id, name, address, distance_m)
+INSERT INTO stores (id, name, address, coordinates, distance_m)
 VALUES (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
   'LIDL Delft',
   'Martinus Nijhofflaan 2, 2624 ES Delft',
+  POINT(4.3572, 52.0029), -- lon, lat
   450
 );
 
 -- ============================================
 -- Farm: Quinta da Ria
 -- ============================================
-INSERT INTO farms (id, name, full_address, region, country, distance_km, description)
+INSERT INTO farms (id, name, full_address, region, country, coordinates, distance_km, description)
 VALUES (
   'f1a2b3c4-d5e6-7890-abcd-ef1234567890',
   'Quinta da Ria',
   'Estrada Nacional 125, Algarve',
   'Algarve',
   'Portugal',
+  POINT(-7.5370, 37.1342), -- lon, lat
   1842.5,
   'A family-owned organic farm in the sunny Algarve region of Portugal, specializing in tomatoes and citrus fruits. The farm has been practicing sustainable agriculture for over 30 years.'
 );
@@ -52,6 +54,10 @@ VALUES (
   'VT-3345667'
 );
 
+-- QR code linkage for Cluster Tomatoes
+INSERT INTO qr_codes (qr_code_id, product_id, batch_number, is_active)
+VALUES ('QR-3345667', '11111111-2222-3333-4444-555555555555', NULL, true);
+
 -- ============================================
 -- Product Labels
 -- ============================================
@@ -77,7 +83,7 @@ INSERT INTO quality_indicators (product_id, indicator_type, score, max_score, pe
 INSERT INTO supply_chain_ledger (
   product_id, block_index, block_hash, previous_hash,
   event_type, location_name, location_type, actor_name,
-  distance_from_store_km, storage_type, timestamp, details
+  coordinates, distance_from_store_km, storage_type, timestamp, details
 )
 VALUES (
   '11111111-2222-3333-4444-555555555555',
@@ -88,6 +94,7 @@ VALUES (
   'Quinta da Ria Farm',
   'farm',
   'João Silva',
+  POINT(-7.5370, 37.1342),
   1842.5,
   'ambient',
   '2025-11-18T06:30:00Z',
@@ -98,7 +105,7 @@ VALUES (
 INSERT INTO supply_chain_ledger (
   product_id, block_index, block_hash, previous_hash,
   event_type, location_name, location_type, actor_name,
-  distance_from_store_km, storage_type, timestamp, details
+  coordinates, distance_from_store_km, storage_type, timestamp, details
 )
 VALUES (
   '11111111-2222-3333-4444-555555555555',
@@ -109,6 +116,7 @@ VALUES (
   'FreshPack Algarve',
   'packaging_center',
   'Maria Santos',
+  POINT(-7.9090, 36.9975),
   1840.0,
   'refrigerated',
   '2025-11-18T10:15:00Z',
@@ -119,7 +127,7 @@ VALUES (
 INSERT INTO supply_chain_ledger (
   product_id, block_index, block_hash, previous_hash,
   event_type, location_name, location_type, actor_name,
-  distance_from_store_km, storage_type, transport_method, timestamp, details
+  coordinates, distance_from_store_km, storage_type, transport_method, timestamp, details
 )
 VALUES (
   '11111111-2222-3333-4444-555555555555',
@@ -130,6 +138,7 @@ VALUES (
   'European Distribution Hub',
   'distribution_center',
   'TransEuro Logistics',
+  POINT(4.4699, 51.9225),
   250.0,
   'refrigerated',
   'refrigerated_truck',
@@ -141,7 +150,7 @@ VALUES (
 INSERT INTO supply_chain_ledger (
   product_id, block_index, block_hash, previous_hash,
   event_type, location_name, location_type, actor_name,
-  distance_from_store_km, storage_type, transport_method, timestamp, details
+  coordinates, distance_from_store_km, storage_type, transport_method, timestamp, details
 )
 VALUES (
   '11111111-2222-3333-4444-555555555555',
@@ -152,6 +161,7 @@ VALUES (
   'LIDL Delft',
   'store',
   'Store Team',
+  POINT(4.3572, 52.0029),
   0,
   'refrigerated',
   'refrigerated_truck',
@@ -311,6 +321,33 @@ INSERT INTO recipes (
 VALUES
 (
   '11111111-2222-3333-4444-555555555555',
+  'Tomato & Olive Salad (Salada da Horta)',
+  'A bright Algarve-style salad with ripe tomatoes, briny olives, and herb dressing.',
+  'Portugal - Algarve',
+  10,
+  0,
+  2,
+  '[
+    {"name": "Cluster tomatoes", "amount": "400g"},
+    {"name": "Kalamata olives", "amount": "80g"},
+    {"name": "Red onion", "amount": "1/2 small"},
+    {"name": "Fresh parsley", "amount": "small handful"},
+    {"name": "Olive oil", "amount": "3 tbsp"},
+    {"name": "Red wine vinegar", "amount": "1 tbsp"},
+    {"name": "Dried oregano", "amount": "1/2 tsp"},
+    {"name": "Sea salt", "amount": "pinch"},
+    {"name": "Black pepper", "amount": "to taste"}
+  ]'::jsonb,
+  ARRAY[
+    'Slice tomatoes into wedges; thinly slice the red onion.',
+    'Whisk olive oil, red wine vinegar, oregano, salt, and pepper for the dressing.',
+    'Combine tomatoes, olives, and onion in a bowl. Toss with dressing.',
+    'Finish with chopped parsley and serve immediately.'
+  ],
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800'
+),
+(
+  '11111111-2222-3333-4444-555555555555',
   'Classic Gazpacho',
   'A refreshing cold soup from Andalusia, perfect for hot summer days. This traditional recipe lets the natural sweetness of ripe tomatoes shine.',
   'Spain - Andalusia',
@@ -422,6 +459,10 @@ VALUES (
   'VT-3345668'
 );
 
+-- QR code linkage for Cherry Tomatoes
+INSERT INTO qr_codes (qr_code_id, product_id, batch_number, is_active)
+VALUES ('QR-3345668', '22222222-3333-4444-5555-666666666666', NULL, true);
+
 -- Roma Tomatoes
 INSERT INTO products (
   id, display_id, name, scientific_name, variety,
@@ -444,6 +485,10 @@ VALUES (
   'https://images.unsplash.com/photo-1582284540020-8acbe03f4924?w=800',
   'VT-3345669'
 );
+
+-- QR code linkage for Roma Tomatoes
+INSERT INTO qr_codes (qr_code_id, product_id, batch_number, is_active)
+VALUES ('QR-3345669', '33333333-4444-5555-6666-777777777777', NULL, true);
 
 -- Link alternatives
 INSERT INTO alternative_products (product_id, alternative_id, reason, sort_order) VALUES

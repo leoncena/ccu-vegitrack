@@ -1,14 +1,21 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { MapContainer, Marker, Popup, TileLayer, Polyline } from 'react-leaflet'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
 import {
   SupplyChainCard,
   FreshnessCard,
   TransportStats,
+  Spinner,
   type SupplyChainCardData,
   type TransportStat,
 } from '../../components/ui'
+import { getProductByDisplayId, getProductById, getFarmById, getSupplyChain } from '../../lib/api'
+import type { Farm, Product, SupplyChainBlock } from '../../types/database'
 
-// Import SVG icons
+// Import SVG icons (still used by supply chain cards)
 import originPinIcon from '../../assets/origin/origin_pin.svg'
 import packagingCenterIcon from '../../assets/origin/Packaging_center.svg'
 import distributionCenterIcon from '../../assets/origin/distrubution_center.svg'
@@ -17,7 +24,19 @@ import refrigeratedTruckIcon from '../../assets/origin/refrigerated_truck.svg'
 import distanceIcon from '../../assets/origin/distance.svg'
 import co2eIcon from '../../assets/origin/co2e.svg'
 
-// Demo data - Supply Chain
+// Fix default Leaflet marker asset paths for Vite
+const markerIcon = new L.Icon({
+  iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).toString(),
+  iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).toString(),
+  shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).toString(),
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+})
+L.Marker.prototype.options.icon = markerIcon
+
+// Demo data - Supply Chain (kept as placeholder)
 const SUPPLY_CHAIN_DATA: (SupplyChainCardData & { icon: string })[] = [
   {
     type: 'origin',
@@ -57,17 +76,17 @@ const TRANSPORT_STATS: TransportStat[] = [
   {
     icon: refrigeratedTruckIcon,
     label: 'Refrigerated\nTruck',
-    iconScale: 0.5, // Scale to 50% of original size
+    iconScale: 0.5,
   },
   {
     icon: distanceIcon,
     label: '350 km',
-    iconScale: 0.5, // Scale to 50% to match truck icon height
+    iconScale: 0.5,
   },
   {
     icon: co2eIcon,
     label: '0.025 kg\nCO2e',
-    iconScale: 0.5, // Scale to 50% to match truck icon height
+    iconScale: 0.5,
   },
 ]
 
@@ -78,8 +97,78 @@ const FRESHNESS_DATA = {
   durationHours: 9,
 }
 
+type LatLng = { lat: number; lng: number }
+
+function normalizePoint(coords: any): LatLng | null {
+  if (!coords) return null
+  if (typeof coords === 'string') {
+    const match = coords.match(/\(([-0-9.]+),\s*([-0-9.]+)\)/)
+    if (match) return { lng: Number(match[1]), lat: Number(match[2]) }
+  }
+  if (Array.isArray(coords) && coords.length >= 2) {
+    return { lng: Number(coords[0]), lat: Number(coords[1]) }
+  }
+  if (typeof coords === 'object') {
+    if ('lat' in coords && 'lng' in coords) return { lat: Number(coords.lat), lng: Number(coords.lng) }
+    if ('y' in coords && 'x' in coords) return { lat: Number((coords as any).y), lng: Number((coords as any).x) }
+  }
+  return null
+}
+
 export default function OriginTransport() {
   const { id } = useParams()
+  const [product, setProduct] = useState<Product | null>(null)
+  const [farm, setFarm] = useState<Farm | null>(null)
+  const [mapCenter, setMapCenter] = useState<LatLng | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [chain, setChain] = useState<SupplyChainBlock[]>([])
+  const [initialCenterSet, setInitialCenterSet] = useState(false)
+
+  useEffect(() => {
+    async function load() {
+      if (!id) return
+      setLoading(true)
+      setError(null)
+      try {
+        let prod: Product | null = await getProductById(id)
+        if (!prod) {
+          prod = await getProductByDisplayId(id)
+        }
+        if (!prod) {
+          setError('Product not found')
+          setLoading(false)
+          return
+        }
+        setProduct(prod)
+
+        if (prod.farm_id) {
+          const farmData = await getFarmById(prod.farm_id)
+          setFarm(farmData)
+          const coords = normalizePoint(farmData?.coordinates)
+          if (coords) setMapCenter(coords)
+        }
+
+        const supply = await getSupplyChain(prod.id)
+        setChain(supply || [])
+
+        if (!initialCenterSet && supply?.length) {
+          const firstWithCoords = supply.map((b) => normalizePoint(b.coordinates)).find(Boolean)
+          if (firstWithCoords) {
+            setMapCenter(firstWithCoords)
+            setInitialCenterSet(true)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load origin data', err)
+        setError('Failed to load origin data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    void load()
+  }, [id, initialCenterSet])
 
   // Get origin and transport sections
   const originCards = SUPPLY_CHAIN_DATA.filter((item) => item.type === 'origin')
@@ -89,6 +178,44 @@ export default function OriginTransport() {
       item.type === 'distribution_center' ||
       item.type === 'supermarket'
   )
+
+  const mapsLinks = useMemo(() => {
+    if (!mapCenter) return null
+    const { lat, lng } = mapCenter
+    return {
+      google: `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`,
+      apple: `https://maps.apple.com/?ll=${lat},${lng}`,
+    }
+  }, [mapCenter])
+
+  const chainMarkers = useMemo(() => {
+    return chain
+      .map((block) => {
+        const coords = normalizePoint(block.coordinates)
+        if (!coords) return null
+        return {
+          coords,
+          title: block.location_name,
+          type: block.event_type,
+          time: new Date(block.timestamp).toLocaleString(),
+          details: block.details,
+          mapLinks: {
+            google: `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`,
+            apple: `https://maps.apple.com/?ll=${coords.lat},${coords.lng}`,
+          },
+        }
+      })
+      .filter(Boolean) as {
+        coords: LatLng
+        title: string
+        type: string
+        time: string
+        details: Record<string, unknown>
+        mapLinks: { google: string; apple: string }
+      }[]
+  }, [chain])
+
+  const polylinePositions = chainMarkers.map((m) => [m.coords.lat, m.coords.lng])
 
   return (
     <div
@@ -103,18 +230,109 @@ export default function OriginTransport() {
     >
       <PageHeaderWithBack title="Origin & Transport" backTo={`/product/${id}`} />
 
-      {/* Map placeholder */}
+      {/* Map */}
       <div
-        className="h-48 flex items-center justify-center"
+        className="w-full"
         style={{
+          height: '260px',
           backgroundColor: 'var(--color-card)',
           borderRadius: 'var(--radius-card)',
           border: '1px solid var(--color-primary-light)',
           marginBottom: 'var(--spacing-card)',
+          overflow: 'hidden',
         }}
       >
-        <span className="text-4xl">🗺️</span>
+        {loading ? (
+          <div className="h-full flex items-center justify-center">
+            <Spinner className="text-green-800" />
+          </div>
+        ) : mapCenter ? (
+          <MapContainer
+            center={[mapCenter.lat, mapCenter.lng]}
+            zoom={7}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; OpenStreetMap contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {polylinePositions.length > 1 ? (
+              <Polyline positions={polylinePositions} color="#1c8c3d" weight={4} />
+            ) : null}
+            {chainMarkers.length
+              ? chainMarkers.map((m, idx) => (
+                  <Marker key={`${m.title}-${idx}`} position={[m.coords.lat, m.coords.lng]}>
+                    <Popup>
+                      <div style={{ fontFamily: 'var(--font-body)', maxWidth: '220px' }}>
+                        <strong>{m.title}</strong>
+                        <div style={{ fontSize: '12px', marginTop: '4px' }}>{m.type}</div>
+                        <div style={{ fontSize: '12px', opacity: 0.7 }}>{m.time}</div>
+                        <div style={{ marginTop: '6px' }}>
+                          <a href={m.mapLinks.google} target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>
+                            Google Maps
+                          </a>
+                          {' · '}
+                          <a href={m.mapLinks.apple} target="_blank" rel="noreferrer" style={{ color: 'var(--color-primary)' }}>
+                            Apple Maps
+                          </a>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))
+              : (
+                  <Marker position={[mapCenter.lat, mapCenter.lng]}>
+                    <Popup>
+                      <div style={{ fontFamily: 'var(--font-body)' }}>
+                        <strong>{farm?.name || 'Farm'}</strong>
+                        <div>{farm?.full_address || `${mapCenter.lat.toFixed(4)}, ${mapCenter.lng.toFixed(4)}`}</div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+          </MapContainer>
+        ) : (
+          <div className="h-full flex items-center justify-center text-center px-4" style={{ fontFamily: 'var(--font-body)' }}>
+            {error ? error : 'No location data available for this farm.'}
+          </div>
+        )}
       </div>
+
+      {mapsLinks ? (
+        <div className="flex gap-3 mb-6" style={{ flexWrap: 'wrap' }}>
+          <a
+            href={mapsLinks.google}
+            target="_blank"
+            rel="noreferrer"
+            className="px-4 py-2 text-sm"
+            style={{
+              backgroundColor: 'var(--color-primary)',
+              color: 'white',
+              borderRadius: 'var(--radius-md)',
+              fontFamily: 'var(--font-body)',
+              textDecoration: 'none',
+            }}
+          >
+            Open in Google Maps
+          </a>
+          <a
+            href={mapsLinks.apple}
+            target="_blank"
+            rel="noreferrer"
+            className="px-4 py-2 text-sm"
+            style={{
+              backgroundColor: 'var(--color-card)',
+              color: 'var(--color-text)',
+              borderRadius: 'var(--radius-md)',
+              fontFamily: 'var(--font-body)',
+              textDecoration: 'none',
+              border: '1px solid var(--color-primary-light)',
+            }}
+          >
+            Open in Apple Maps
+          </a>
+        </div>
+      ) : null}
 
       {/* Transport Stats - Three icons below map*/}
       <TransportStats stats={TRANSPORT_STATS} />

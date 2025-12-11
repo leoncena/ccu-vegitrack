@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 import { SocialButton } from '../components/ui/SocialButton'
 import { toast } from '../components/ui/sonner'
 import { Spinner } from '../components/ui/spinner'
@@ -95,6 +96,7 @@ export default function Auth() {
         <div className="w-full">
           <PageHeaderWithBack
             title="VegiTrack"
+            rightActions={<MenuToggleButton size="sm" />}
           />
 
           <div className="space-y-2 text-center">

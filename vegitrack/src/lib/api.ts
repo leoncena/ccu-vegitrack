@@ -14,6 +14,30 @@ import type {
 } from '../types/database'
 
 // ============================================
+// QR Codes
+// ============================================
+
+export interface QRCodePayload {
+  qr_id: string
+  product_id: string
+  // Allow future fields without breaking existing codes
+  [key: string]: any
+}
+
+export function parseQRCodePayload(qrText: string): QRCodePayload | null {
+  try {
+    const parsed = JSON.parse(qrText)
+    if (parsed?.qr_id && parsed?.product_id) {
+      return parsed as QRCodePayload
+    }
+    return null
+  } catch (error) {
+    console.error('Invalid QR payload:', error)
+    return null
+  }
+}
+
+// ============================================
 // Product Queries
 // ============================================
 
@@ -239,6 +263,20 @@ export async function getRecipes(productId: string): Promise<Recipe[]> {
     return []
   }
   return data || []
+}
+
+export async function getRecipeById(id: string): Promise<Recipe | null> {
+  const { data, error } = await supabase
+    .from('recipes')
+    .select('*')
+    .eq('id', id)
+    .single()
+
+  if (error) {
+    console.error('Error fetching recipe:', error)
+    return null
+  }
+  return data
 }
 
 // ============================================

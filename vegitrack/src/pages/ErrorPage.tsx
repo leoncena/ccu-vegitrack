@@ -1,5 +1,6 @@
 import { useRouteError, isRouteErrorResponse, Link } from 'react-router-dom'
 import { PageWrapper, PageHeaderWithBack } from '../components/layout'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 
 export default function ErrorPage() {
   const error = useRouteError()
@@ -21,7 +22,7 @@ export default function ErrorPage() {
         style={{ paddingTop: '20px', paddingLeft: '10%', paddingRight: '10%' }}
       >
         <div className="w-full">
-          <PageHeaderWithBack title="Error" />
+          <PageHeaderWithBack title="Error" rightActions={<MenuToggleButton size="sm" />} />
 
           <div className="space-y-2 text-center">
             <h1

@@ -1,8 +1,10 @@
 -- VegiTrack Database Schema
 -- Run this in Supabase SQL Editor to create all tables
 
--- Enable UUID extension
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Optional: enable PostGIS for better distance calculations (geography type)
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- ============================================
 -- Table: farms
@@ -52,6 +54,22 @@ CREATE TABLE IF NOT EXISTS products (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- ============================================
+-- Table: qr_codes (JSON QR payload authority)
+-- ============================================
+CREATE TABLE IF NOT EXISTS qr_codes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  qr_code_id VARCHAR(50) UNIQUE NOT NULL,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  batch_number VARCHAR(100),
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_qr_codes_qr_code_id ON qr_codes(qr_code_id);
+CREATE INDEX IF NOT EXISTS idx_qr_codes_product_id ON qr_codes(product_id);
 
 -- ============================================
 -- Table: product_labels
@@ -242,6 +260,7 @@ ALTER TABLE alternative_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scan_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for product-related tables
 CREATE POLICY "Public read access" ON farms FOR SELECT USING (true);
@@ -255,6 +274,7 @@ CREATE POLICY "Public read access" ON farming_practices FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON farmer_stories FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON recipes FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON alternative_products FOR SELECT USING (true);
+CREATE POLICY "Public read access" ON qr_codes FOR SELECT USING (true);
 
 -- User-specific policies
 CREATE POLICY "Users can read own profile" ON users 

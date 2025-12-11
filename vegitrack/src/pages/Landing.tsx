@@ -9,6 +9,7 @@ import lemonIcon from '../assets/wallpaper/Lemon.svg'
 import tomatoIcon from '../assets/wallpaper/tomato.svg'
 import strawberryIcon from '../assets/wallpaper/strawberry.svg'
 import caleIcon from '../assets/wallpaper/cale.svg'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -57,6 +58,16 @@ export default function Landing() {
       className="min-h-screen relative overflow-hidden"
       style={{ backgroundColor: '#fffefc', width: '100%' }}
     >
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--spacing-section) * 1.25)',
+          right: 'calc(var(--spacing-section) * 1.25)',
+          zIndex: 20,
+        }}
+      >
+        <MenuToggleButton />
+      </div>
       {/* Background vegetable pattern - reduced opacity to not interfere with text */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: 0.2, zIndex: 0 }}>
         {/* Tomatoes - actual size: 40x39 */}

@@ -1,5 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom'
 
+// Layout
+import { AppLayout } from '../components/layout/AppLayout'
+
 // Pages
 import Landing from '../pages/Landing'
 import Start from '../pages/Start'
@@ -14,77 +17,36 @@ import CertificationsQuality from '../pages/details/CertificationsQuality'
 import FarmingPractices from '../pages/details/FarmingPractices'
 import FarmerStories from '../pages/details/FarmerStories'
 import Recipes from '../pages/details/Recipes'
+import RecipeDetail from '../pages/details/RecipeDetail'
 import ErrorPage from '../pages/ErrorPage'
+import RecentScans from '../pages/RecentScans'
+import Favorites from '../pages/Favorites'
+import MyAccount from '../pages/MyAccount'
 
 export const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Landing />,
+    element: <AppLayout />,
     errorElement: <ErrorPage />,
-  },
-  {
-    path: '/start',
-    element: <Start />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/auth',
-    element: <Auth />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/auth/callback',
-    element: <AuthCallback />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/auth/forgot-password',
-    element: <ForgotPassword />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/auth/update-password',
-    element: <UpdatePassword />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/scan',
-    element: <Scanning />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id',
-    element: <FoodPassport />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id/origin',
-    element: <OriginTransport />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id/certifications',
-    element: <CertificationsQuality />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id/farming',
-    element: <FarmingPractices />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id/farmer',
-    element: <FarmerStories />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '/product/:id/recipes',
-    element: <Recipes />,
-    errorElement: <ErrorPage />,
-  },
-  {
-    path: '*',
-    element: <ErrorPage />,
+    children: [
+      { path: '/', element: <Landing /> },
+      { path: '/start', element: <Start /> },
+      { path: '/auth', element: <Auth /> },
+      { path: '/auth/callback', element: <AuthCallback /> },
+      { path: '/auth/forgot-password', element: <ForgotPassword /> },
+      { path: '/auth/update-password', element: <UpdatePassword /> },
+      { path: '/scan', element: <Scanning /> },
+      { path: '/recent-scans', element: <RecentScans /> },
+      { path: '/favorites', element: <Favorites /> },
+      { path: '/account', element: <MyAccount /> },
+      { path: '/product/:id', element: <FoodPassport /> },
+      { path: '/product/:id/origin', element: <OriginTransport /> },
+      { path: '/product/:id/certifications', element: <CertificationsQuality /> },
+      { path: '/product/:id/farming', element: <FarmingPractices /> },
+      { path: '/product/:id/farmer', element: <FarmerStories /> },
+      { path: '/product/:id/recipes', element: <Recipes /> },
+      { path: '/product/:id/recipes/:recipeId', element: <RecipeDetail /> },
+      { path: '*', element: <ErrorPage /> },
+    ],
   },
 ])
 

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { Spinner } from '../components/ui/spinner'
+import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 
 /**
  * Handles Supabase auth callbacks (email confirmation, password recovery, etc.)
@@ -108,6 +109,15 @@ export default function AuthCallback() {
         fontFamily: 'var(--font-body)',
       }}
     >
+      <div
+        style={{
+          position: 'absolute',
+          top: 'calc(var(--spacing-section) * 1.5)',
+          right: 'calc(var(--spacing-section) * 1.5)',
+        }}
+      >
+        <MenuToggleButton size="sm" />
+      </div>
       <Spinner className="size-8 mb-4" style={{ color: 'var(--color-primary)' }} />
       <p>Processing...</p>
     </div>
