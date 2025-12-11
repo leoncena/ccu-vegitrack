@@ -24,6 +24,9 @@ export { StoryCard, type StoryCardProps } from './StoryCard'
 export { StoryBulletCard, type StoryBulletCardProps } from './StoryBulletCard'
 export { StoryTextCard, type StoryTextCardProps } from './StoryTextCard'
 export { FarmPicturesCarousel, type FarmPicturesCarouselProps } from './FarmPicturesCarousel'
+export { SupplyChainCard, type SupplyChainCardData, type SupplyChainType } from './SupplyChainCard'
+export { FreshnessCard } from './FreshnessCard'
+export { TransportStats, type TransportStat } from './TransportStats'
 export {
   Carousel,
   CarouselContent,
