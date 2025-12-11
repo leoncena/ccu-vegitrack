@@ -117,7 +117,6 @@ function normalizePoint(coords: any): LatLng | null {
 
 export default function OriginTransport() {
   const { id } = useParams()
-  const [product, setProduct] = useState<Product | null>(null)
   const [farm, setFarm] = useState<Farm | null>(null)
   const [mapCenter, setMapCenter] = useState<LatLng | null>(null)
   const [loading, setLoading] = useState(true)
@@ -140,7 +139,6 @@ export default function OriginTransport() {
           setLoading(false)
           return
         }
-        setProduct(prod)
 
         if (prod.farm_id) {
           const farmData = await getFarmById(prod.farm_id)
@@ -248,16 +246,19 @@ export default function OriginTransport() {
           </div>
         ) : mapCenter ? (
           <MapContainer
-            center={[mapCenter.lat, mapCenter.lng]}
+            center={[mapCenter.lat, mapCenter.lng] as [number, number]}
             zoom={7}
             style={{ height: '100%', width: '100%' }}
           >
             <TileLayer
-              attribution='&copy; OpenStreetMap contributors'
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {polylinePositions.length > 1 ? (
-              <Polyline positions={polylinePositions} color="#1c8c3d" weight={4} />
+              <Polyline 
+                positions={polylinePositions as [number, number][]} 
+                pathOptions={{ color: "#1c8c3d", weight: 4 }} 
+              />
             ) : null}
             {chainMarkers.length
               ? chainMarkers.map((m, idx) => (
