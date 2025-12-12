@@ -46,3 +46,4 @@ CREATE POLICY "Producers insert own product links" ON producer_products
 CREATE POLICY "Producers delete own product links" ON producer_products 
   FOR DELETE USING (producer_id IN (SELECT id FROM producer_profiles WHERE user_id = auth.uid()));
 
+

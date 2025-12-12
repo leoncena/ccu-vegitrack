@@ -9,6 +9,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/ta
 import { Slider } from '../../components/ui/slider'
 import { FileUpload } from '../../components/admin/FileUpload'
 import { DatePicker } from '../../components/admin/DatePicker'
+import { PageHeaderWithBack } from '../../components/layout'
 import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications } from '../../lib/api'
 import type {
   Product,
@@ -17,8 +18,9 @@ import type {
   CertificationBlock,
   FarmingPractice,
 } from '../../types/database'
-import { Plus, Trash2, ArrowRight } from 'lucide-react'
+import { Plus, Trash2, ArrowRight, MapPin } from 'lucide-react'
 import { Spinner } from '../../components/ui'
+import { Combobox, type ComboboxOption } from '../../components/ui/combobox'
 
 interface RecipeFormData {
   id?: string
@@ -315,21 +317,13 @@ export default function ProductForm() {
       }}
     >
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        <div style={{ marginBottom: 'calc(var(--spacing-section) * 2)' }}>
-          <h1
-            style={{
-              fontFamily: 'var(--font-body)',
-              fontSize: '32px',
-              fontWeight: 600,
-              color: 'var(--color-text)',
-            }}
-          >
-            {id === 'new' ? 'Create Product' : 'Edit Product'}
-          </h1>
-        </div>
+        <PageHeaderWithBack
+          title={id === 'new' ? 'Create Product' : 'Edit Product'}
+          backTo="/admin?tab=products"
+        />
 
         <Tabs defaultValue="product-info">
-          <TabsList>
+          <TabsList style={{ marginBottom: 'var(--spacing-card)' }}>
             <TabsTrigger value="product-info">Product Info</TabsTrigger>
             <TabsTrigger value="recipes">Recipes</TabsTrigger>
             <TabsTrigger value="certifications">Certifications & Quality</TabsTrigger>
@@ -353,11 +347,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                       required
@@ -372,11 +366,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                       required
@@ -393,11 +387,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                     />
@@ -411,11 +405,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                     />
@@ -431,11 +425,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                       required
@@ -450,11 +444,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                     />
@@ -462,29 +456,15 @@ export default function ProductForm() {
                 </div>
                 <div>
                   <Label htmlFor="farm_id" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Farm</Label>
-                  <select
-                    id="farm_id"
+                  <Combobox
+                    options={farms.map(farm => ({ value: farm.id, label: farm.name }))}
                     value={productData.farm_id}
-                    onChange={(e) => setProductData({ ...productData, farm_id: e.target.value })}
-                    style={{
-                      marginTop: 'calc(var(--spacing-card) * 0.5)',
-                      width: '100%',
-                      height: '42px',
-                      padding: '0 var(--spacing-card)',
-                      borderRadius: '8px',
-                      border: '1.5px solid var(--color-primary)',
-                      fontFamily: 'var(--font-body)',
-                      backgroundColor: 'transparent',
-                      color: 'var(--color-text)',
-                    }}
-                  >
-                    <option value="">Select a farm</option>
-                    {farms.map((farm) => (
-                      <option key={farm.id} value={farm.id}>
-                        {farm.name}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(value) => setProductData({ ...productData, farm_id: value || '' })}
+                    placeholder="Select a farm"
+                    searchPlaceholder="Search farms..."
+                    emptyText="No farms found."
+                    rightIcon={MapPin}
+                  />
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
                   <div>
@@ -506,11 +486,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                     />
@@ -526,11 +506,11 @@ export default function ProductForm() {
                       className="h-[42px] rounded-[8px] border-[1.5px]"
                       style={{
                         fontFamily: 'var(--font-body)',
-                        backgroundColor: 'transparent',
+                        backgroundColor: 'var(--color-background)',
                         marginTop: 'calc(var(--spacing-card) * 0.5)',
                         paddingLeft: 'var(--spacing-card)',
                         paddingRight: 'var(--spacing-card)',
-                        borderColor: 'var(--color-primary)',
+                        borderColor: 'var(--color-border)',
                         color: 'var(--color-text)',
                       }}
                     />
@@ -547,11 +527,11 @@ export default function ProductForm() {
                     className="h-[42px] rounded-[8px] border-[1.5px]"
                     style={{
                       fontFamily: 'var(--font-body)',
-                      backgroundColor: 'transparent',
+                      backgroundColor: 'var(--color-background)',
                       marginTop: 'calc(var(--spacing-card) * 0.5)',
                       paddingLeft: 'var(--spacing-card)',
                       paddingRight: 'var(--spacing-card)',
-                      borderColor: 'var(--color-primary)',
+                      borderColor: 'var(--color-border)',
                       color: 'var(--color-text)',
                     }}
                   />
@@ -570,15 +550,15 @@ export default function ProductForm() {
 
           {/* Recipes Tab */}
           <TabsContent value="recipes">
-            <Card>
-              <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Recipes</CardTitle>
+            <div>
+              <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
+                <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Recipes</h3>
                 <Button onClick={addRecipe} size="sm" variant="outline">
                   <Plus className="size-4" />
                   Add Recipe
                 </Button>
-              </CardHeader>
-              <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-section)' }}>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-section)' }}>
                 {recipes.map((recipe, recipeIndex) => (
                   <Card key={recipeIndex} stroke>
                     <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
@@ -586,7 +566,7 @@ export default function ProductForm() {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
                             <div>
-                              <Label>Title *</Label>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Title *</Label>
                               <Input
                                 value={recipe.title}
                                 onChange={(e) => {
@@ -594,11 +574,20 @@ export default function ProductForm() {
                                   updated[recipeIndex].title = e.target.value
                                   setRecipes(updated)
                                 }}
-                                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
                             <div>
-                              <Label>Cultural Origin</Label>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Cultural Origin</Label>
                               <Input
                                 value={recipe.cultural_origin}
                                 onChange={(e) => {
@@ -606,12 +595,21 @@ export default function ProductForm() {
                                   updated[recipeIndex].cultural_origin = e.target.value
                                   setRecipes(updated)
                                 }}
-                                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
                           </div>
                           <div>
-                            <Label>Description</Label>
+                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
                             <textarea
                               value={recipe.description}
                               onChange={(e) => {
@@ -624,16 +622,18 @@ export default function ProductForm() {
                                 width: '100%',
                                 minHeight: '80px',
                                 padding: 'var(--spacing-card)',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid var(--color-border)',
+                                borderRadius: '8px',
+                                border: '1.5px solid var(--color-border)',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '14px',
+                                backgroundColor: 'var(--color-background)',
+                                color: 'var(--color-text)',
                               }}
                             />
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
                             <div>
-                              <Label>Prep Time (min)</Label>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Prep Time (min)</Label>
                               <Input
                                 type="number"
                                 value={recipe.prep_time_minutes}
@@ -642,11 +642,20 @@ export default function ProductForm() {
                                   updated[recipeIndex].prep_time_minutes = e.target.value
                                   setRecipes(updated)
                                 }}
-                                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
                             <div>
-                              <Label>Cook Time (min)</Label>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Cook Time (min)</Label>
                               <Input
                                 type="number"
                                 value={recipe.cook_time_minutes}
@@ -655,11 +664,20 @@ export default function ProductForm() {
                                   updated[recipeIndex].cook_time_minutes = e.target.value
                                   setRecipes(updated)
                                 }}
-                                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
                             <div>
-                              <Label>Servings</Label>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Servings</Label>
                               <Input
                                 type="number"
                                 value={recipe.servings}
@@ -668,7 +686,16 @@ export default function ProductForm() {
                                   updated[recipeIndex].servings = e.target.value
                                   setRecipes(updated)
                                 }}
-                                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
                           </div>
@@ -685,6 +712,15 @@ export default function ProductForm() {
                                       updated[recipeIndex].ingredients[ingIndex].name = e.target.value
                                       setRecipes(updated)
                                     }}
+                                    className="h-[42px] rounded-[8px] border-[1.5px]"
+                                    style={{
+                                      fontFamily: 'var(--font-body)',
+                                      backgroundColor: 'var(--color-background)',
+                                      paddingLeft: 'var(--spacing-card)',
+                                      paddingRight: 'var(--spacing-card)',
+                                      borderColor: 'var(--color-border)',
+                                      color: 'var(--color-text)',
+                                    }}
                                   />
                                   <Input
                                     placeholder="Amount"
@@ -693,6 +729,15 @@ export default function ProductForm() {
                                       const updated = [...recipes]
                                       updated[recipeIndex].ingredients[ingIndex].amount = e.target.value
                                       setRecipes(updated)
+                                    }}
+                                    className="h-[42px] rounded-[8px] border-[1.5px]"
+                                    style={{
+                                      fontFamily: 'var(--font-body)',
+                                      backgroundColor: 'var(--color-background)',
+                                      paddingLeft: 'var(--spacing-card)',
+                                      paddingRight: 'var(--spacing-card)',
+                                      borderColor: 'var(--color-border)',
+                                      color: 'var(--color-text)',
                                     }}
                                   />
                                   <Button
@@ -735,6 +780,15 @@ export default function ProductForm() {
                                       const updated = [...recipes]
                                       updated[recipeIndex].instructions[instIndex] = e.target.value
                                       setRecipes(updated)
+                                    }}
+                                    className="h-[42px] rounded-[8px] border-[1.5px]"
+                                    style={{
+                                      fontFamily: 'var(--font-body)',
+                                      backgroundColor: 'var(--color-background)',
+                                      paddingLeft: 'var(--spacing-card)',
+                                      paddingRight: 'var(--spacing-card)',
+                                      borderColor: 'var(--color-border)',
+                                      color: 'var(--color-text)',
                                     }}
                                   />
                                   <Button
@@ -795,23 +849,23 @@ export default function ProductForm() {
                     No recipes added yet. Click "Add Recipe" to get started.
                   </p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
           {/* Certifications & Quality Tab */}
           <TabsContent value="certifications">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-section)' }}>
               {/* Quality Indicators */}
-              <Card>
-                <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Quality Indicators</CardTitle>
+              <div>
+                <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
+                  <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Quality Indicators</h3>
                   <Button onClick={addQualityIndicator} size="sm" variant="outline">
                     <Plus className="size-4" />
                     Add Indicator
                   </Button>
-                </CardHeader>
-                <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                   {qualityIndicators.map((indicator, index) => (
                     <Card key={index} stroke>
                       <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', gap: 'var(--spacing-card)' }}>
@@ -835,9 +889,9 @@ export default function ProductForm() {
                                 height: '42px',
                                 padding: '0 var(--spacing-card)',
                                 borderRadius: '8px',
-                                border: '1.5px solid var(--color-primary)',
+                                border: '1.5px solid var(--color-border)',
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 color: 'var(--color-text)',
                               }}
                             >
@@ -897,11 +951,11 @@ export default function ProductForm() {
                               className="h-[42px] rounded-[8px] border-[1.5px]"
                               style={{
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                                 paddingLeft: 'var(--spacing-card)',
                                 paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-primary)',
+                                borderColor: 'var(--color-border)',
                                 color: 'var(--color-text)',
                               }}
                             />
@@ -918,11 +972,11 @@ export default function ProductForm() {
                               className="h-[42px] rounded-[8px] border-[1.5px]"
                               style={{
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                                 paddingLeft: 'var(--spacing-card)',
                                 paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-primary)',
+                                borderColor: 'var(--color-border)',
                                 color: 'var(--color-text)',
                               }}
                             />
@@ -938,19 +992,19 @@ export default function ProductForm() {
                       </CardContent>
                     </Card>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Certifications */}
-              <Card>
-                <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Certifications</CardTitle>
+              <div>
+                <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
+                  <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Certifications</h3>
                   <Button onClick={addCertification} size="sm" variant="outline">
                     <Plus className="size-4" />
                     Add Certification
                   </Button>
-                </CardHeader>
-                <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                   {certifications.map((cert, index) => (
                     <Card key={index} stroke>
                       <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', gap: 'var(--spacing-card)' }}>
@@ -968,11 +1022,11 @@ export default function ProductForm() {
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: 'var(--color-background)',
                                   marginTop: 'calc(var(--spacing-card) * 0.5)',
                                   paddingLeft: 'var(--spacing-card)',
                                   paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-primary)',
+                                  borderColor: 'var(--color-border)',
                                   color: 'var(--color-text)',
                                 }}
                               />
@@ -989,11 +1043,11 @@ export default function ProductForm() {
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: 'var(--color-background)',
                                   marginTop: 'calc(var(--spacing-card) * 0.5)',
                                   paddingLeft: 'var(--spacing-card)',
                                   paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-primary)',
+                                  borderColor: 'var(--color-border)',
                                   color: 'var(--color-text)',
                                 }}
                               />
@@ -1012,11 +1066,11 @@ export default function ProductForm() {
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: 'var(--color-background)',
                                   marginTop: 'calc(var(--spacing-card) * 0.5)',
                                   paddingLeft: 'var(--spacing-card)',
                                   paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-primary)',
+                                  borderColor: 'var(--color-border)',
                                   color: 'var(--color-text)',
                                 }}
                               />
@@ -1033,11 +1087,11 @@ export default function ProductForm() {
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: 'var(--color-background)',
                                   marginTop: 'calc(var(--spacing-card) * 0.5)',
                                   paddingLeft: 'var(--spacing-card)',
                                   paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-primary)',
+                                  borderColor: 'var(--color-border)',
                                   color: 'var(--color-text)',
                                 }}
                               />
@@ -1055,11 +1109,11 @@ export default function ProductForm() {
                               className="h-[42px] rounded-[8px] border-[1.5px]"
                               style={{
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                                 paddingLeft: 'var(--spacing-card)',
                                 paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-primary)',
+                                borderColor: 'var(--color-border)',
                                 color: 'var(--color-text)',
                               }}
                             />
@@ -1101,18 +1155,18 @@ export default function ProductForm() {
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'transparent',
+                                  backgroundColor: 'var(--color-background)',
                                   marginTop: 'calc(var(--spacing-card) * 0.5)',
                                   paddingLeft: 'var(--spacing-card)',
                                   paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-primary)',
+                                  borderColor: 'var(--color-border)',
                                   color: 'var(--color-text)',
                                 }}
                               />
                             </div>
                           </div>
                           <div>
-                            <Label>Audit Findings</Label>
+                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Audit Findings</Label>
                             <textarea
                               value={cert.audit_findings}
                               onChange={(e) => {
@@ -1125,15 +1179,17 @@ export default function ProductForm() {
                                 width: '100%',
                                 minHeight: '80px',
                                 padding: 'var(--spacing-card)',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid var(--color-border)',
+                                borderRadius: '8px',
+                                border: '1.5px solid var(--color-border)',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '14px',
+                                backgroundColor: 'var(--color-background)',
+                                color: 'var(--color-text)',
                               }}
                             />
                           </div>
                           <div>
-                            <Label>Description</Label>
+                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
                             <textarea
                               value={cert.description}
                               onChange={(e) => {
@@ -1146,10 +1202,12 @@ export default function ProductForm() {
                                 width: '100%',
                                 minHeight: '80px',
                                 padding: 'var(--spacing-card)',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid var(--color-border)',
+                                borderRadius: '8px',
+                                border: '1.5px solid var(--color-border)',
                                 fontFamily: 'var(--font-body)',
                                 fontSize: '14px',
+                                backgroundColor: 'var(--color-background)',
+                                color: 'var(--color-text)',
                               }}
                             />
                           </div>
@@ -1164,22 +1222,22 @@ export default function ProductForm() {
                       </CardContent>
                     </Card>
                   ))}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
           {/* Farming Practices Tab */}
           <TabsContent value="farming">
-            <Card>
-              <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farming Practices</CardTitle>
+            <div>
+              <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
+                <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Farming Practices</h3>
                 <Button onClick={addFarmingPractice} size="sm" variant="outline">
                   <Plus className="size-4" />
                   Add Practice
                 </Button>
-              </CardHeader>
-              <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                 {farmingPractices.map((practice, index) => (
                   <Card key={index} stroke>
                     <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', gap: 'var(--spacing-card)' }}>
@@ -1200,9 +1258,9 @@ export default function ProductForm() {
                                 height: '42px',
                                 padding: '0 var(--spacing-card)',
                                 borderRadius: '8px',
-                                border: '1.5px solid var(--color-primary)',
+                                border: '1.5px solid var(--color-border)',
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 color: 'var(--color-text)',
                               }}
                             >
@@ -1226,18 +1284,18 @@ export default function ProductForm() {
                               className="h-[42px] rounded-[8px] border-[1.5px]"
                               style={{
                                 fontFamily: 'var(--font-body)',
-                                backgroundColor: 'transparent',
+                                backgroundColor: 'var(--color-background)',
                                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                                 paddingLeft: 'var(--spacing-card)',
                                 paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-primary)',
+                                borderColor: 'var(--color-border)',
                                 color: 'var(--color-text)',
                               }}
                             />
                           </div>
                         </div>
                         <div>
-                          <Label>Practices</Label>
+                          <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Practices</Label>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)', marginTop: 'calc(var(--spacing-card) * 0.5)' }}>
                             {practice.practices.map((item, itemIndex) => (
                               <div key={itemIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
@@ -1247,6 +1305,15 @@ export default function ProductForm() {
                                     const updated = [...farmingPractices]
                                     updated[index].practices[itemIndex] = e.target.value
                                     setFarmingPractices(updated)
+                                  }}
+                                  className="h-[42px] rounded-[8px] border-[1.5px]"
+                                  style={{
+                                    fontFamily: 'var(--font-body)',
+                                    backgroundColor: 'var(--color-background)',
+                                    paddingLeft: 'var(--spacing-card)',
+                                    paddingRight: 'var(--spacing-card)',
+                                    borderColor: 'var(--color-border)',
+                                    color: 'var(--color-text)',
                                   }}
                                 />
                                 <Button
@@ -1288,8 +1355,8 @@ export default function ProductForm() {
                     </CardContent>
                   </Card>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
 

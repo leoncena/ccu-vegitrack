@@ -12,7 +12,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       ref={ref}
       className={cn("bg-card text-card-foreground", className)}
       style={{
-        backgroundColor: 'var(--color-card-foreground)',
+        backgroundColor: 'var(--color-card)',
         borderRadius: 'var(--radius-card)',
         padding: 'var(--spacing-card)',
         border: stroke ? '1px solid var(--color-card-stroke)' : 'none',

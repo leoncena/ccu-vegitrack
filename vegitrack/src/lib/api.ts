@@ -72,6 +72,19 @@ export async function getProductByDisplayId(displayId: string): Promise<Product 
   return data
 }
 
+export async function getAllProducts(): Promise<Product[]> {
+  const { data, error } = await supabase
+    .from('products')
+    .select('id, name, display_id')
+    .order('name', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching all products:', error)
+    return []
+  }
+  return data || []
+}
+
 export async function getProductWithRelations(id: string): Promise<ProductWithRelations | null> {
   // Fetch product
   const product = await getProductById(id)

@@ -68,3 +68,4 @@ If no user exists, either:
 - **Error: ON CONFLICT requires a unique constraint** → Schema might be missing unique constraints, check schema.sql ran completely
 - **Warning: User not found** → Producer profile insertion will be skipped due to `ON CONFLICT DO NOTHING`, this is okay
 
+

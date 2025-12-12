@@ -125,10 +125,15 @@ export function Combobox({
       className={cn("w-full flex items-center justify-between", className)}
       style={{
         fontFamily: 'var(--font-body)',
+        height: '42px',
+        borderRadius: '8px',
+        borderWidth: '1.5px',
+        borderColor: 'var(--color-border)',
+        backgroundColor: 'var(--color-background)',
         paddingTop: '0.5rem',
         paddingBottom: '0.5rem',
-        borderRadius: 'var(--radius-md)',
-        marginTop: 'var(--spacing-card)',
+        marginTop: 'calc(var(--spacing-card) * 0.5)',
+        color: 'var(--color-text)',
       }}
     >
       <div 

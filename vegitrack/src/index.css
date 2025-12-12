@@ -222,3 +222,15 @@ body {
   padding-top: calc(var(--spacing-card) * 0.5) !important;
   padding-bottom: calc(var(--spacing-card) * 0.5) !important;
 }
+
+/* Tab styling for folded appearance */
+[role="tablist"] [role="tab"][data-state="active"] {
+  background-color: var(--color-background) !important;
+  border: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+}
+
+[role="tablist"] [role="tab"]:not([data-state="active"]) {
+  background-color: var(--color-card) !important;
+  border: none !important;
+}

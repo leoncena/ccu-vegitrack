@@ -31,9 +31,9 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date', class
             height: '42px',
             borderRadius: '8px',
             borderWidth: '1.5px',
-            borderColor: 'var(--color-primary)',
+            borderColor: 'var(--color-border)',
             fontFamily: 'var(--font-body)',
-            backgroundColor: 'transparent',
+            backgroundColor: 'var(--color-background)',
             marginTop: 'calc(var(--spacing-card) * 0.5)',
             paddingLeft: 'var(--spacing-card)',
             paddingRight: 'var(--spacing-card)',
@@ -60,4 +60,5 @@ export function DatePicker({ value, onChange, placeholder = 'Pick a date', class
     </Popover>
   )
 }
+
 

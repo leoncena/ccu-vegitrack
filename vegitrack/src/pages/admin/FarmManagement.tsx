@@ -218,68 +218,122 @@ export default function FarmManagement() {
         <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
             <div>
-              <Label htmlFor="name">Farm Name *</Label>
+              <Label htmlFor="name" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Farm Name *</Label>
               <Input
                 id="name"
                 value={farmData.name}
                 onChange={(e) => setFarmData({ ...farmData, name: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
             <div>
-              <Label htmlFor="country">Country *</Label>
+              <Label htmlFor="country" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Country *</Label>
               <Input
                 id="country"
                 value={farmData.country}
                 onChange={(e) => setFarmData({ ...farmData, country: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="full_address">Full Address</Label>
+            <Label htmlFor="full_address" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Full Address</Label>
             <Input
               id="full_address"
               value={farmData.full_address}
               onChange={(e) => setFarmData({ ...farmData, full_address: e.target.value })}
-              style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+              className="h-[42px] rounded-[8px] border-[1.5px]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                backgroundColor: 'var(--color-background)',
+                marginTop: 'calc(var(--spacing-card) * 0.5)',
+                paddingLeft: 'var(--spacing-card)',
+                paddingRight: 'var(--spacing-card)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text)',
+              }}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
             <div>
-              <Label htmlFor="region">Region</Label>
+              <Label htmlFor="region" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Region</Label>
               <Input
                 id="region"
                 value={farmData.region}
                 onChange={(e) => setFarmData({ ...farmData, region: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
             <div>
-              <Label htmlFor="coordinates_lat">Latitude</Label>
+              <Label htmlFor="coordinates_lat" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Latitude</Label>
               <Input
                 id="coordinates_lat"
                 type="number"
                 step="any"
                 value={farmData.coordinates_lat}
                 onChange={(e) => setFarmData({ ...farmData, coordinates_lat: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
             <div>
-              <Label htmlFor="coordinates_lng">Longitude</Label>
+              <Label htmlFor="coordinates_lng" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Longitude</Label>
               <Input
                 id="coordinates_lng"
                 type="number"
                 step="any"
                 value={farmData.coordinates_lng}
                 onChange={(e) => setFarmData({ ...farmData, coordinates_lng: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
             <textarea
               id="description"
               value={farmData.description}
@@ -289,10 +343,12 @@ export default function FarmManagement() {
                 width: '100%',
                 minHeight: '100px',
                 padding: 'var(--spacing-card)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                border: '1.5px solid var(--color-border)',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)',
               }}
             />
           </div>
@@ -307,45 +363,81 @@ export default function FarmManagement() {
         <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
             <div>
-              <Label htmlFor="farmer_name">Farmer Name</Label>
+              <Label htmlFor="farmer_name" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Farmer Name</Label>
               <Input
                 id="farmer_name"
                 value={storyData.farmer_name}
                 onChange={(e) => setStoryData({ ...storyData, farmer_name: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
             <div>
-              <Label htmlFor="years_farming">Years Farming</Label>
+              <Label htmlFor="years_farming" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Years Farming</Label>
               <Input
                 id="years_farming"
                 type="number"
                 value={storyData.years_farming}
                 onChange={(e) => setStoryData({ ...storyData, years_farming: e.target.value })}
-                style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                className="h-[42px] rounded-[8px] border-[1.5px]"
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  backgroundColor: 'var(--color-background)',
+                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                  paddingLeft: 'var(--spacing-card)',
+                  paddingRight: 'var(--spacing-card)',
+                  borderColor: 'var(--color-border)',
+                  color: 'var(--color-text)',
+                }}
               />
             </div>
           </div>
           <div>
-            <Label htmlFor="title">Story Title</Label>
+            <Label htmlFor="title" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Title</Label>
             <Input
               id="title"
               value={storyData.title}
               onChange={(e) => setStoryData({ ...storyData, title: e.target.value })}
-              style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+              className="h-[42px] rounded-[8px] border-[1.5px]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                backgroundColor: 'var(--color-background)',
+                marginTop: 'calc(var(--spacing-card) * 0.5)',
+                paddingLeft: 'var(--spacing-card)',
+                paddingRight: 'var(--spacing-card)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text)',
+              }}
             />
           </div>
           <div>
-            <Label htmlFor="quote">Quote</Label>
+            <Label htmlFor="quote" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Quote</Label>
             <Input
               id="quote"
               value={storyData.quote}
               onChange={(e) => setStoryData({ ...storyData, quote: e.target.value })}
-              style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+              className="h-[42px] rounded-[8px] border-[1.5px]"
+              style={{
+                fontFamily: 'var(--font-body)',
+                backgroundColor: 'var(--color-background)',
+                marginTop: 'calc(var(--spacing-card) * 0.5)',
+                paddingLeft: 'var(--spacing-card)',
+                paddingRight: 'var(--spacing-card)',
+                borderColor: 'var(--color-border)',
+                color: 'var(--color-text)',
+              }}
             />
           </div>
           <div>
-            <Label htmlFor="story_content">Story Content</Label>
+            <Label htmlFor="story_content" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Content</Label>
             <textarea
               id="story_content"
               value={storyData.story_content}
@@ -355,10 +447,12 @@ export default function FarmManagement() {
                 width: '100%',
                 minHeight: '150px',
                 padding: 'var(--spacing-card)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)',
+                borderRadius: '8px',
+                border: '1.5px solid var(--color-border)',
                 fontFamily: 'var(--font-body)',
                 fontSize: '14px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)',
               }}
             />
           </div>
@@ -374,32 +468,35 @@ export default function FarmManagement() {
       </Card>
 
       {/* Farming Practices */}
-      <Card>
-        <CardHeader style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farming Practices</CardTitle>
+      <div>
+        <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
+          <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Farming Practices</h3>
           <Button onClick={addFarmingPractice} size="sm" variant="outline">
             <Plus className="size-4" />
             Add Practice
           </Button>
-        </CardHeader>
-        <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-section)' }}>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-section)' }}>
           {farmingPractices.map((practice, index) => (
             <Card key={index} stroke>
               <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
                     <div>
-                      <Label>Category</Label>
+                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
                       <select
                         value={practice.category}
                         onChange={(e) => updateFarmingPractice(index, 'category', e.target.value)}
                         style={{
                           marginTop: 'calc(var(--spacing-card) * 0.5)',
                           width: '100%',
-                          padding: 'calc(var(--spacing-card) * 0.75)',
-                          borderRadius: 'var(--radius-md)',
-                          border: '1px solid var(--color-border)',
+                          height: '42px',
+                          padding: '0 var(--spacing-card)',
+                          borderRadius: '8px',
+                          border: '1.5px solid var(--color-border)',
                           fontFamily: 'var(--font-body)',
+                          backgroundColor: 'var(--color-background)',
+                          color: 'var(--color-text)',
                         }}
                       >
                         <option value="soil_inputs">Soil & Inputs</option>
@@ -410,20 +507,38 @@ export default function FarmManagement() {
                       </select>
                     </div>
                     <div>
-                      <Label>Display Name</Label>
+                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Display Name</Label>
                       <Input
                         value={practice.category_display_name || ''}
                         onChange={(e) => updateFarmingPractice(index, 'category_display_name', e.target.value)}
-                        style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                        className="h-[42px] rounded-[8px] border-[1.5px]"
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          backgroundColor: 'var(--color-background)',
+                          marginTop: 'calc(var(--spacing-card) * 0.5)',
+                          paddingLeft: 'var(--spacing-card)',
+                          paddingRight: 'var(--spacing-card)',
+                          borderColor: 'var(--color-border)',
+                          color: 'var(--color-text)',
+                        }}
                       />
                     </div>
                     <div>
-                      <Label>Icon Type</Label>
+                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Icon Type</Label>
                       <Input
                         value={practice.icon_type || ''}
                         onChange={(e) => updateFarmingPractice(index, 'icon_type', e.target.value)}
                         placeholder="e.g. soil, water, bug"
-                        style={{ marginTop: 'calc(var(--spacing-card) * 0.5)' }}
+                        className="h-[42px] rounded-[8px] border-[1.5px]"
+                        style={{
+                          fontFamily: 'var(--font-body)',
+                          backgroundColor: 'var(--color-background)',
+                          marginTop: 'calc(var(--spacing-card) * 0.5)',
+                          paddingLeft: 'var(--spacing-card)',
+                          paddingRight: 'var(--spacing-card)',
+                          borderColor: 'var(--color-border)',
+                          color: 'var(--color-text)',
+                        }}
                       />
                     </div>
                   </div>
@@ -437,7 +552,7 @@ export default function FarmManagement() {
                   </Button>
                 </div>
                 <div>
-                  <Label>Practices</Label>
+                  <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Practices</Label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)', marginTop: 'calc(var(--spacing-card) * 0.5)' }}>
                     {(practice.practices || []).map((item, itemIndex) => (
                       <div key={itemIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
@@ -448,6 +563,15 @@ export default function FarmManagement() {
                             updated[index].practices = [...(updated[index].practices || [])]
                             updated[index].practices[itemIndex] = e.target.value
                             setFarmingPractices(updated)
+                          }}
+                          className="h-[42px] rounded-[8px] border-[1.5px]"
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            backgroundColor: 'var(--color-background)',
+                            paddingLeft: 'var(--spacing-card)',
+                            paddingRight: 'var(--spacing-card)',
+                            borderColor: 'var(--color-border)',
+                            color: 'var(--color-text)',
                           }}
                         />
                         <Button
@@ -478,8 +602,8 @@ export default function FarmManagement() {
               No farming practices added yet. Click "Add Practice" to get started.
             </p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)' }}>
         <Button onClick={handleSave} disabled={saving || !farmData.name || !farmData.country}>
@@ -489,4 +613,5 @@ export default function FarmManagement() {
     </div>
   )
 }
+
 

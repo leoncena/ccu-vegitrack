@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { PageHeaderWithBack, DebugFooter } from '../components/layout'
 import { MenuToggleButton } from '../components/layout/MenuToggleButton'
@@ -6,21 +6,36 @@ import { Button, Spinner, Toaster, toast } from '../components/ui'
 import { Combobox, type ComboboxOption } from '../components/ui/combobox'
 import { QRScanner } from '../components/scanner/QRScanner'
 import qrSampleImage from '../assets/scanner/qr_sample.svg'
-import { parseQRCodePayload } from '../lib/api'
+import { parseQRCodePayload, getAllProducts } from '../lib/api'
 import { useTranslation } from '../lib/i18n'
-
-// Available products for fallback selection (mirrors seed.sql demo rows)
-const PRODUCT_OPTIONS: ComboboxOption[] = [
-  { value: '11111111-2222-3333-4444-555555555555', label: 'Cluster Tomatoes (3345667)' },
-  { value: '22222222-3333-4444-5555-666666666666', label: 'Cherry Tomatoes (3345668)' },
-  { value: '33333333-4444-5555-6666-777777777777', label: 'Roma Tomatoes (3345669)' },
-]
 
 export default function Scanning() {
   const navigate = useNavigate()
   const [selectedProductId, setSelectedProductId] = useState<string>('')
   const [isLoadingProduct, setIsLoadingProduct] = useState(false)
+  const [productOptions, setProductOptions] = useState<ComboboxOption[]>([])
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true)
   const { t } = useTranslation()
+
+  useEffect(() => {
+    async function loadProducts() {
+      setIsLoadingOptions(true)
+      try {
+        const products = await getAllProducts()
+        const options: ComboboxOption[] = products.map((product) => ({
+          value: product.id,
+          label: `${product.name} (${product.display_id})`,
+        }))
+        setProductOptions(options)
+      } catch (error) {
+        console.error('Error loading products:', error)
+        toast.error('Failed to load products')
+      } finally {
+        setIsLoadingOptions(false)
+      }
+    }
+    loadProducts()
+  }, [])
 
   const handleNavigate = useCallback(
     (productId: string) => {
@@ -136,14 +151,20 @@ export default function Scanning() {
           </p>
 
           <div style={{ marginBottom: 'var(--spacing-card)' }}>
-            <Combobox
-              options={PRODUCT_OPTIONS}
-              value={selectedProductId}
-              onValueChange={setSelectedProductId}
-              placeholder={t('scan.placeholder')}
-              searchPlaceholder={t('scan.searchPlaceholder')}
-              emptyText={t('scan.empty')}
-            />
+            {isLoadingOptions ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-card)' }}>
+                <Spinner className="size-4" style={{ color: 'var(--color-primary)' }} />
+              </div>
+            ) : (
+              <Combobox
+                options={productOptions}
+                value={selectedProductId}
+                onValueChange={setSelectedProductId}
+                placeholder={t('scan.placeholder')}
+                searchPlaceholder={t('scan.searchPlaceholder')}
+                emptyText={t('scan.empty')}
+              />
+            )}
           </div>
 
           <Button
