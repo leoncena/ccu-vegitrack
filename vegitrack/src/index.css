@@ -73,6 +73,19 @@ body {
   background-color: var(--color-background);
 }
 
+/* Desktop layout override for admin pages */
+#root.admin-page {
+  max-width: none;
+  margin: 0;
+  width: 100%;
+}
+
+/* Ensure text is visible on admin pages */
+#root.admin-page,
+#root.admin-page * {
+  color: var(--color-text);
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

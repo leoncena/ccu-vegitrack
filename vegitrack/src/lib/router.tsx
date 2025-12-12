@@ -23,6 +23,9 @@ import ErrorPage from '../pages/ErrorPage'
 import RecentScans from '../pages/RecentScans'
 import Favorites from '../pages/Favorites'
 import MyAccount from '../pages/MyAccount'
+import AdminDashboard from '../pages/admin/AdminDashboard'
+import ProductForm from '../pages/admin/ProductForm'
+import ProductOverview from '../pages/admin/ProductOverview'
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +42,10 @@ export const router = createBrowserRouter([
       { path: '/recent-scans', element: <RecentScans /> },
       { path: '/favorites', element: <Favorites /> },
       { path: '/account', element: <MyAccount /> },
+      { path: '/admin', element: <AdminDashboard /> },
+      { path: '/admin/product/new', element: <ProductForm /> },
+      { path: '/admin/product/:id', element: <ProductForm /> },
+      { path: '/admin/product/:id/overview', element: <ProductOverview /> },
       { path: '/blockchain/assurance', element: <BlockchainAssurance /> },
       { path: '/product/:id', element: <FoodPassport /> },
       { path: '/product/:id/origin', element: <OriginTransport /> },

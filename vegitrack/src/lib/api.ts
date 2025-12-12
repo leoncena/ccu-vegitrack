@@ -389,3 +389,296 @@ export async function getAlternativeProducts(productId: string): Promise<Alterna
   }))
 }
 
+// ============================================
+// Producer & Farm Management
+// ============================================
+
+export async function getProducerProfile(userId: string) {
+  const { data, error } = await supabase
+    .from('producer_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching producer profile:', error)
+    return null
+  }
+  return data
+}
+
+export async function getProducerFarm(userId: string): Promise<Farm | null> {
+  // First, get producer profile
+  const { data: profile } = await supabase
+    .from('producer_profiles')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!profile) return null
+
+  // Try to get farm from producer's products
+  const { data: products } = await supabase
+    .from('producer_products')
+    .select('product:products(farm_id)')
+    .eq('producer_id', profile.id)
+
+  if (products && products.length > 0) {
+    const product = products[0]?.product as any
+    if (product?.farm_id) {
+      return getFarmById(product.farm_id)
+    }
+  }
+
+  // If no farm found via products, return null (user can create one)
+  return null
+}
+
+export async function createFarm(farmData: Omit<Farm, 'id' | 'created_at'>) {
+  const { data, error } = await (supabase
+    .from('farms') as any)
+    .insert(farmData)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error creating farm:', error)
+    throw error
+  }
+  return data
+}
+
+export async function updateFarm(farmId: string, farmData: Partial<Omit<Farm, 'id' | 'created_at'>>) {
+  const { data, error } = await (supabase
+    .from('farms') as any)
+    .update(farmData)
+    .eq('id', farmId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating farm:', error)
+    throw error
+  }
+  return data
+}
+
+export async function upsertFarmerStory(storyData: Omit<FarmerStory, 'id' | 'created_at'> & { id?: string }) {
+  if (storyData.id) {
+    const { id, ...updateData } = storyData
+    const { data, error } = await (supabase
+      .from('farmer_stories') as any)
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  } else {
+    const { id, ...insertData } = storyData
+    const { data, error } = await (supabase
+      .from('farmer_stories') as any)
+      .insert(insertData)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
+}
+
+export async function upsertFarmingPractice(practiceData: Omit<FarmingPractice, 'id' | 'created_at'> & { id?: string }) {
+  if (practiceData.id) {
+    const { id, ...updateData } = practiceData
+    const { data, error } = await (supabase
+      .from('farming_practices') as any)
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  } else {
+    const { id, ...insertData } = practiceData
+    const { data, error } = await (supabase
+      .from('farming_practices') as any)
+      .insert(insertData)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  }
+}
+
+export async function deleteFarmingPractice(practiceId: string) {
+  const { error } = await supabase
+    .from('farming_practices')
+    .delete()
+    .eq('id', practiceId)
+  if (error) throw error
+}
+
+// ============================================
+// Product Management
+// ============================================
+
+export async function getProducerProducts(userId: string): Promise<Product[]> {
+  const { data: profile } = await (supabase
+    .from('producer_profiles') as any)
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!profile) return []
+
+  const { data, error } = await (supabase
+    .from('producer_products') as any)
+    .select('product:products(*)')
+    .eq('producer_id', profile.id)
+
+  if (error) {
+    console.error('Error fetching producer products:', error)
+    return []
+  }
+
+  return (data || []).map((item: { product: Product }) => item.product).filter(Boolean)
+}
+
+export async function createProduct(
+  productData: Omit<Product, 'id' | 'created_at' | 'updated_at'>,
+  userId: string,
+  relatedData?: {
+    labels?: Omit<ProductLabel, 'id' | 'created_at' | 'product_id'>[]
+    qualityIndicators?: Omit<QualityIndicator, 'id' | 'created_at' | 'product_id'>[]
+    certifications?: Omit<CertificationBlock, 'id' | 'created_at' | 'product_id' | 'block_index' | 'block_hash' | 'previous_hash' | 'timestamp'>[]
+    recipes?: Omit<Recipe, 'id' | 'created_at' | 'product_id'>[]
+    sustainabilityMetrics?: Omit<SustainabilityMetric, 'id' | 'created_at' | 'product_id'> | null
+  }
+) {
+  // Create product
+  const { data: product, error: productError } = await (supabase
+    .from('products') as any)
+    .insert(productData)
+    .select()
+    .single()
+
+  if (productError) {
+    console.error('Error creating product:', productError)
+    throw productError
+  }
+
+  // Link to producer
+  const { data: profile } = await (supabase
+    .from('producer_profiles') as any)
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (profile && product) {
+    await (supabase.from('producer_products') as any).insert({
+      producer_id: profile.id,
+      product_id: product.id,
+    })
+  }
+
+  // Create related data
+  if (relatedData) {
+    const now = new Date().toISOString()
+    
+    if (relatedData.labels?.length && product) {
+      await (supabase.from('product_labels') as any).insert(
+        relatedData.labels.map((label: any) => ({ ...label, product_id: product.id }))
+      )
+    }
+
+    if (relatedData.qualityIndicators?.length && product) {
+      await (supabase.from('quality_indicators') as any).insert(
+        relatedData.qualityIndicators.map((indicator: any) => {
+          const indicatorData: any = {
+            ...indicator,
+            product_id: product.id,
+            score: typeof indicator.score === 'string' ? parseFloat(indicator.score) : indicator.score,
+            max_score: typeof indicator.max_score === 'string' ? parseFloat(indicator.max_score) : (indicator.max_score || 5),
+            percentage: indicator.percentage ? parseFloat(indicator.percentage) : ((indicator.score / (indicator.max_score || 5)) * 100),
+          }
+          // Remove shelf_life_remaining_days if not shelf_life type (it's not a DB field)
+          if (indicator.indicator_type !== 'shelf_life') {
+            delete indicatorData.shelf_life_remaining_days
+          }
+          return indicatorData
+        })
+      )
+    }
+
+    if (relatedData.certifications?.length && product) {
+      let previousHash: string | null = null
+      for (let i = 0; i < relatedData.certifications.length; i++) {
+        const cert = relatedData.certifications[i]
+        const blockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+        await (supabase.from('certification_ledger') as any).insert({
+          ...cert,
+          product_id: product.id,
+          block_index: i,
+          block_hash: blockHash,
+          previous_hash: previousHash,
+          timestamp: now,
+        })
+        previousHash = blockHash
+      }
+    }
+
+    if (relatedData.recipes?.length && product) {
+      await (supabase.from('recipes') as any).insert(
+        relatedData.recipes.map((recipe: any) => ({ ...recipe, product_id: product.id }))
+      )
+    }
+
+    if (relatedData.sustainabilityMetrics && product) {
+      await (supabase.from('sustainability_metrics') as any).insert({
+        ...relatedData.sustainabilityMetrics,
+        product_id: product.id,
+      })
+    }
+  }
+
+  return product
+}
+
+export async function updateProduct(
+  productId: string,
+  productData: Partial<Omit<Product, 'id' | 'created_at' | 'updated_at'>>
+) {
+  const { data, error } = await (supabase
+    .from('products') as any)
+    .update(productData)
+    .eq('id', productId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating product:', error)
+    throw error
+  }
+  return data
+}
+
+export async function deleteProduct(productId: string) {
+  const { error } = await (supabase
+    .from('products') as any)
+    .delete()
+    .eq('id', productId)
+  if (error) throw error
+}
+
+export async function getAllFarms(): Promise<Farm[]> {
+  const { data, error } = await (supabase
+    .from('farms') as any)
+    .select('*')
+    .order('name')
+
+  if (error) {
+    console.error('Error fetching farms:', error)
+    return []
+  }
+  return data || []
+}
+

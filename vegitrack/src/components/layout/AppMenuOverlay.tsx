@@ -37,6 +37,7 @@ export function AppMenuOverlay() {
       { label: t('menu.recentScans'), to: '/recent-scans' },
       { label: t('menu.favorites'), to: '/favorites' },
       { label: t('menu.myAccount'), to: '/account' },
+      { label: 'Admin mode', to: '/admin' },
     ],
     [t],
   )
