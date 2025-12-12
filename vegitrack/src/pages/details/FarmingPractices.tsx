@@ -1,9 +1,10 @@
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
 import { 
   FarmingPracticeCard, 
   FarmingHighlightsCarousel,
 } from '../../components/ui'
+import { VerifiedBadge } from '../../components/features/VegiChain'
 
 const PRACTICES = [
   {
@@ -95,6 +96,42 @@ export default function FarmingPractices() {
             items={practice.items}
           />
         ))}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'calc(var(--spacing-card) * 0.6)',
+          backgroundColor: 'var(--color-surface)',
+          borderRadius: 'var(--radius-card)',
+          padding: 'calc(var(--spacing-section) * 1.2)',
+          marginTop: 'calc(var(--spacing-section) * 1.2)',
+          marginBottom: 'calc(var(--spacing-section) * 1.2)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--spacing-card) * 0.6)' }}>
+          <VerifiedBadge size="md" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.2)' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-text)' }}>
+              Supply chain events anchored on VegiChain
+            </span>
+            <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
+              Harvest, packaging, cold-chain handoffs, and store arrival are hashed blocks to expose tampering.
+            </span>
+          </div>
+        </div>
+        <Link
+          to="/blockchain/assurance"
+          style={{
+            fontFamily: 'var(--font-body)',
+            color: 'var(--color-primary)',
+            textDecoration: 'underline',
+            fontWeight: 600,
+          }}
+        >
+          What this verification covers
+        </Link>
       </div>
       
       {/* Debug Footer */}

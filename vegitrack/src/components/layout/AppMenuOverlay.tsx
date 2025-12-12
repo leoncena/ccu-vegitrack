@@ -33,6 +33,7 @@ export function AppMenuOverlay() {
 
   const navItems: NavItem[] = useMemo(
     () => [
+      { label: t('menu.blockchainAssurance') ?? 'Blockchain assurance', to: '/blockchain/assurance' },
       { label: t('menu.recentScans'), to: '/recent-scans' },
       { label: t('menu.favorites'), to: '/favorites' },
       { label: t('menu.myAccount'), to: '/account' },

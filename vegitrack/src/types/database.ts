@@ -54,6 +54,31 @@ export interface Database {
         Insert: Omit<Recipe, 'id' | 'created_at'>
         Update: Partial<Omit<Recipe, 'id'>>
       }
+      sustainability_metrics: {
+        Row: SustainabilityMetric
+        Insert: Omit<SustainabilityMetric, 'id' | 'created_at'>
+        Update: Partial<Omit<SustainabilityMetric, 'id'>>
+      }
+      user_favorites: {
+        Row: UserFavorite
+        Insert: Omit<UserFavorite, 'id' | 'created_at'>
+        Update: Partial<Omit<UserFavorite, 'id'>>
+      }
+      view_history: {
+        Row: ViewHistory
+        Insert: Omit<ViewHistory, 'id' | 'viewed_at'>
+        Update: Partial<Omit<ViewHistory, 'id'>>
+      }
+      producer_profiles: {
+        Row: ProducerProfile
+        Insert: Omit<ProducerProfile, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<ProducerProfile, 'id'>>
+      }
+      producer_products: {
+        Row: ProducerProduct
+        Insert: Omit<ProducerProduct, 'id' | 'created_at'>
+        Update: Partial<Omit<ProducerProduct, 'id'>>
+      }
     }
   }
 }
@@ -105,6 +130,7 @@ export interface ProductLabel {
   label_name: string
   label_color: string | null
   icon_type: string | null
+  blockchain_verified?: boolean | null
   created_at: string
 }
 
@@ -137,6 +163,7 @@ export interface SupplyChainBlock {
   transport_method: 'truck' | 'refrigerated_truck' | 'ship' | 'rail' | null
   timestamp: string
   details: Record<string, unknown>
+  blockchain_verified?: boolean | null
   created_at: string
 }
 
@@ -157,6 +184,7 @@ export interface CertificationBlock {
   audit_findings: string | null
   description: string | null
   timestamp: string
+  blockchain_verified?: boolean | null
   created_at: string
 }
 
@@ -194,6 +222,50 @@ export interface Recipe {
   ingredients: { name: string; amount: string }[]
   instructions: string[]
   image_url: string | null
+  created_at: string
+}
+
+export interface SustainabilityMetric {
+  id: string
+  product_id: string
+  co2e_per_kg: number | null
+  water_usage_l_per_kg: number | null
+  land_use_m2_per_kg: number | null
+  energy_kwh_per_kg: number | null
+  notes: string | null
+  created_at: string
+}
+
+export interface UserFavorite {
+  id: string
+  user_id: string
+  product_id: string
+  created_at: string
+}
+
+export interface ViewHistory {
+  id: string
+  user_id: string
+  product_id: string
+  viewed_at: string
+  metadata?: Record<string, unknown> | null
+}
+
+export interface ProducerProfile {
+  id: string
+  user_id: string
+  company_name: string
+  contact_email: string | null
+  contact_phone: string | null
+  country: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ProducerProduct {
+  id: string
+  producer_id: string
+  product_id: string
   created_at: string
 }
 

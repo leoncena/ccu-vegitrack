@@ -80,6 +80,7 @@ CREATE TABLE IF NOT EXISTS product_labels (
   label_name VARCHAR(100) NOT NULL,
   label_color VARCHAR(7),
   icon_type VARCHAR(50),
+  blockchain_verified BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -117,6 +118,7 @@ CREATE TABLE IF NOT EXISTS supply_chain_ledger (
   transport_method VARCHAR(50),
   timestamp TIMESTAMPTZ NOT NULL,
   details JSONB DEFAULT '{}',
+  blockchain_verified BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -143,6 +145,7 @@ CREATE TABLE IF NOT EXISTS certification_ledger (
   audit_findings TEXT,
   description TEXT,
   timestamp TIMESTAMPTZ NOT NULL,
+  blockchain_verified BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -193,6 +196,20 @@ CREATE TABLE IF NOT EXISTS recipes (
 );
 
 -- ============================================
+-- Table: sustainability_metrics (per product)
+-- ============================================
+CREATE TABLE IF NOT EXISTS sustainability_metrics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  co2e_per_kg DECIMAL(10,3),
+  water_usage_l_per_kg DECIMAL(10,2),
+  land_use_m2_per_kg DECIMAL(10,2),
+  energy_kwh_per_kg DECIMAL(10,2),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- ============================================
 -- Table: alternative_products
 -- ============================================
 CREATE TABLE IF NOT EXISTS alternative_products (
@@ -203,6 +220,53 @@ CREATE TABLE IF NOT EXISTS alternative_products (
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(product_id, alternative_id)
+);
+
+-- ============================================
+-- Table: user_favorites (products)
+-- ============================================
+CREATE TABLE IF NOT EXISTS user_favorites (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, product_id)
+);
+
+-- ============================================
+-- Table: view_history (product views)
+-- ============================================
+CREATE TABLE IF NOT EXISTS view_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMPTZ DEFAULT now(),
+  metadata JSONB DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_view_history_user ON view_history(user_id, viewed_at DESC);
+
+-- ============================================
+-- Producer / Admin Tables
+-- ============================================
+CREATE TABLE IF NOT EXISTS producer_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  company_name VARCHAR(255) NOT NULL,
+  contact_email VARCHAR(255),
+  contact_phone VARCHAR(50),
+  country VARCHAR(100),
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS producer_products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  producer_id UUID REFERENCES producer_profiles(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(producer_id, product_id)
 );
 
 -- ============================================
@@ -261,6 +325,11 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scan_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE qr_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sustainability_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
+ALTER TABLE view_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE producer_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE producer_products ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for product-related tables
 CREATE POLICY "Public read access" ON farms FOR SELECT USING (true);
@@ -275,6 +344,7 @@ CREATE POLICY "Public read access" ON farmer_stories FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON recipes FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON alternative_products FOR SELECT USING (true);
 CREATE POLICY "Public read access" ON qr_codes FOR SELECT USING (true);
+CREATE POLICY "Public read access" ON sustainability_metrics FOR SELECT USING (true);
 
 -- User-specific policies
 CREATE POLICY "Users can read own profile" ON users 
@@ -295,6 +365,33 @@ CREATE POLICY "Users can insert own bookmarks" ON bookmarks
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete own bookmarks" ON bookmarks 
   FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can read own favorites" ON user_favorites 
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own favorites" ON user_favorites 
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can delete own favorites" ON user_favorites 
+  FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can read own view history" ON view_history 
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own view history" ON view_history 
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Producers read own profile" ON producer_profiles 
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Producers upsert own profile" ON producer_profiles 
+  FOR INSERT TO authenticated
+  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Producers update own profile" ON producer_profiles 
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Producers read own product links" ON producer_products 
+  FOR SELECT USING (producer_id IN (SELECT id FROM producer_profiles WHERE user_id = auth.uid()));
+CREATE POLICY "Producers insert own product links" ON producer_products 
+  FOR INSERT WITH CHECK (producer_id IN (SELECT id FROM producer_profiles WHERE user_id = auth.uid()));
+CREATE POLICY "Producers delete own product links" ON producer_products 
+  FOR DELETE USING (producer_id IN (SELECT id FROM producer_profiles WHERE user_id = auth.uid()));
 
 -- ============================================
 -- Function: Update timestamp trigger

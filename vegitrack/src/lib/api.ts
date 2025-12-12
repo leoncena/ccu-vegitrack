@@ -11,6 +11,9 @@ import type {
   FarmerStory,
   Recipe,
   ProductWithRelations,
+  UserFavorite,
+  ViewHistory,
+  SustainabilityMetric,
 } from '../types/database'
 
 // ============================================
@@ -75,12 +78,13 @@ export async function getProductWithRelations(id: string): Promise<ProductWithRe
   if (!product) return null
 
   // Fetch related data in parallel
-  const [farm, labels, qualityIndicators, supplyChain, certifications] = await Promise.all([
+  const [farm, labels, qualityIndicators, supplyChain, certifications, metrics] = await Promise.all([
     product.farm_id ? getFarmById(product.farm_id) : null,
     getProductLabels(id),
     getQualityIndicators(id),
     getSupplyChain(id),
     getCertifications(id),
+    getSustainabilityMetrics(id),
   ])
 
   return {
@@ -90,6 +94,7 @@ export async function getProductWithRelations(id: string): Promise<ProductWithRe
     quality_indicators: qualityIndicators || undefined,
     supply_chain: supplyChain || undefined,
     certifications: certifications || undefined,
+    sustainability_metrics: metrics || undefined,
   }
 }
 
@@ -263,6 +268,79 @@ export async function getRecipes(productId: string): Promise<Recipe[]> {
     return []
   }
   return data || []
+}
+
+// ============================================
+// Sustainability Metrics
+// ============================================
+export async function getSustainabilityMetrics(productId: string): Promise<SustainabilityMetric | null> {
+  const { data, error } = await supabase
+    .from('sustainability_metrics')
+    .select('*')
+    .eq('product_id', productId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Error fetching sustainability metrics:', error)
+    return null
+  }
+  return data || null
+}
+
+// ============================================
+// Favorites
+// ============================================
+export async function getUserFavorites(userId: string): Promise<(UserFavorite & { product?: Product | null })[]> {
+  const { data, error } = await supabase
+    .from('user_favorites')
+    .select('*, product:products(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching favorites:', error)
+    return []
+  }
+  return (data as (UserFavorite & { product?: Product | null })[]) || []
+}
+
+export async function addFavorite(userId: string, productId: string) {
+  const { error } = await supabase.from('user_favorites').upsert({ user_id: userId, product_id: productId })
+  if (error) throw error
+}
+
+export async function removeFavorite(userId: string, productId: string) {
+  const { error } = await supabase
+    .from('user_favorites')
+    .delete()
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+  if (error) throw error
+}
+
+// ============================================
+// View History
+// ============================================
+export async function addViewHistory(userId: string, productId: string, metadata: Record<string, unknown> = {}) {
+  const { error } = await supabase
+    .from('view_history')
+    .insert({ user_id: userId, product_id: productId, metadata })
+  if (error) throw error
+}
+
+export async function getViewHistory(userId: string, limit = 20): Promise<(ViewHistory & { product?: Product | null })[]> {
+  const { data, error } = await supabase
+    .from('view_history')
+    .select('*, product:products(*)')
+    .eq('user_id', userId)
+    .order('viewed_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    console.error('Error fetching view history:', error)
+    return []
+  }
+  return (data as (ViewHistory & { product?: Product | null })[]) || []
 }
 
 export async function getRecipeById(id: string): Promise<Recipe | null> {

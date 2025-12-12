@@ -22,15 +22,20 @@ export function Tag({
   children, 
   ...props 
 }: TagProps) {
+  const background = color ? `${color}1A` : 'var(--color-card)'
+  const textColor = color || 'var(--color-text)'
+  const borderColor = color ? `${color}80` : 'rgba(0,0,0,0.08)'
   return (
     <span
       className={`inline-flex items-center gap-1 ${sizeStyles[size]} ${className}`}
       style={{
-        backgroundColor: color ? `${color}15` : 'var(--color-card)',
-        color: color || 'var(--color-text)',
+        backgroundColor: background,
+        color: textColor,
         borderRadius: '15px',
         fontFamily: 'var(--font-body)',
-        fontWeight: 500,
+        fontWeight: 600,
+        border: `1px solid ${borderColor}`,
+        letterSpacing: '-0.1px',
         ...style,
       }}
       {...props}

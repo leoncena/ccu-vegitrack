@@ -18,6 +18,7 @@ import FarmingPractices from '../pages/details/FarmingPractices'
 import FarmerStories from '../pages/details/FarmerStories'
 import Recipes from '../pages/details/Recipes'
 import RecipeDetail from '../pages/details/RecipeDetail'
+import BlockchainAssurance from '../pages/BlockchainAssurance'
 import ErrorPage from '../pages/ErrorPage'
 import RecentScans from '../pages/RecentScans'
 import Favorites from '../pages/Favorites'
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: '/recent-scans', element: <RecentScans /> },
       { path: '/favorites', element: <Favorites /> },
       { path: '/account', element: <MyAccount /> },
+      { path: '/blockchain/assurance', element: <BlockchainAssurance /> },
       { path: '/product/:id', element: <FoodPassport /> },
       { path: '/product/:id/origin', element: <OriginTransport /> },
       { path: '/product/:id/certifications', element: <CertificationsQuality /> },

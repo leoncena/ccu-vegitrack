@@ -2,30 +2,88 @@
 -- Run this AFTER schema.sql to populate sample data
 
 -- ============================================
--- Store: LIDL Delft
+-- Store: My Auchan - Largo da Graça
+-- Plus code: PVM6+XX Lisbon
 -- ============================================
 INSERT INTO stores (id, name, address, coordinates, distance_m)
 VALUES (
   'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  'LIDL Delft',
-  'Martinus Nijhofflaan 2, 2624 ES Delft',
-  POINT(4.3572, 52.0029), -- lon, lat
-  450
+  'My Auchan - Largo do Leão',
+  'Largo do Leão 268, 1000-268 Lisboa, Portugal',
+  POINT(-9.0815, 38.4406), -- lon, lat 38°44'06.0"N 9°08'15.3"W
+  200
 );
 
 -- ============================================
--- Farm: Quinta da Ria
+-- Store: Continente Bom Dia - Av. Defensores Chaves 9A, Av. Praia da Vitória 7 a, 1000-245 Lisboa
+-- Plus code: PVM4+CW Lisbon
+-- ===========================================
+INSERT INTO stores (id, name, address, coordinates, distance_m)
+VALUES (
+  'b2c3d4e5-f6a7-8901-bcde-f23456789012',
+  'Continente Bom Dia - Av. Defensores Chaves 9A',
+  'Av. Praia da Vitória 7 a, 1000-245 Lisboa, Portugal',
+  POINT(-9.0833, 38.4401), -- lon, lat 38°44'00.3"N 9°08'33.2"W
+  500
+);
+
+-- ============================================
+-- Store: Pingo Doce - Av. Rovisco Pais 1, 1049-001 Lisboa
+-- Plus code: PVP6+R2 Lisbon
+-- ===========================================
+INSERT INTO stores (id, name, address, coordinates, distance_m)
+VALUES (
+  'c3d4e5f6-a7b8-9012-cdef-034567890123',
+  'Pingo Doce - Av. Rovisco Pais 1',
+  'Av. Rovisco Pais 1, 1049-001 Lisboa, Portugal',
+  POINT(-9.1500, 38.7369), -- lon, lat
+  50
+);
+
+
+-- ============================================
+-- Farm: Quinta do Sol
 -- ============================================
 INSERT INTO farms (id, name, full_address, region, country, coordinates, distance_km, description)
 VALUES (
   'f1a2b3c4-d5e6-7890-abcd-ef1234567890',
-  'Quinta da Ria',
+  'Quinta do Sol',
   'Estrada Nacional 125, Algarve',
   'Algarve',
   'Portugal',
   POINT(-7.5370, 37.1342), -- lon, lat
-  1842.5,
+  230.0,
   'A family-owned organic farm in the sunny Algarve region of Portugal, specializing in tomatoes and citrus fruits. The farm has been practicing sustainable agriculture for over 30 years.'
+);
+
+-- ============================================
+-- Farm: GreenHouse Westland (for Cherry Tomatoes)
+-- ============================================
+INSERT INTO farms (id, name, full_address, region, country, coordinates, distance_km, description)
+VALUES (
+  'f2b3c4d5-e6f7-8901-bcde-f23456789012',
+  'GreenHouse Westland',
+  'Middel Broekweg 29, Naaldwijk',
+  'Westland',
+  'Netherlands',
+  POINT(4.2056, 51.9943), -- lon, lat
+  65.0,
+  'High-tech sustainable greenhouse complex in the heart of the Netherlands. Using geothermal energy and advanced hydroponics for year-round production.'
+);
+
+-- ============================================
+-- Farm: Sole di Campania (for Roma Tomatoes)
+-- ============================================
+INSERT INTO farms (id, name, full_address, region, country, coordinates, distance_km, description)
+VALUES (
+  'f3c4d5e6-f7a8-9012-cdef-034567890123',
+  'Sole di Campania',
+  'Via Domitiana, Castel Volturno',
+  'Campania',
+  'Italy',
+  POINT(14.0595, 40.9459), -- lon, lat
+  1450.0,
+  'Traditional Italian farm located in the fertile volcanic soils of Campania. Famous for San Marzano tomatoes grown under the Mediterranean sun.'
 );
 
 -- ============================================
@@ -91,11 +149,11 @@ VALUES (
   '0x7f3a8b2c9d4e5f6a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a',
   NULL,
   'harvest',
-  'Quinta da Ria Farm',
+  'Quinta do Sol',
   'farm',
   'João Silva',
   POINT(-7.5370, 37.1342),
-  1842.5,
+  230.0,
   'ambient',
   '2025-11-18T06:30:00Z',
   '{"temperature_c": 18, "humidity_percent": 65, "batch_size_kg": 500}'
@@ -113,11 +171,11 @@ VALUES (
   '0x2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c',
   '0x7f3a8b2c9d4e5f6a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a',
   'package',
-  'FreshPack Algarve',
+  'Packaging Center',
   'packaging_center',
   'Maria Santos',
   POINT(-7.9090, 36.9975),
-  1840.0,
+  157.0,
   'refrigerated',
   '2025-11-18T10:15:00Z',
   '{"package_type": "cluster_tray", "weight_kg": 0.5, "quality_grade": "A"}'
@@ -135,15 +193,15 @@ VALUES (
   '0x9c1d3e5f7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d',
   '0x2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d3e5f7a9b1c3d5e7f9a1b3c',
   'distribution',
-  'European Distribution Hub',
+  'Distribution Center',
   'distribution_center',
   'TransEuro Logistics',
-  POINT(4.4699, 51.9225),
-  250.0,
+  POINT(-8.6291, 37.1390), -- Portimão/Lagos area
+  80.0,
   'refrigerated',
   'refrigerated_truck',
   '2025-11-20T14:30:00Z',
-  '{"vehicle_id": "TE-7823", "temperature_maintained_c": 4, "route": "Algarve → Madrid → Paris → Rotterdam"}'
+  '{"vehicle_id": "TE-7823", "temperature_maintained_c": 4, "route": "Algarve → Lisbon"}'
 );
 
 -- Block 3: Store arrival
@@ -158,10 +216,10 @@ VALUES (
   '0x4e6f8a0b2c4d6e8f0a2b4c6d8e0f2a4b6c8d0e2f4a6b8c0d2e4f6a8b0c2d4e6f',
   '0x9c1d3e5f7a9b1c3d5e7f9a1b3c5d7e9f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c1d',
   'store_arrival',
-  'LIDL Delft',
+  'My Auchan - Largo da Graça',
   'store',
   'Store Team',
-  POINT(4.3572, 52.0029),
+  POINT(-9.1304, 38.7162),
   0,
   'refrigerated',
   'refrigerated_truck',
@@ -450,7 +508,7 @@ VALUES (
   'Sweet Million',
   'Netherlands',
   'Westland',
-  NULL,
+  'f2b3c4d5-e6f7-8901-bcde-f23456789012',
   '2025-11-20',
   4.49,
   65,
@@ -466,7 +524,7 @@ VALUES ('QR-3345668', '22222222-3333-4444-5555-666666666666', NULL, true);
 -- Roma Tomatoes
 INSERT INTO products (
   id, display_id, name, scientific_name, variety,
-  origin_country, origin_region, harvest_date,
+  origin_country, origin_region, farm_id, harvest_date,
   price_per_kg, transport_distance_km, emissions_co2e_per_kg,
   image_url, qr_code
 )
@@ -478,6 +536,7 @@ VALUES (
   'San Marzano',
   'Italy',
   'Campania',
+  'f3c4d5e6-f7a8-9012-cdef-034567890123',
   '2025-11-17',
   3.29,
   1450,

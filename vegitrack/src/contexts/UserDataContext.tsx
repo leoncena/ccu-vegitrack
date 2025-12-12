@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAuth } from './AuthContext'
+import { addFavorite, addViewHistory, getUserFavorites, getViewHistory, removeFavorite } from '../lib/api'
 
 export interface ProductSummary {
   id: string
@@ -49,49 +50,106 @@ export function UserDataProvider({ children }: { children: ReactNode }) {
 
   // Load when user changes
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw) as UserDataState
-        setData({
-          recentProducts: parsed.recentProducts || [],
-          favoriteProducts: parsed.favoriteProducts || [],
-          favoriteRecipes: parsed.favoriteRecipes || [],
-        })
+    const run = async () => {
+      // guest fallback to localStorage
+      if (!user) {
+        try {
+          const raw = localStorage.getItem(storageKey)
+          if (raw) {
+            const parsed = JSON.parse(raw) as UserDataState
+            setData({
+              recentProducts: parsed.recentProducts || [],
+              favoriteProducts: parsed.favoriteProducts || [],
+              favoriteRecipes: parsed.favoriteRecipes || [],
+            })
+            return
+          }
+        } catch (err) {
+          console.error('Failed to load user data from storage', err)
+        }
+        setData(DEFAULT_STATE)
         return
       }
-    } catch (err) {
-      console.error('Failed to load user data from storage', err)
+
+      try {
+        const [favorites, history] = await Promise.all([
+          getUserFavorites(user.id),
+          getViewHistory(user.id, 25),
+        ])
+        setData((prev) => ({
+          ...prev,
+          favoriteProducts: favorites.map((f) => ({
+            id: f.product_id,
+            name: f.product?.name || '',
+            displayId: f.product?.display_id,
+            imageUrl: f.product?.image_url,
+          })),
+          recentProducts: history.map((h) => ({
+            id: h.product_id,
+            name: h.product?.name || '',
+            displayId: h.product?.display_id,
+            imageUrl: h.product?.image_url,
+          })),
+        }))
+      } catch (err) {
+        console.error('Failed to load remote user data', err)
+      }
     }
-    setData(DEFAULT_STATE)
-  }, [storageKey])
+    run()
+  }, [storageKey, user])
 
-  // Persist when data changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(data))
-    } catch (err) {
-      console.error('Failed to persist user data', err)
-    }
-  }, [data, storageKey])
+  const addRecentProduct = useCallback(
+    (product: ProductSummary) => {
+      setData((prev) => {
+        const filtered = prev.recentProducts.filter((item) => item.id !== product.id)
+        const next = [product, ...filtered].slice(0, 10)
 
-  const addRecentProduct = useCallback((product: ProductSummary) => {
-    setData((prev) => {
-      const filtered = prev.recentProducts.filter((item) => item.id !== product.id)
-      const next = [product, ...filtered].slice(0, 10)
-      return { ...prev, recentProducts: next }
-    })
-  }, [])
+        // Persist guest state inside the updater to avoid stale captures and re-renders
+        if (!user?.id) {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify({ ...prev, recentProducts: next }))
+          } catch (err) {
+            console.error('Failed to persist guest recent product', err)
+          }
+        }
 
-  const toggleFavoriteProduct = useCallback((product: ProductSummary) => {
-    setData((prev) => {
-      const exists = prev.favoriteProducts.some((item) => item.id === product.id)
-      const nextFavorites = exists
-        ? prev.favoriteProducts.filter((item) => item.id !== product.id)
-        : [...prev.favoriteProducts, product]
-      return { ...prev, favoriteProducts: nextFavorites }
-    })
-  }, [])
+        return { ...prev, recentProducts: next }
+      })
+
+      if (user?.id) {
+        addViewHistory(user.id, product.id).catch((err) => console.error('Failed to record view history', err))
+      }
+    },
+    [storageKey, user?.id],
+  )
+
+  const toggleFavoriteProduct = useCallback(
+    (product: ProductSummary) => {
+      setData((prev) => {
+        const exists = prev.favoriteProducts.some((item) => item.id === product.id)
+        const nextFavorites = exists
+          ? prev.favoriteProducts.filter((item) => item.id !== product.id)
+          : [...prev.favoriteProducts, product]
+
+        if (!user?.id) {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify({ ...prev, favoriteProducts: nextFavorites }))
+          } catch (err) {
+            console.error('Failed to persist guest favorites', err)
+          }
+        }
+
+        return { ...prev, favoriteProducts: nextFavorites }
+      })
+
+      if (user?.id) {
+        const exists = data.favoriteProducts.some((item) => item.id === product.id)
+        const op = exists ? removeFavorite : addFavorite
+        op(user.id, product.id).catch((err) => console.error('Failed to update favorite', err))
+      }
+    },
+    [data.favoriteProducts, storageKey, user?.id],
+  )
 
   const toggleFavoriteRecipe = useCallback((recipe: RecipeSummary) => {
     setData((prev) => {

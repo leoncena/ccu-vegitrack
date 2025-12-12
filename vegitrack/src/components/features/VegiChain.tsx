@@ -37,6 +37,8 @@ interface BlockCardProps {
   icon?: string
   showHash?: boolean
   children?: React.ReactNode
+  verified?: boolean
+  assuranceHref?: string
 }
 
 export function BlockCard({
@@ -49,6 +51,8 @@ export function BlockCard({
   icon,
   showHash = true,
   children,
+  verified,
+  assuranceHref,
 }: BlockCardProps) {
   return (
     <div
@@ -88,6 +92,19 @@ export function BlockCard({
           </span>
         </div>
       </div>
+          {verified && (
+            assuranceHref ? (
+              <a
+                href={assuranceHref}
+                style={{ textDecoration: 'none' }}
+                aria-label="Verified on blockchain (learn more)"
+              >
+                <VerifiedBadge size="sm" />
+              </a>
+            ) : (
+              <VerifiedBadge size="sm" />
+            )
+          )}
 
       {/* Optional content */}
       {children && <div className="mt-3 pt-3 border-t border-gray-200">{children}</div>}
@@ -154,6 +171,8 @@ export function ChainTimeline({ blocks, showHashes = true }: ChainTimelineProps)
               timestamp={block.timestamp}
               icon={config.icon}
               showHash={showHashes}
+              verified={block.blockchain_verified !== false}
+              assuranceHref="/blockchain/assurance"
             >
               <div className="flex flex-wrap gap-2 text-xs" style={{ fontFamily: 'var(--font-body)' }}>
                 <span
@@ -204,18 +223,20 @@ interface VerifiedBadgeProps {
 export function VerifiedBadge({ size = 'md' }: VerifiedBadgeProps) {
   const styles = {
     sm: 'px-2 py-0.5 text-[10px]',
-    md: 'px-2.5 py-1 text-xs',
+    md: 'px-3 py-1 text-xs',
   }
 
   return (
     <span
-      className={`inline-flex items-center gap-1 ${styles[size]}`}
+      className={`inline-flex items-center gap-1.5 ${styles[size]}`}
       style={{
-        backgroundColor: 'var(--color-primary)',
-        color: 'white',
-        borderRadius: '4px',
+        backgroundColor: 'rgba(23, 78, 5, 0.08)',
+        color: 'var(--color-primary)',
+        border: '1px solid var(--color-primary)',
+        borderRadius: 'var(--radius-button)',
         fontFamily: 'var(--font-body)',
-        fontWeight: 500,
+        fontWeight: 600,
+        whiteSpace: 'nowrap',
       }}
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -260,7 +281,7 @@ export function CertificationCard({ certification, showHash = true }: Certificat
             )}
           </div>
         </div>
-        <VerifiedBadge size="sm" />
+        {certification.blockchain_verified !== false && <VerifiedBadge size="sm" />}
       </div>
 
       {/* Audit info */}

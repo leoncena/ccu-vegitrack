@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { MapContainer, Marker, Popup, TileLayer, Polyline } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -14,8 +14,9 @@ import {
 } from '../../components/ui'
 import { getProductByDisplayId, getProductById, getFarmById, getSupplyChain } from '../../lib/api'
 import type { Farm, Product, SupplyChainBlock } from '../../types/database'
+import { VerifiedBadge } from '../../components/features/VegiChain'
 
-// Import SVG icons (still used by supply chain cards)
+// Import SVG icons
 import originPinIcon from '../../assets/origin/origin_pin.svg'
 import packagingCenterIcon from '../../assets/origin/Packaging_center.svg'
 import distributionCenterIcon from '../../assets/origin/distrubution_center.svg'
@@ -36,42 +37,7 @@ const markerIcon = new L.Icon({
 })
 L.Marker.prototype.options.icon = markerIcon
 
-// Demo data - Supply Chain (kept as placeholder)
-const SUPPLY_CHAIN_DATA: (SupplyChainCardData & { icon: string })[] = [
-  {
-    type: 'origin',
-    title: 'Quinta do Sol',
-    date: 'Nov 18, 2025',
-    distance: '230 km away',
-    description: 'Harvested at peak ripeness at dawn',
-    icon: originPinIcon,
-  },
-  {
-    type: 'packaging_center',
-    title: 'Packaging Center',
-    date: 'Nov 18, 2025',
-    distance: '157 km away',
-    packagingHours: '7 hours',
-    icon: packagingCenterIcon,
-  },
-  {
-    type: 'distribution_center',
-    title: 'Distribution Center',
-    date: 'Nov 19, 2025',
-    distance: '80 km away',
-    storageInfo: 'Storage: Refrigerated',
-    icon: distributionCenterIcon,
-  },
-  {
-    type: 'supermarket',
-    title: 'My Auchan - Largo da Graça',
-    date: 'Nov 20, 2025',
-    distance: '0 km away',
-    icon: supermarketIcon,
-  },
-]
-
-// Demo data - Transport Stats
+// Demo data - Transport Stats (can be made dynamic later if data exists)
 const TRANSPORT_STATS: TransportStat[] = [
   {
     icon: refrigeratedTruckIcon,
@@ -80,7 +46,7 @@ const TRANSPORT_STATS: TransportStat[] = [
   },
   {
     icon: distanceIcon,
-    label: '350 km',
+    label: '350 km', // This should ideally be dynamic
     iconScale: 0.5,
   },
   {
@@ -99,6 +65,23 @@ const FRESHNESS_DATA = {
 
 type LatLng = { lat: number; lng: number }
 
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1)
+  const dLon = deg2rad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const d = R * c // Distance in km
+  return d
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180)
+}
+
 function normalizePoint(coords: any): LatLng | null {
   if (!coords) return null
   if (typeof coords === 'string') {
@@ -113,6 +96,21 @@ function normalizePoint(coords: any): LatLng | null {
     if ('y' in coords && 'x' in coords) return { lat: Number((coords as any).y), lng: Number((coords as any).x) }
   }
   return null
+}
+
+function getIconForEventType(type: string): string {
+  switch (type) {
+    case 'harvest': return originPinIcon
+    case 'package': return packagingCenterIcon
+    case 'distribution': return distributionCenterIcon
+    case 'store_arrival': return supermarketIcon
+    default: return originPinIcon
+  }
+}
+
+function formatDistance(km: number | null | undefined): string {
+  if (km === null || km === undefined) return ''
+  return `${Math.round(km)} km away`
 }
 
 export default function OriginTransport() {
@@ -168,14 +166,58 @@ export default function OriginTransport() {
     void load()
   }, [id, initialCenterSet])
 
-  // Get origin and transport sections
-  const originCards = SUPPLY_CHAIN_DATA.filter((item) => item.type === 'origin')
-  const transportCards = SUPPLY_CHAIN_DATA.filter(
-    (item) =>
-      item.type === 'packaging_center' ||
-      item.type === 'distribution_center' ||
-      item.type === 'supermarket'
-  )
+  // Calculate total distance
+  const totalDistance = useMemo(() => {
+    if (!chain || chain.length < 2) return 0
+    let dist = 0
+    for (let i = 0; i < chain.length - 1; i++) {
+      const p1 = normalizePoint(chain[i].coordinates)
+      const p2 = normalizePoint(chain[i+1].coordinates)
+      if (p1 && p2) {
+        dist += calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng)
+      }
+    }
+    return Math.round(dist)
+  }, [chain])
+
+  const transportStats = useMemo(() => {
+    const stats = [...TRANSPORT_STATS]
+    if (totalDistance > 0) {
+      stats[1] = { ...stats[1], label: `${totalDistance} km` }
+    }
+    return stats
+  }, [totalDistance])
+
+  // Generate cards from chain data
+  const { originCards, transportCards } = useMemo(() => {
+    const origin: (SupplyChainCardData & { icon: string })[] = []
+    const transport: (SupplyChainCardData & { icon: string })[] = []
+
+    chain.forEach((block) => {
+      const date = new Date(block.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      const details = block.details || {}
+      
+      const cardData: SupplyChainCardData & { icon: string } = {
+        type: block.event_type === 'harvest' ? 'origin' : block.event_type,
+        title: block.location_name,
+        date: date,
+        distance: formatDistance(block.distance_from_store_km),
+        icon: getIconForEventType(block.event_type),
+        // Map specific details to card fields
+        description: block.event_type === 'harvest' ? 'Harvested at peak ripeness' : undefined,
+        packagingHours: details.packaging_duration ? `${details.packaging_duration}` : undefined,
+        storageInfo: block.storage_type ? `Storage: ${block.storage_type.charAt(0).toUpperCase() + block.storage_type.slice(1)}` : undefined,
+      }
+
+      if (block.event_type === 'harvest') {
+        origin.push(cardData)
+      } else {
+        transport.push(cardData)
+      }
+    })
+
+    return { originCards: origin, transportCards: transport }
+  }, [chain])
 
   const mapsLinks = useMemo(() => {
     if (!mapCenter) return null
@@ -336,7 +378,7 @@ export default function OriginTransport() {
       ) : null}
 
       {/* Transport Stats - Three icons below map*/}
-      <TransportStats stats={TRANSPORT_STATS} />
+      <TransportStats stats={transportStats} />
 
       {/* Origin Section */}
       <h2
@@ -351,9 +393,11 @@ export default function OriginTransport() {
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-        {originCards.map((item, index) => (
+        {originCards.length > 0 ? originCards.map((item, index) => (
           <SupplyChainCard key={index} data={item} icon={item.icon} />
-        ))}
+        )) : (
+          <div className="text-sm opacity-60">Loading origin data...</div>
+        )}
       </div>
 
       {/* Transportation Section */}
@@ -370,9 +414,11 @@ export default function OriginTransport() {
       </h2>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-        {transportCards.map((item, index) => (
+        {transportCards.length > 0 ? transportCards.map((item, index) => (
           <SupplyChainCard key={index} data={item} icon={item.icon} />
-        ))}
+        )) : (
+          <div className="text-sm opacity-60">Loading transport data...</div>
+        )}
       </div>
 
       {/* Freshness Report Section */}
@@ -396,6 +442,40 @@ export default function OriginTransport() {
 
       {/* Debug Footer */}
       <DebugFooter />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'calc(var(--spacing-card) * 0.6)',
+          backgroundColor: 'var(--color-surface)',
+          borderRadius: 'var(--radius-card)',
+          padding: 'calc(var(--spacing-section) * 1.2)',
+          marginTop: 'calc(var(--spacing-section) * 1.2)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--spacing-card) * 0.6)' }}>
+          <VerifiedBadge size="md" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.2)' }}>
+            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-text)' }}>
+              Supply chain events anchored on VegiChain
+            </span>
+            <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
+              Harvest, packaging, cold-chain handoffs, and store arrival are hashed blocks to expose tampering.
+            </span>
+          </div>
+        </div>
+        <Link
+          to="/blockchain/assurance"
+          style={{
+            fontFamily: 'var(--font-body)',
+            color: 'var(--color-primary)',
+            textDecoration: 'underline',
+            fontWeight: 600,
+          }}
+        >
+          What this verification covers
+        </Link>
+      </div>
     </div>
   )
 }

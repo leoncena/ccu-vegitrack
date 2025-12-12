@@ -1,8 +1,8 @@
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom'
 import { useEffect, useState, useMemo } from 'react'
-import { getProductById, getProductByDisplayId, getProductLabels, getAlternativeProducts } from '../lib/api'
+import { getProductById, getProductByDisplayId, getProductLabels, getAlternativeProducts, getSupplyChain } from '../lib/api'
 import { supabase } from '../lib/supabase'
-import type { Product, ProductLabel, Farm } from '../types/database'
+import type { Product, ProductLabel, Farm, SupplyChainBlock } from '../types/database'
 import { Tag, Spinner } from '../components/ui'
 import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
 import { useUserData } from '../contexts/UserDataContext'
@@ -10,6 +10,40 @@ import { useTranslation } from '../lib/i18n'
 
 interface ProductWithFarm extends Product {
   farm?: Farm | null
+  blockchain_verified?: boolean | null
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // Radius of the earth in km
+  const dLat = deg2rad(lat2 - lat1)
+  const dLon = deg2rad(lon2 - lon1)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  const d = R * c // Distance in km
+  return d
+}
+
+function deg2rad(deg: number): number {
+  return deg * (Math.PI / 180)
+}
+
+function normalizePoint(coords: any): { lat: number; lng: number } | null {
+  if (!coords) return null
+  if (typeof coords === 'string') {
+    const match = coords.match(/\(([-0-9.]+),\s*([-0-9.]+)\)/)
+    if (match) return { lng: Number(match[1]), lat: Number(match[2]) }
+  }
+  if (Array.isArray(coords) && coords.length >= 2) {
+    return { lng: Number(coords[0]), lat: Number(coords[1]) }
+  }
+  if (typeof coords === 'object') {
+    if ('lat' in coords && 'lng' in coords) return { lat: Number(coords.lat), lng: Number(coords.lng) }
+    if ('y' in coords && 'x' in coords) return { lat: Number((coords as any).y), lng: Number((coords as any).x) }
+  }
+  return null
 }
 
 export default function FoodPassport() {
@@ -21,6 +55,7 @@ export default function FoodPassport() {
   const [alternatives, setAlternatives] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [totalDistance, setTotalDistance] = useState<number | null>(null)
   const { addRecentProduct, toggleFavoriteProduct, isProductFavorite } = useUserData()
   const { t, language } = useTranslation()
 
@@ -58,14 +93,31 @@ export default function FoodPassport() {
 
         setProduct({ ...productData, farm: farmData })
 
-        // Fetch labels and alternatives in parallel
-        const [labelsData, alternativesData] = await Promise.all([
+        // Fetch labels, alternatives, and supply chain in parallel
+        const [labelsData, alternativesData, supplyChainData] = await Promise.all([
           getProductLabels(productData.id),
           getAlternativeProducts(productData.id),
+          getSupplyChain(productData.id)
         ])
 
         setLabels(labelsData)
         setAlternatives(alternativesData)
+
+        // Calculate total distance from supply chain
+        if (supplyChainData && supplyChainData.length > 1) {
+          let dist = 0
+          for (let i = 0; i < supplyChainData.length - 1; i++) {
+            const p1 = normalizePoint(supplyChainData[i].coordinates)
+            const p2 = normalizePoint(supplyChainData[i+1].coordinates)
+            if (p1 && p2) {
+              dist += calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng)
+            }
+          }
+          setTotalDistance(Math.round(dist))
+        } else if (productData.transport_distance_km) {
+          setTotalDistance(productData.transport_distance_km)
+        }
+
       } catch (err) {
         console.error('Error fetching product:', err)
         setError('Failed to load product')
@@ -130,11 +182,11 @@ export default function FoodPassport() {
       },
       {
         label: t('food.stat.transport'),
-        value: product?.transport_distance_km ? `${product.transport_distance_km} km` : '—',
+        value: totalDistance ? `${totalDistance} km` : '—',
       },
       {
         label: t('food.stat.emissions'),
-        value: product?.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg` : '—',
+        value: product?.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg CO₂/kg` : '—',
       },
       {
         label: t('food.stat.price'),
@@ -143,7 +195,7 @@ export default function FoodPassport() {
     ],
     [
       daysSinceHarvest,
-      product?.transport_distance_km,
+      totalDistance,
       product?.emissions_co2e_per_kg,
       product?.price_per_kg,
       relativeTimeFormatter,
@@ -164,6 +216,7 @@ export default function FoodPassport() {
 
   const fromProductId = (location.state as { fromProductId?: string } | null)?.fromProductId || null
   const isBookmarked = product ? isProductFavorite(product.id) : false
+  const isBlockchainSecured = Boolean(product?.blockchain_verified ?? labels.some((label) => label.blockchain_verified))
 
   const handleBookmark = () => {
     if (!product) return
@@ -367,6 +420,74 @@ export default function FoodPassport() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  gap: 'calc(var(--spacing-card) * 0.6)',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-body)',
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: 'var(--color-text)',
+                    backgroundColor: 'rgba(23, 78, 5, 0.08)',
+                    padding: 'calc(var(--spacing-card) * 0.35) calc(var(--spacing-card) * 0.8)',
+                    borderRadius: 'var(--radius-button)',
+                    border: '1px solid rgba(23, 78, 5, 0.25)',
+                    letterSpacing: '-0.1px',
+                  }}
+                >
+                  {product.origin_country}
+                  {product.origin_region ? `, ${product.origin_region}` : ''}
+                </span>
+                {isBlockchainSecured && (
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--spacing-card) * 0.35)' }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--color-text)',
+                        opacity: 0.75,
+                        fontFamily: 'var(--font-body)',
+                      }}
+                    >
+                      Secured by Blockchain
+                    </span>
+                    <span
+                      aria-hidden
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(23, 78, 5, 0.12)',
+                        borderRadius: '12px',
+                        color: 'var(--color-primary)',
+                      }}
+                    >
+                      🔒
+                    </span>
+                    <Link
+                      to="/blockchain/assurance"
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--color-primary)',
+                        fontFamily: 'var(--font-body)',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      What this means
+                    </Link>
+                  </div>
+                )}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 'calc(var(--spacing-card) * 0.8)',
                   fontFamily: 'var(--font-body)',
                   fontSize: '14px',
@@ -375,20 +496,13 @@ export default function FoodPassport() {
                   flexWrap: 'wrap',
                 }}
               >
-                <span>
-                  {product.origin_country}
-                  {product.origin_region ? `, ${product.origin_region}` : ''}
-                </span>
                 {product.farm && (
-                  <>
-                    <span style={{ width: '1px', height: 'calc(var(--spacing-card) * 2)', backgroundColor: palette.accent, opacity: 0.6 }} />
-                    <span>{product.farm.name}</span>
-                  </>
+                  <span>{product.farm.name}</span>
                 )}
-                {product.transport_distance_km && (
+                {totalDistance && (
                   <>
-                    <span style={{ width: '1px', height: 'calc(var(--spacing-card) * 2)', backgroundColor: palette.accent, opacity: 0.6 }} />
-                    <span>{product.transport_distance_km} km</span>
+                    {product.farm && <span style={{ width: '1px', height: 'calc(var(--spacing-card) * 2)', backgroundColor: palette.accent, opacity: 0.6 }} />}
+                    <span>{totalDistance} km</span>
                   </>
                 )}
               </div>
