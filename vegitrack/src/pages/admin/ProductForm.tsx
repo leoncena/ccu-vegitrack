@@ -926,7 +926,7 @@ export default function ProductForm() {
                   </Card>
                 ))}
                 {recipes.length === 0 && (
-                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', padding: 'var(--spacing-section)' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', paddingTop: '4px', paddingBottom: '4px', paddingLeft: 'var(--spacing-section)', paddingRight: 'var(--spacing-section)', verticalAlign: 'middle' }}>
                     No recipes added yet. Click "Add Recipe" to get started.
                   </p>
                 )}
@@ -1064,6 +1064,11 @@ export default function ProductForm() {
                       </CardContent>
                     </Card>
                   ))}
+                  {qualityIndicators.length === 0 && (
+                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', paddingTop: '4px', paddingBottom: '4px', paddingLeft: 'var(--spacing-section)', paddingRight: 'var(--spacing-section)', verticalAlign: 'middle' }}>
+                      No quality indicators added yet. Click "Add Indicator" to get started.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1294,6 +1299,11 @@ export default function ProductForm() {
                       </CardContent>
                     </Card>
                   ))}
+                  {certifications.length === 0 && (
+                    <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', paddingTop: '4px', paddingBottom: '4px', paddingLeft: 'var(--spacing-section)', paddingRight: 'var(--spacing-section)', verticalAlign: 'middle' }}>
+                      No certifications added yet. Click "Add Certification" to get started.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1418,6 +1428,11 @@ export default function ProductForm() {
                     </CardContent>
                   </Card>
                 ))}
+                {farmingPractices.length === 0 && (
+                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', paddingTop: '4px', paddingBottom: '4px', paddingLeft: 'var(--spacing-section)', paddingRight: 'var(--spacing-section)', verticalAlign: 'middle' }}>
+                    No farming practices added yet. Click "Add Practice" to get started.
+                  </p>
+                )}
               </div>
             </div>
           </TabsContent>
