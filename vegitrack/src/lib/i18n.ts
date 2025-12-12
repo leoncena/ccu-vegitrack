@@ -11,6 +11,7 @@ export type TranslationKey =
   | 'menu.language'
   | 'menu.login'
   | 'menu.logout'
+  | 'menu.blockchainAssurance'
   | 'recent.title'
   | 'recent.loginTitle'
   | 'recent.loginBody'
@@ -76,6 +77,7 @@ const translations: Record<LanguageOption, Record<TranslationKey, string>> = {
     'menu.language': 'Language',
     'menu.login': 'Log In',
     'menu.logout': 'Log Out',
+    'menu.blockchainAssurance': 'Blockchain Assurance',
     'recent.title': 'Recent Scans',
     'recent.loginTitle': 'Login to view your scans',
     'recent.loginBody': 'Keep track of your last scans across devices by signing in.',
@@ -140,6 +142,7 @@ const translations: Record<LanguageOption, Record<TranslationKey, string>> = {
     'menu.language': 'Idioma',
     'menu.login': 'Iniciar sessão',
     'menu.logout': 'Terminar sessão',
+    'menu.blockchainAssurance': 'Garantia Blockchain',
     'recent.title': 'Leituras Recentes',
     'recent.loginTitle': 'Inicie sessão para ver as suas leituras',
     'recent.loginBody': 'Guarde as suas últimas leituras em todos os dispositivos iniciando sessão.',
@@ -204,6 +207,7 @@ const translations: Record<LanguageOption, Record<TranslationKey, string>> = {
     'menu.language': 'Sprache',
     'menu.login': 'Anmelden',
     'menu.logout': 'Abmelden',
+    'menu.blockchainAssurance': 'Blockchain-Garantie',
     'recent.title': 'Letzte Scans',
     'recent.loginTitle': 'Melde dich an, um deine Scans zu sehen',
     'recent.loginBody': 'Behalte deine letzten Scans geräteübergreifend im Blick, indem du dich anmeldest.',
@@ -268,6 +272,7 @@ const translations: Record<LanguageOption, Record<TranslationKey, string>> = {
     'menu.language': 'Språk',
     'menu.login': 'Logga in',
     'menu.logout': 'Logga ut',
+    'menu.blockchainAssurance': 'Blockchain-garanti',
     'recent.title': 'Senaste skanningar',
     'recent.loginTitle': 'Logga in för att se dina skanningar',
     'recent.loginBody': 'Håll koll på dina senaste skanningar på alla enheter genom att logga in.',

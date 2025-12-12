@@ -305,7 +305,9 @@ export async function getUserFavorites(userId: string): Promise<(UserFavorite & 
 }
 
 export async function addFavorite(userId: string, productId: string) {
-  const { error } = await supabase.from('user_favorites').upsert({ user_id: userId, product_id: productId })
+  const { error } = await (supabase
+    .from('user_favorites') as any)
+    .upsert({ user_id: userId, product_id: productId })
   if (error) throw error
 }
 
@@ -322,8 +324,8 @@ export async function removeFavorite(userId: string, productId: string) {
 // View History
 // ============================================
 export async function addViewHistory(userId: string, productId: string, metadata: Record<string, unknown> = {}) {
-  const { error } = await supabase
-    .from('view_history')
+  const { error } = await (supabase
+    .from('view_history') as any)
     .insert({ user_id: userId, product_id: productId, metadata })
   if (error) throw error
 }

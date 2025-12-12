@@ -10,6 +10,7 @@ import {
   TransportStats,
   Spinner,
   type SupplyChainCardData,
+  type SupplyChainType,
   type TransportStat,
 } from '../../components/ui'
 import { getProductByDisplayId, getProductById, getFarmById, getSupplyChain } from '../../lib/api'
@@ -197,8 +198,20 @@ export default function OriginTransport() {
       const date = new Date(block.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
       const details = block.details || {}
       
+      // Map event_type to SupplyChainType
+      let supplyChainType: SupplyChainType = 'origin'
+      if (block.event_type === 'harvest') {
+        supplyChainType = 'origin'
+      } else if (block.event_type === 'package') {
+        supplyChainType = 'packaging_center'
+      } else if (block.event_type === 'distribution') {
+        supplyChainType = 'distribution_center'
+      } else if (block.event_type === 'store_arrival') {
+        supplyChainType = 'supermarket'
+      }
+
       const cardData: SupplyChainCardData & { icon: string } = {
-        type: block.event_type === 'harvest' ? 'origin' : block.event_type,
+        type: supplyChainType,
         title: block.location_name,
         date: date,
         distance: formatDistance(block.distance_from_store_km),

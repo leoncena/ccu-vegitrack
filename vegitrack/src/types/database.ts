@@ -276,5 +276,6 @@ export interface ProductWithRelations extends Product {
   quality_indicators?: QualityIndicator[]
   supply_chain?: SupplyChainBlock[]
   certifications?: CertificationBlock[]
+  sustainability_metrics?: SustainabilityMetric | null
 }
 
