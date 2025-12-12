@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
@@ -23,11 +23,7 @@ export default function ProductsManagement() {
   const [loading, setLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
 
-  useEffect(() => {
-    loadProducts()
-  }, [user])
-
-  async function loadProducts() {
+  const loadProducts = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
@@ -39,7 +35,11 @@ export default function ProductsManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadProducts()
+  }, [loadProducts])
 
   async function handleDelete(productId: string) {
     if (!confirm('Are you sure you want to delete this product?')) return

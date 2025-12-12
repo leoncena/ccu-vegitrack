@@ -12,16 +12,9 @@ import { DatePicker } from '../../components/admin/DatePicker'
 import { PageHeaderWithBack } from '../../components/layout'
 import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications, createProduct, updateProduct } from '../../lib/api'
 import { toast } from '../../components/ui/sonner'
-import type {
-  Product,
-  Recipe,
-  QualityIndicator,
-  CertificationBlock,
-  FarmingPractice,
-} from '../../types/database'
 import { Plus, Trash2, ArrowRight, MapPin } from 'lucide-react'
 import { Spinner } from '../../components/ui'
-import { Combobox, type ComboboxOption } from '../../components/ui/combobox'
+import { Combobox } from '../../components/ui/combobox'
 
 interface RecipeFormData {
   id?: string
@@ -152,6 +145,7 @@ export default function ProductForm() {
           transport_distance_km: product.transport_distance_km?.toString() || '',
           emissions_co2e_per_kg: product.emissions_co2e_per_kg?.toString() || '',
           image_url: product.image_url || '',
+          shelf_life_remaining_days: 0,
         })
 
         // Load recipes

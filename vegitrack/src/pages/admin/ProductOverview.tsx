@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Card, CardContent } from '../../components/ui/card'
 import { Button } from '../../components/ui/Button'
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '../../components/ui/accordion'
 import { createProduct } from '../../lib/api'
@@ -18,7 +18,6 @@ interface FormData {
 }
 
 export default function ProductOverview() {
-  const { id } = useParams()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
@@ -312,7 +311,7 @@ export default function ProductOverview() {
                   {formData.farmingPractices.map((practice: any, index: number) => (
                     <Card key={index} stroke>
                       <CardContent style={{ padding: 'var(--spacing-card)', fontFamily: 'var(--font-body)' }}>
-                        <strong>{practice.category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong>
+                        <strong>{practice.category.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</strong>
                         <ul style={{ marginTop: 'calc(var(--spacing-card) * 0.5)', paddingLeft: 'calc(var(--spacing-card) * 1.5)' }}>
                           {practice.practices.map((p: string, i: number) => (
                             <li key={i}>{p}</li>

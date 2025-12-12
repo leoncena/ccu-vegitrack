@@ -430,14 +430,18 @@ export async function getProducerFarm(userId: string): Promise<Farm | null> {
 
   if (!profile) return null
 
+  const producerId = (profile as { id: string }).id
+  if (!producerId) return null
+
   // Try to get farm from producer's products
   const { data: products } = await supabase
     .from('producer_products')
     .select('product:products(farm_id)')
-    .eq('producer_id', profile.id)
+    .eq('producer_id', producerId)
 
   if (products && products.length > 0) {
-    const product = products[0]?.product as any
+    const firstProduct = products[0] as { product: { farm_id: string } | null } | null
+    const product = firstProduct?.product
     if (product?.farm_id) {
       return getFarmById(product.farm_id)
     }

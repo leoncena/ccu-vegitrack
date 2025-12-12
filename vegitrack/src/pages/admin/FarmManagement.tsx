@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { Button } from '../../components/ui/Button'
@@ -50,11 +50,7 @@ export default function FarmManagement() {
     years_farming: '',
   })
 
-  useEffect(() => {
-    loadData()
-  }, [user])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
@@ -95,7 +91,11 @@ export default function FarmManagement() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
 
   async function handleSave() {
     if (!user) return
@@ -104,22 +104,28 @@ export default function FarmManagement() {
       let farmId = farm?.id
 
       // Create or update farm
-      const farmPayload: any = {
+      const farmPayload: Partial<Omit<Farm, 'id' | 'created_at'>> = {
         name: farmData.name,
         full_address: farmData.full_address || null,
         region: farmData.region || null,
         country: farmData.country,
         description: farmData.description || null,
+        distance_km: null,
       }
 
       if (farmData.coordinates_lat && farmData.coordinates_lng) {
-        farmPayload.coordinates = `(${farmData.coordinates_lng},${farmData.coordinates_lat})`
+        farmPayload.coordinates = {
+          lat: parseFloat(farmData.coordinates_lat),
+          lng: parseFloat(farmData.coordinates_lng),
+        }
+      } else {
+        farmPayload.coordinates = null
       }
 
       if (farmId) {
         await updateFarm(farmId, farmPayload)
       } else {
-        const newFarm = await createFarm(farmPayload)
+        const newFarm = await createFarm(farmPayload as Omit<Farm, 'id' | 'created_at'>)
         farmId = newFarm.id
         setFarm(newFarm)
       }
@@ -183,7 +189,7 @@ export default function FarmManagement() {
     setFarmingPractices(farmingPractices.filter((_, i) => i !== index))
   }
 
-  function updateFarmingPractice(index: number, field: keyof FarmingPractice, value: any) {
+  function updateFarmingPractice(index: number, field: keyof FarmingPractice, value: string | string[] | null) {
     const updated = [...farmingPractices]
     updated[index] = { ...updated[index], [field]: value }
     setFarmingPractices(updated)
