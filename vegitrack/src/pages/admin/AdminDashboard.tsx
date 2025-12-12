@@ -82,16 +82,16 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList style={{ marginBottom: 'calc(var(--spacing-section) * 2)' }}>
+          <TabsList style={{ marginBottom: 'var(--spacing-card)' }}>
             <TabsTrigger value="farm">Farm Information</TabsTrigger>
             <TabsTrigger value="products">Products</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="farm">
+          <TabsContent value="farm" style={{ marginTop: 0 }}>
             <FarmManagement />
           </TabsContent>
 
-          <TabsContent value="products">
+          <TabsContent value="products" style={{ marginTop: 0 }}>
             <ProductsManagement />
           </TabsContent>
         </Tabs>

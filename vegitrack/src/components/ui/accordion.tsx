@@ -17,7 +17,7 @@ function AccordionItem({
   return (
     <AccordionPrimitive.Item
       data-slot="accordion-item"
-      className={cn("border-b last:border-b-0", className)}
+      className={cn("border-b last:border-b-0 mb-[var(--spacing-card)] last:mb-0", className)}
       {...props}
     />
   )
@@ -26,6 +26,7 @@ function AccordionItem({
 function AccordionTrigger({
   className,
   children,
+  style,
   ...props
 }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
   return (
@@ -36,6 +37,12 @@ function AccordionTrigger({
           "focus-visible:border-ring focus-visible:ring-ring/50 flex flex-1 items-start justify-between gap-4 rounded-md py-4 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&[data-state=open]>svg]:rotate-180",
           className
         )}
+        style={{
+          paddingTop: '4px',
+          paddingBottom: '4px',
+          verticalAlign: 'middle',
+          ...style,
+        }}
         {...props}
       >
         {children}
@@ -56,7 +63,7 @@ function AccordionContent({
       className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
       {...props}
     >
-      <div className={cn("pt-0 pb-4", className)}>{children}</div>
+      <div className={cn("pt-[var(--spacing-card)] pb-4 mb-[var(--spacing-card)]", className)}>{children}</div>
     </AccordionPrimitive.Content>
   )
 }

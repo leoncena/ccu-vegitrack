@@ -66,8 +66,8 @@ export default function ProductsManagement() {
     <Card>
       <CardHeader style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Products</CardTitle>
-        <Button onClick={() => navigate('/admin/product/new')}>
-          <Plus className="size-4" />
+        <Button onClick={() => navigate('/admin/product/new')} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+          <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
           Add Product
         </Button>
       </CardHeader>
@@ -82,9 +82,9 @@ export default function ProductsManagement() {
             }}
           >
             <p style={{ marginBottom: 'var(--spacing-card)' }}>No products yet.</p>
-            <Button onClick={() => navigate('/admin/product/new')}>
-              <Plus className="size-4" />
-              Create Your First Product
+            <Button onClick={() => navigate('/admin/product/new')} style={{ padding: '4px 8px' }}>
+              <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
+              <span style={{ color: 'var(--background)' }}>Create Your First Product</span>
             </Button>
           </div>
         ) : (

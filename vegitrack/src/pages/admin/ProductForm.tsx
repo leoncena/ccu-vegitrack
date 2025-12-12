@@ -10,7 +10,8 @@ import { Slider } from '../../components/ui/slider'
 import { FileUpload } from '../../components/admin/FileUpload'
 import { DatePicker } from '../../components/admin/DatePicker'
 import { PageHeaderWithBack } from '../../components/layout'
-import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications } from '../../lib/api'
+import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications, createProduct, updateProduct } from '../../lib/api'
+import { toast } from '../../components/ui/sonner'
 import type {
   Product,
   Recipe,
@@ -72,6 +73,8 @@ export default function ProductForm() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(!!id)
+  const [saving, setSaving] = useState(false)
+  const [currentTab, setCurrentTab] = useState('product-info')
   const [farms, setFarms] = useState<Array<{ id: string; name: string }>>([])
 
   // Product info state
@@ -208,17 +211,101 @@ export default function ProductForm() {
     }
   }
 
+  const tabs = ['product-info', 'recipes', 'certifications', 'farming']
+  const isLastTab = currentTab === tabs[tabs.length - 1]
+
   function handleContinue() {
-    // Store form data in sessionStorage and navigate to overview
-    const formData = {
-      productData,
-      recipes,
-      qualityIndicators,
-      certifications,
-      farmingPractices,
+    if (isLastTab) {
+      handleSave()
+    } else {
+      // Move to next tab
+      const currentIndex = tabs.indexOf(currentTab)
+      if (currentIndex < tabs.length - 1) {
+        setCurrentTab(tabs[currentIndex + 1])
+      }
     }
-    sessionStorage.setItem('productFormData', JSON.stringify(formData))
-    navigate(`/admin/product/${id || 'new'}/overview`)
+  }
+
+  async function handleSave() {
+    if (!user) return
+    setSaving(true)
+    try {
+      // Prepare product data
+      const productPayload: any = {
+        display_id: productData.display_id,
+        name: productData.name,
+        scientific_name: productData.scientific_name || null,
+        variety: productData.variety || null,
+        origin_country: productData.origin_country,
+        origin_region: productData.origin_region || null,
+        farm_id: productData.farm_id || null,
+        harvest_date: productData.harvest_date || null,
+        price_per_kg: productData.price_per_kg ? parseFloat(productData.price_per_kg) : null,
+        transport_distance_km: productData.transport_distance_km ? parseFloat(productData.transport_distance_km) : null,
+        emissions_co2e_per_kg: productData.emissions_co2e_per_kg ? parseFloat(productData.emissions_co2e_per_kg) : null,
+        image_url: productData.image_url || null,
+      }
+
+      // Prepare related data
+      const relatedData: any = {}
+
+      if (recipes.length > 0) {
+        relatedData.recipes = recipes.map((r: any) => ({
+          title: r.title,
+          description: r.description || null,
+          cultural_origin: r.cultural_origin || null,
+          prep_time_minutes: r.prep_time_minutes ? parseInt(r.prep_time_minutes) : null,
+          cook_time_minutes: r.cook_time_minutes ? parseInt(r.cook_time_minutes) : null,
+          servings: r.servings ? parseInt(r.servings) : null,
+          ingredients: r.ingredients.filter((ing: any) => ing.name || ing.amount),
+          instructions: r.instructions.filter((inst: string) => inst.trim()),
+          image_url: r.image_url || null,
+        }))
+      }
+
+      if (qualityIndicators.length > 0) {
+        relatedData.qualityIndicators = qualityIndicators.map((q: any) => ({
+          indicator_type: q.indicator_type,
+          score: typeof q.score === 'number' ? q.score : (q.score ? parseFloat(q.score) : null),
+          max_score: typeof q.max_score === 'number' ? q.max_score : (q.max_score ? parseFloat(q.max_score) : 5),
+          percentage: q.percentage ? parseFloat(q.percentage) : (q.score && q.max_score ? ((q.score / q.max_score) * 100) : null),
+          description: q.description || null,
+          recommendation: q.recommendation || null,
+        }))
+      }
+
+      if (certifications.length > 0) {
+        relatedData.certifications = certifications.map((c: any) => ({
+          cert_type: c.cert_type,
+          cert_display_name: c.cert_display_name || null,
+          certifying_body: c.certifying_body || null,
+          certifying_body_code: c.certifying_body_code || null,
+          certificate_id: c.certificate_id || null,
+          audit_date: c.audit_date || null,
+          expiry_date: c.expiry_date || null,
+          auditor_name: c.auditor_name || null,
+          audit_findings: c.audit_findings || null,
+          description: c.description || null,
+        }))
+      }
+
+      if (id && id !== 'new') {
+        // Update existing product
+        await updateProduct(id, productPayload)
+        toast.success('Product updated successfully!')
+      } else {
+        // Create new product
+        await createProduct(productPayload, user.id, relatedData)
+        toast.success('Product created successfully!')
+      }
+
+      navigate('/admin?tab=products')
+    } catch (error: any) {
+      console.error('Error saving product:', error)
+      toast.error(error.message || 'Failed to save product')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function addRecipe() {
@@ -322,7 +409,7 @@ export default function ProductForm() {
           backTo="/admin?tab=products"
         />
 
-        <Tabs defaultValue="product-info">
+        <Tabs value={currentTab} onValueChange={setCurrentTab}>
           <TabsList style={{ marginBottom: 'var(--spacing-card)' }}>
             <TabsTrigger value="product-info">Product Info</TabsTrigger>
             <TabsTrigger value="recipes">Recipes</TabsTrigger>
@@ -331,7 +418,7 @@ export default function ProductForm() {
           </TabsList>
 
           {/* Product Info Tab */}
-          <TabsContent value="product-info">
+          <TabsContent value="product-info" style={{ marginTop: 0 }}>
             <Card>
               <CardHeader>
                 <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Product Information</CardTitle>
@@ -553,7 +640,7 @@ export default function ProductForm() {
             <div>
               <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
                 <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Recipes</h3>
-                <Button onClick={addRecipe} size="sm" variant="outline">
+                <Button onClick={addRecipe} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
                   <Plus className="size-4" />
                   Add Recipe
                 </Button>
@@ -761,7 +848,7 @@ export default function ProductForm() {
                                 }}
                                 size="sm"
                                 variant="outline"
-                                style={{ alignSelf: 'flex-start' }}
+                                style={{ alignSelf: 'flex-start', padding: '4px 8px' }}
                               >
                                 <Plus className="size-4" />
                                 Add Ingredient
@@ -812,7 +899,7 @@ export default function ProductForm() {
                                 }}
                                 size="sm"
                                 variant="outline"
-                                style={{ alignSelf: 'flex-start' }}
+                                style={{ alignSelf: 'flex-start', padding: '4px 8px' }}
                               >
                                 <Plus className="size-4" />
                                 Add Instruction
@@ -860,7 +947,7 @@ export default function ProductForm() {
               <div>
                 <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
                   <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Quality Indicators</h3>
-                  <Button onClick={addQualityIndicator} size="sm" variant="outline">
+                  <Button onClick={addQualityIndicator} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
                     <Plus className="size-4" />
                     Add Indicator
                   </Button>
@@ -872,33 +959,24 @@ export default function ProductForm() {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                           <div>
                             <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Type</Label>
-                            <select
+                            <Combobox
+                              options={[
+                                { value: 'freshness', label: 'Freshness' },
+                                { value: 'ripeness', label: 'Ripeness' },
+                                { value: 'shelf_life', label: 'Shelf Life' },
+                              ]}
                               value={indicator.indicator_type}
-                              onChange={(e) => {
+                              onValueChange={(value) => {
                                 const updated = [...qualityIndicators]
-                                updated[index].indicator_type = e.target.value as any
+                                updated[index].indicator_type = value as any
                                 // Reset shelf_life_remaining_days if type changes
-                                if (e.target.value !== 'shelf_life') {
+                                if (value !== 'shelf_life') {
                                   updated[index].shelf_life_remaining_days = undefined
                                 }
                                 setQualityIndicators(updated)
                               }}
-                              style={{
-                                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                width: '100%',
-                                height: '42px',
-                                padding: '0 var(--spacing-card)',
-                                borderRadius: '8px',
-                                border: '1.5px solid var(--color-border)',
-                                fontFamily: 'var(--font-body)',
-                                backgroundColor: 'var(--color-background)',
-                                color: 'var(--color-text)',
-                              }}
-                            >
-                              <option value="freshness">Freshness</option>
-                              <option value="ripeness">Ripeness</option>
-                              <option value="shelf_life">Shelf Life</option>
-                            </select>
+                              placeholder="Select type"
+                            />
                           </div>
                           <div>
                             <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>
@@ -999,7 +1077,7 @@ export default function ProductForm() {
               <div>
                 <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
                   <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Certifications</h3>
-                  <Button onClick={addCertification} size="sm" variant="outline">
+                  <Button onClick={addCertification} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
                     <Plus className="size-4" />
                     Add Certification
                   </Button>
@@ -1232,7 +1310,7 @@ export default function ProductForm() {
             <div>
               <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
                 <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Farming Practices</h3>
-                <Button onClick={addFarmingPractice} size="sm" variant="outline">
+                <Button onClick={addFarmingPractice} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
                   <Plus className="size-4" />
                   Add Practice
                 </Button>
@@ -1245,31 +1323,22 @@ export default function ProductForm() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
                           <div>
                             <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
-                            <select
+                            <Combobox
+                              options={[
+                                { value: 'soil_inputs', label: 'Soil & Inputs' },
+                                { value: 'water_management', label: 'Water Management' },
+                                { value: 'pest_control', label: 'Pest Control' },
+                                { value: 'biodiversity', label: 'Biodiversity' },
+                                { value: 'labor_conditions', label: 'Labor Conditions' },
+                              ]}
                               value={practice.category}
-                              onChange={(e) => {
+                              onValueChange={(value) => {
                                 const updated = [...farmingPractices]
-                                updated[index].category = e.target.value
+                                updated[index].category = value || ''
                                 setFarmingPractices(updated)
                               }}
-                              style={{
-                                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                width: '100%',
-                                height: '42px',
-                                padding: '0 var(--spacing-card)',
-                                borderRadius: '8px',
-                                border: '1.5px solid var(--color-border)',
-                                fontFamily: 'var(--font-body)',
-                                backgroundColor: 'var(--color-background)',
-                                color: 'var(--color-text)',
-                              }}
-                            >
-                              <option value="soil_inputs">Soil & Inputs</option>
-                              <option value="water_management">Water Management</option>
-                              <option value="pest_control">Pest Control</option>
-                              <option value="biodiversity">Biodiversity</option>
-                              <option value="labor_conditions">Labor Conditions</option>
-                            </select>
+                              placeholder="Select category"
+                            />
                           </div>
                           <div>
                             <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Icon Type</Label>
@@ -1337,7 +1406,7 @@ export default function ProductForm() {
                               }}
                               size="sm"
                               variant="outline"
-                              style={{ alignSelf: 'flex-start' }}
+                              style={{ alignSelf: 'flex-start', padding: '4px 8px' }}
                             >
                               <Plus className="size-4" />
                               Add Practice Item
@@ -1361,12 +1430,23 @@ export default function ProductForm() {
         </Tabs>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)', marginTop: 'calc(var(--spacing-section) * 2)' }}>
-          <Button onClick={() => navigate('/admin?tab=products')} variant="outline">
+          <Button onClick={() => navigate('/admin?tab=products')} variant="outline" style={{ padding: '4px 8px' }}>
             Cancel
           </Button>
-          <Button onClick={handleContinue} disabled={!productData.name || !productData.display_id || !productData.origin_country}>
-            Continue to Overview
-            <ArrowRight className="size-4" />
+          <Button onClick={handleContinue} disabled={saving || (!productData.name || !productData.display_id || !productData.origin_country)} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+            {saving ? (
+              <>
+                <Spinner className="size-4" />
+                Saving...
+              </>
+            ) : isLastTab ? (
+              'Confirm & Save'
+            ) : (
+              <>
+                Next
+                <ArrowRight className="size-4" style={{ stroke: 'var(--background)' }} />
+              </>
+            )}
           </Button>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { Label } from '../../components/ui/label'
 import { FileUpload } from '../../components/admin/FileUpload'
 import { toast } from '../../components/ui/sonner'
 import { Spinner } from '../../components/ui'
+import { Combobox } from '../../components/ui/combobox'
 import {
   getProducerFarm,
   createFarm,
@@ -213,7 +214,7 @@ export default function FarmManagement() {
       {/* Farm Information */}
       <Card>
         <CardHeader>
-          <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farm Information</CardTitle>
+          <CardTitle style={{ fontFamily: 'var(--font-body)', marginBottom: 'var(--spacing-card)' }}>Farm Information</CardTitle>
         </CardHeader>
         <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
@@ -358,7 +359,7 @@ export default function FarmManagement() {
       {/* Farmer Story */}
       <Card>
         <CardHeader>
-          <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farmer Story</CardTitle>
+          <CardTitle style={{ fontFamily: 'var(--font-body)', marginBottom: 'var(--spacing-card)' }}>Farmer Story</CardTitle>
         </CardHeader>
         <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
@@ -471,7 +472,7 @@ export default function FarmManagement() {
       <div>
         <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
           <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Farming Practices</h3>
-          <Button onClick={addFarmingPractice} size="sm" variant="outline">
+          <Button onClick={addFarmingPractice} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
             <Plus className="size-4" />
             Add Practice
           </Button>
@@ -484,27 +485,18 @@ export default function FarmManagement() {
                   <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
                     <div>
                       <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
-                      <select
+                      <Combobox
+                        options={[
+                          { value: 'soil_inputs', label: 'Soil & Inputs' },
+                          { value: 'water_management', label: 'Water Management' },
+                          { value: 'pest_control', label: 'Pest Control' },
+                          { value: 'biodiversity', label: 'Biodiversity' },
+                          { value: 'labor_conditions', label: 'Labor Conditions' },
+                        ]}
                         value={practice.category}
-                        onChange={(e) => updateFarmingPractice(index, 'category', e.target.value)}
-                        style={{
-                          marginTop: 'calc(var(--spacing-card) * 0.5)',
-                          width: '100%',
-                          height: '42px',
-                          padding: '0 var(--spacing-card)',
-                          borderRadius: '8px',
-                          border: '1.5px solid var(--color-border)',
-                          fontFamily: 'var(--font-body)',
-                          backgroundColor: 'var(--color-background)',
-                          color: 'var(--color-text)',
-                        }}
-                      >
-                        <option value="soil_inputs">Soil & Inputs</option>
-                        <option value="water_management">Water Management</option>
-                        <option value="pest_control">Pest Control</option>
-                        <option value="biodiversity">Biodiversity</option>
-                        <option value="labor_conditions">Labor Conditions</option>
-                      </select>
+                        onValueChange={(value) => updateFarmingPractice(index, 'category', value || '')}
+                        placeholder="Select category"
+                      />
                     </div>
                     <div>
                       <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Display Name</Label>
@@ -587,7 +579,7 @@ export default function FarmManagement() {
                       onClick={() => addPracticeItem(index)}
                       size="sm"
                       variant="outline"
-                      style={{ alignSelf: 'flex-start' }}
+                      style={{ alignSelf: 'flex-start', padding: '4px 8px' }}
                     >
                       <Plus className="size-4" />
                       Add Practice Item
@@ -606,7 +598,7 @@ export default function FarmManagement() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)' }}>
-        <Button onClick={handleSave} disabled={saving || !farmData.name || !farmData.country}>
+        <Button onClick={handleSave} disabled={saving || !farmData.name || !farmData.country} style={{ padding: '4px 8px', color: 'var(--background)' }}>
           {saving ? <Spinner className="size-4" /> : 'Save Farm Information'}
         </Button>
       </div>

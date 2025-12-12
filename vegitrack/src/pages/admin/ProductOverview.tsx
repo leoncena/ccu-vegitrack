@@ -183,7 +183,7 @@ export default function ProductOverview() {
               Product Information
             </AccordionTrigger>
             <AccordionContent>
-              <Card>
+              <Card style={{ marginBottom: 'var(--spacing-card)' }}>
                 <CardContent style={{ padding: 'var(--spacing-card)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
                   <div>
                     <strong style={{ fontFamily: 'var(--font-body)' }}>Display ID:</strong>
@@ -330,10 +330,10 @@ export default function ProductOverview() {
         </Accordion>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--spacing-card)', marginTop: 'calc(var(--spacing-section) * 2)' }}>
-          <Button onClick={() => navigate(-1)} variant="outline">
+          <Button onClick={() => navigate(-1)} variant="outline" style={{ padding: '4px 8px' }}>
             Back to Edit
           </Button>
-          <Button onClick={handleConfirm} disabled={loading}>
+          <Button onClick={handleConfirm} disabled={loading} style={{ padding: '4px 8px' }}>
             {loading ? (
               <>
                 <Spinner className="size-4" />
