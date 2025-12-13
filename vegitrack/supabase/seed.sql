@@ -108,7 +108,7 @@ VALUES (
   2.99,
   1842.5,
   1.8,
-  'https://images.unsplash.com/photo-1546470427-227c7369a9b0?w=800',
+  'https://static.tegut.com/fileadmin/_processed_/5/c/csm_Tomate_Header_2_01_f1bde0a618.jpg',
   'VT-3345667'
 );
 
@@ -513,7 +513,7 @@ VALUES (
   4.49,
   65,
   0.9,
-  'https://images.unsplash.com/photo-1558818498-28c1e002674f?w=800',
+  'https://foodbutlers.de/wp-content/uploads/2020/12/Food-Butlers-Tomate-980x634.jpg',
   'VT-3345668'
 );
 

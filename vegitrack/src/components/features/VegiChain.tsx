@@ -292,10 +292,10 @@ export function CertificationCard({ certification, showHash = true }: Certificat
         </p>
       )}
 
-      {/* Description */}
-      {certification.description && (
+      {/* Audit Findings */}
+      {certification.audit_findings && (
         <p className="text-sm mb-3" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.5 }}>
-          {certification.description}
+          {certification.audit_findings}
         </p>
       )}
 

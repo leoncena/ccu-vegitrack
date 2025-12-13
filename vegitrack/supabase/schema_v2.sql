@@ -1,5 +1,8 @@
--- VegiTrack Database Schema
+-- VegiTrack Database Schema V2
 -- Run this in Supabase SQL Editor to create all tables
+-- This version includes loose RLS policies for mockup/testing:
+-- - Any authenticated user can manage farms and products
+-- - Use this with seed_v2.sql for a complete test setup
 
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

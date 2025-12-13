@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { MapPin } from 'lucide-react'
@@ -6,6 +6,8 @@ import { Combobox, type ComboboxOption } from '../components/ui/combobox'
 import { Button } from '../components/ui/Button'
 import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 import { useTranslation } from '../lib/i18n'
+import { getAllStores } from '../lib/api'
+import type { Store } from '../types/database'
 
 // Import produce icons
 import carrotIcon from '../assets/wallpaper/carrot.svg'
@@ -13,28 +15,36 @@ import asparagusIcon from '../assets/wallpaper/asparagus.svg'
 import lemonIcon from '../assets/wallpaper/Lemon.svg'
 import tomatoIcon from '../assets/wallpaper/tomato.svg'
 
-// Mock stores data
-const MOCK_STORES = [
-  { id: '1', name: 'Continente - Rua da Palma', distance_m: 250 },
-  { id: '2', name: 'Pingo Doce - Chão do Loureiro', distance_m: 270 },
-  { id: '3', name: 'My Auchan - Largo da Graça', distance_m: 850 },
-  { id: '4', name: 'Continente Bom Dia - Chiado', distance_m: 550 },
-]
-
 export default function Start() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
   const { t } = useTranslation()
-  const [selectedStore, setSelectedStore] = useState<string>(MOCK_STORES[0]?.id || '')
+  const [stores, setStores] = useState<Store[]>([])
+  const [selectedStore, setSelectedStore] = useState<string>('')
+
+  useEffect(() => {
+    async function loadStores() {
+      try {
+        const data = await getAllStores()
+        setStores(data)
+        if (data.length > 0) {
+          setSelectedStore(data[0].id)
+        }
+      } catch (error) {
+        console.error('Error loading stores:', error)
+      }
+    }
+    loadStores()
+  }, [])
 
   const handleLogout = async () => {
     await signOut()
     navigate('/start', { replace: true })
   }
 
-  const storeOptions: ComboboxOption[] = MOCK_STORES.map(store => ({
+  const storeOptions: ComboboxOption[] = stores.map(store => ({
     value: store.id,
-    label: `${store.name} (${store.distance_m}m)`,
+    label: `${store.name}${store.distance_m ? ` (${store.distance_m}m)` : ''}`,
   }))
 
   return (
@@ -123,7 +133,7 @@ export default function Start() {
           rightIcon={MapPin}
           getDisplayValue={(option) => {
             if (!option) return ''
-            const store = MOCK_STORES.find(s => s.id === option.value)
+            const store = stores.find(s => s.id === option.value)
             return store ? store.name : option.label
           }}
         />

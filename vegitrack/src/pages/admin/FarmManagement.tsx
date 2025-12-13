@@ -9,7 +9,15 @@ import { toast } from '../../components/ui/sonner'
 import { Spinner } from '../../components/ui'
 import { Combobox } from '../../components/ui/combobox'
 import {
-  getProducerFarm,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table'
+import {
+  getProducerFarms,
   createFarm,
   updateFarm,
   getFarmingPractices,
@@ -17,13 +25,14 @@ import {
   deleteFarmingPractice,
 } from '../../lib/api'
 import type { Farm, FarmingPractice } from '../../types/database'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Edit } from 'lucide-react'
 
 export default function FarmManagement() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [farm, setFarm] = useState<Farm | null>(null)
+  const [farms, setFarms] = useState<Farm[]>([])
+  const [editingFarmId, setEditingFarmId] = useState<string | null>(null)
   const [farmingPractices, setFarmingPractices] = useState<FarmingPractice[]>([])
 
   // Farm form state
@@ -49,46 +58,91 @@ export default function FarmManagement() {
     labor_conditions: 'users',
   }
 
-  const loadData = useCallback(async () => {
+  const loadFarms = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
-      const farmData = await getProducerFarm(user.id)
-      if (farmData) {
-        setFarm(farmData)
-        // Convert coordinates to Google Maps link if available
-        let googleMapsLink = ''
-        if (farmData.coordinates?.lat && farmData.coordinates?.lng) {
-          googleMapsLink = `https://www.google.com/maps/place/${farmData.coordinates.lat},${farmData.coordinates.lng}`
-        }
-        setFarmData({
-          name: farmData.name || '',
-          full_address: farmData.full_address || '',
-          region: farmData.region || '',
-          country: farmData.country || '',
-          google_maps_link: googleMapsLink,
-          our_story: (farmData as any).our_story || '',
-          what_drives_us: (farmData as any).what_drives_us || [],
-          life_on_farm: (farmData as any).life_on_farm || '',
-          looking_ahead: (farmData as any).looking_ahead || '',
-          image_url: (farmData as any).image_url || '',
-        })
-
-        // Load farming practices
-        const practices = await getFarmingPractices(farmData.id)
-        setFarmingPractices(practices)
-      }
+      const farmsData = await getProducerFarms(user.id)
+      setFarms(farmsData)
     } catch (error) {
-      console.error('Error loading farm data:', error)
-      toast.error('Failed to load farm data')
+      console.error('Error loading farms:', error)
+      toast.error('Failed to load farms')
     } finally {
       setLoading(false)
     }
   }, [user])
 
+  const loadFarmForEditing = useCallback(async (farmId: string) => {
+    try {
+      const farm = farms.find(f => f.id === farmId)
+      if (!farm) return
+
+      // Convert coordinates to Google Maps link if available
+      let googleMapsLink = ''
+      if (farm.coordinates?.lat && farm.coordinates?.lng) {
+        googleMapsLink = `https://www.google.com/maps/place/${farm.coordinates.lat},${farm.coordinates.lng}`
+      }
+      setFarmData({
+        name: farm.name || '',
+        full_address: farm.full_address || '',
+        region: farm.region || '',
+        country: farm.country || '',
+        google_maps_link: googleMapsLink,
+        our_story: (farm as any).our_story || '',
+        what_drives_us: (farm as any).what_drives_us || [],
+        life_on_farm: (farm as any).life_on_farm || '',
+        looking_ahead: (farm as any).looking_ahead || '',
+        image_url: (farm as any).image_url || '',
+      })
+
+      // Load farming practices
+      const practices = await getFarmingPractices(farmId)
+      setFarmingPractices(practices)
+    } catch (error) {
+      console.error('Error loading farm for editing:', error)
+      toast.error('Failed to load farm data')
+    }
+  }, [farms])
+
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadFarms()
+  }, [loadFarms])
+
+  useEffect(() => {
+    if (editingFarmId && editingFarmId !== 'new') {
+      loadFarmForEditing(editingFarmId)
+    } else if (editingFarmId === 'new') {
+      // Reset form for new farm
+      setFarmData({
+        name: '',
+        full_address: '',
+        region: '',
+        country: '',
+        google_maps_link: '',
+        our_story: '',
+        what_drives_us: [],
+        life_on_farm: '',
+        looking_ahead: '',
+        image_url: '',
+      })
+      setFarmingPractices([])
+    } else {
+      // Reset form when not editing
+      setFarmData({
+        name: '',
+        full_address: '',
+        region: '',
+        country: '',
+        google_maps_link: '',
+        our_story: '',
+        what_drives_us: [],
+        life_on_farm: '',
+        looking_ahead: '',
+        image_url: '',
+      })
+      setFarmingPractices([])
+    }
+  }, [editingFarmId, loadFarmForEditing])
 
   function extractCoordinatesFromGoogleMaps(link: string): { lat: number; lng: number } | null {
     try {
@@ -119,8 +173,6 @@ export default function FarmManagement() {
     if (!user) return
     setSaving(true)
     try {
-      let farmId = farm?.id
-
       // Extract coordinates from Google Maps link
       let coordinates: { lat: number; lng: number } | null = null
       if (farmData.google_maps_link) {
@@ -142,28 +194,29 @@ export default function FarmManagement() {
         image_url: farmData.image_url || null,
       }
 
-      if (farmId) {
-        await updateFarm(farmId, farmPayload)
+      let farmId: string
+      if (editingFarmId) {
+        await updateFarm(editingFarmId, farmPayload)
+        farmId = editingFarmId
       } else {
         const newFarm = await createFarm(farmPayload as Omit<Farm, 'id' | 'created_at'>)
         farmId = newFarm.id
-        setFarm(newFarm)
       }
 
       // Save farming practices
       for (const practice of farmingPractices) {
         await upsertFarmingPractice({
           id: practice.id,
-          farm_id: farmId!,
+          farm_id: farmId,
           category: practice.category,
-          category_display_name: null, // Inferred from category
           icon_type: farmingPracticeIcons[practice.category] || null,
           practices: practice.practices || [],
         })
       }
 
-      toast.success('Farm information saved successfully!')
-      await loadData()
+      toast.success(editingFarmId ? 'Farm updated successfully!' : 'Farm created successfully!')
+      await loadFarms()
+      setEditingFarmId(null)
     } catch (error) {
       console.error('Error saving farm:', error)
       toast.error('Failed to save farm information')
@@ -172,14 +225,25 @@ export default function FarmManagement() {
     }
   }
 
+  function handleEdit(farmId: string) {
+    setEditingFarmId(farmId)
+  }
+
+  function handleCancel() {
+    setEditingFarmId(null)
+  }
+
+  function handleAddNew() {
+    setEditingFarmId('new')
+  }
+
   function addFarmingPractice() {
     setFarmingPractices([
       ...farmingPractices,
       {
         id: `temp-${Date.now()}`,
-        farm_id: farm?.id || '',
+        farm_id: editingFarmId && editingFarmId !== 'new' ? editingFarmId : '',
         category: 'soil_inputs',
-        category_display_name: null,
         icon_type: null,
         practices: [''],
         created_at: new Date().toISOString(),
@@ -221,6 +285,85 @@ export default function FarmManagement() {
     )
   }
 
+  // Show table view when not editing
+  if (!editingFarmId) {
+    return (
+      <Card>
+        <CardHeader style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farms</CardTitle>
+          <Button onClick={handleAddNew} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+            <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
+            Add Farm
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {farms.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 'calc(var(--spacing-section) * 2)',
+                fontFamily: 'var(--font-body)',
+                color: 'var(--color-text-light)',
+              }}
+            >
+              <p style={{ marginBottom: 'var(--spacing-card)' }}>No farms registered yet.</p>
+              <Button onClick={handleAddNew} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+                <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
+                <span style={{ color: 'var(--background)' }}>Add Your First Farm</span>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Farm Name</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead style={{ textAlign: 'right' }}>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {farms.map((farm) => (
+                  <TableRow key={farm.id}>
+                    <TableCell style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}>
+                      {farm.name}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.full_address || '—'}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.region || '—'}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.country}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {new Date(farm.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 'calc(var(--spacing-card) * 0.5)', justifyContent: 'flex-end' }}>
+                        <Button
+                          onClick={() => handleEdit(farm.id)}
+                          size="icon-sm"
+                          variant="ghost"
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Show form view when editing or no farm exists
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-section) * 2)' }}>
       {/* Farm Information */}
@@ -542,8 +685,11 @@ export default function FarmManagement() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)' }}>
+        <Button onClick={handleCancel} variant="outline" style={{ padding: '4px 8px' }}>
+          Cancel
+        </Button>
         <Button onClick={handleSave} disabled={saving || !farmData.name || !farmData.country} style={{ padding: '4px 8px', color: 'var(--background)' }}>
-          {saving ? <Spinner className="size-4" /> : 'Save Farm Information'}
+          {saving ? <Spinner className="size-4" /> : editingFarmId === 'new' ? 'Create Farm' : 'Update Farm Information'}
         </Button>
       </div>
     </div>
