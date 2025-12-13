@@ -464,20 +464,56 @@ export async function getProducerFarms(userId: string): Promise<Farm[]> {
   const producerId = (profile as { id: string }).id
   if (!producerId) return []
 
-  // Get all products for this producer
+  const farmIds = new Set<string>()
+
+  // Method 1: Get farms from products linked to this producer
   const { data: products } = await supabase
     .from('producer_products')
     .select('product:products(farm_id)')
     .eq('producer_id', producerId)
 
-  if (!products || products.length === 0) return []
+  if (products && products.length > 0) {
+    for (const item of products) {
+      const product = (item as { product: { farm_id: string | null } | null })?.product
+      if (product?.farm_id) {
+        farmIds.add(product.farm_id)
+      }
+    }
+  }
 
-  // Extract unique farm IDs
-  const farmIds = new Set<string>()
-  for (const item of products) {
-    const product = (item as { product: { farm_id: string | null } | null })?.product
-    if (product?.farm_id) {
-      farmIds.add(product.farm_id)
+  // Method 2: Get farms that have farming_practices but no products yet
+  // These are likely newly created farms by this producer
+  // Get all farms with farming_practices
+  const { data: allPractices } = await (supabase
+    .from('farming_practices') as any)
+    .select('farm_id')
+    .not('farm_id', 'is', null)
+
+  if (allPractices && allPractices.length > 0) {
+    // Get unique farm IDs from practices
+    const practiceFarmIds = new Set<string>()
+    for (const practice of allPractices as { farm_id: string }[]) {
+      if (practice.farm_id) {
+        practiceFarmIds.add(practice.farm_id)
+      }
+    }
+
+    // For each farm with practices, check if it has products
+    // If no products, include it (likely a new farm)
+    for (const farmId of practiceFarmIds) {
+      if (!farmIds.has(farmId)) {
+        // Check if this farm has any products
+        const { data: farmProducts } = await supabase
+          .from('products')
+          .select('id')
+          .eq('farm_id', farmId)
+          .limit(1)
+        
+        // If farm has no products, include it (newly created farm)
+        if (!farmProducts || farmProducts.length === 0) {
+          farmIds.add(farmId)
+        }
+      }
     }
   }
 
@@ -494,9 +530,24 @@ export async function getProducerFarms(userId: string): Promise<Farm[]> {
 }
 
 export async function createFarm(farmData: Omit<Farm, 'id' | 'created_at'>) {
+  // Ensure id and created_at are not in the payload (they should be auto-generated)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, created_at, coordinates, ...cleanData } = farmData as any
+  
+  // Convert coordinates from {lat, lng} object to PostgreSQL POINT format: "(lng,lat)"
+  let coordinatesFormatted: string | null = null
+  if (coordinates && typeof coordinates === 'object' && 'lat' in coordinates && 'lng' in coordinates) {
+    coordinatesFormatted = `(${coordinates.lng},${coordinates.lat})`
+  }
+  
+  const insertData = {
+    ...cleanData,
+    ...(coordinatesFormatted !== null ? { coordinates: coordinatesFormatted } : {})
+  }
+  
   const { data, error } = await (supabase
     .from('farms') as any)
-    .insert(farmData)
+    .insert(insertData)
     .select()
     .single()
 
@@ -508,9 +559,26 @@ export async function createFarm(farmData: Omit<Farm, 'id' | 'created_at'>) {
 }
 
 export async function updateFarm(farmId: string, farmData: Partial<Omit<Farm, 'id' | 'created_at'>>) {
+  // Convert coordinates from {lat, lng} object to PostgreSQL POINT format: "(lng,lat)"
+  const { coordinates, ...restData } = farmData as any
+  let coordinatesFormatted: string | null | undefined = undefined
+  
+  if (coordinates !== undefined) {
+    if (coordinates === null) {
+      coordinatesFormatted = null
+    } else if (typeof coordinates === 'object' && coordinates !== null && 'lat' in coordinates && 'lng' in coordinates) {
+      coordinatesFormatted = `(${coordinates.lng},${coordinates.lat})`
+    }
+  }
+  
+  const updateData = {
+    ...restData,
+    ...(coordinatesFormatted !== undefined ? { coordinates: coordinatesFormatted } : {})
+  }
+  
   const { data, error } = await (supabase
     .from('farms') as any)
-    .update(farmData)
+    .update(updateData)
     .eq('id', farmId)
     .select()
     .single()
