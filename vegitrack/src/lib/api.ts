@@ -451,6 +451,48 @@ export async function getProducerFarm(userId: string): Promise<Farm | null> {
   return null
 }
 
+export async function getProducerFarms(userId: string): Promise<Farm[]> {
+  // First, get producer profile
+  const { data: profile } = await supabase
+    .from('producer_profiles')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (!profile) return []
+
+  const producerId = (profile as { id: string }).id
+  if (!producerId) return []
+
+  // Get all products for this producer
+  const { data: products } = await supabase
+    .from('producer_products')
+    .select('product:products(farm_id)')
+    .eq('producer_id', producerId)
+
+  if (!products || products.length === 0) return []
+
+  // Extract unique farm IDs
+  const farmIds = new Set<string>()
+  for (const item of products) {
+    const product = (item as { product: { farm_id: string | null } | null })?.product
+    if (product?.farm_id) {
+      farmIds.add(product.farm_id)
+    }
+  }
+
+  // Fetch all farms
+  const farms: Farm[] = []
+  for (const farmId of farmIds) {
+    const farm = await getFarmById(farmId)
+    if (farm) {
+      farms.push(farm)
+    }
+  }
+
+  return farms
+}
+
 export async function createFarm(farmData: Omit<Farm, 'id' | 'created_at'>) {
   const { data, error } = await (supabase
     .from('farms') as any)
@@ -538,7 +580,7 @@ export async function deleteFarmingPractice(practiceId: string) {
 // Product Management
 // ============================================
 
-export async function getProducerProducts(userId: string): Promise<Product[]> {
+export async function getProducerProducts(userId: string): Promise<(Product & { farm_name?: string | null })[]> {
   const { data: profile } = await (supabase
     .from('producer_profiles') as any)
     .select('id')
@@ -549,7 +591,7 @@ export async function getProducerProducts(userId: string): Promise<Product[]> {
 
   const { data, error } = await (supabase
     .from('producer_products') as any)
-    .select('product:products(*)')
+    .select('product:products(*, farms(name))')
     .eq('producer_id', profile.id)
 
   if (error) {
@@ -557,7 +599,15 @@ export async function getProducerProducts(userId: string): Promise<Product[]> {
     return []
   }
 
-  return (data || []).map((item: { product: Product }) => item.product).filter(Boolean)
+  return (data || []).map((item: { product: Product & { farms?: { name: string } | { name: string }[] | null } }) => {
+    const product = item.product
+    // Handle both array and object cases for the farms relationship
+    const farm = Array.isArray(product.farms) ? product.farms[0] : product.farms
+    return {
+      ...product,
+      farm_name: farm?.name || null,
+    }
+  }).filter(Boolean)
 }
 
 export async function createProduct(
@@ -610,18 +660,27 @@ export async function createProduct(
     if (relatedData.qualityIndicators?.length && product) {
       await (supabase.from('quality_indicators') as any).insert(
         relatedData.qualityIndicators.map((indicator: any) => {
-          const indicatorData: any = {
-            ...indicator,
-            product_id: product.id,
-            score: typeof indicator.score === 'string' ? parseFloat(indicator.score) : indicator.score,
-            max_score: typeof indicator.max_score === 'string' ? parseFloat(indicator.max_score) : (indicator.max_score || 5),
-            percentage: indicator.percentage ? parseFloat(indicator.percentage) : ((indicator.score / (indicator.max_score || 5)) * 100),
+          if (indicator.indicator_type === 'shelf_life') {
+            return {
+              indicator_type: indicator.indicator_type,
+              product_id: product.id,
+              score: null,
+              max_score: null,
+              percentage: null,
+              description: indicator.description || null,
+              shelf_life_remaining_days: indicator.shelf_life_remaining_days || null,
+            }
+          } else {
+            return {
+              indicator_type: indicator.indicator_type,
+              product_id: product.id,
+              score: typeof indicator.score === 'string' ? parseFloat(indicator.score) : indicator.score,
+              max_score: typeof indicator.max_score === 'string' ? parseFloat(indicator.max_score) : (indicator.max_score || 5),
+              percentage: indicator.percentage ? parseFloat(indicator.percentage) : ((indicator.score / (indicator.max_score || 5)) * 100),
+              description: indicator.description || null,
+              shelf_life_remaining_days: null,
+            }
           }
-          // Remove shelf_life_remaining_days if not shelf_life type (it's not a DB field)
-          if (indicator.indicator_type !== 'shelf_life') {
-            delete indicatorData.shelf_life_remaining_days
-          }
-          return indicatorData
         })
       )
     }
@@ -694,6 +753,19 @@ export async function getAllFarms(): Promise<Farm[]> {
 
   if (error) {
     console.error('Error fetching farms:', error)
+    return []
+  }
+  return data || []
+}
+
+export async function getAllStores(): Promise<Store[]> {
+  const { data, error } = await (supabase
+    .from('stores') as any)
+    .select('*')
+    .order('name')
+
+  if (error) {
+    console.error('Error fetching stores:', error)
     return []
   }
   return data || []

@@ -274,7 +274,7 @@ export function CertificationCard({ certification, showHash = true }: Certificat
           <span className="text-2xl">{certIcons[certification.cert_type] || '✓'}</span>
           <div>
             <span className="font-medium" style={{ fontFamily: 'var(--font-body)' }}>
-              {certification.cert_display_name || certification.cert_type}
+              {certification.cert_type}
             </span>
             {certification.certifying_body_code && (
               <span className="text-xs opacity-60 ml-2">({certification.certifying_body_code})</span>
@@ -292,10 +292,10 @@ export function CertificationCard({ certification, showHash = true }: Certificat
         </p>
       )}
 
-      {/* Description */}
-      {certification.description && (
+      {/* Audit Findings */}
+      {certification.audit_findings && (
         <p className="text-sm mb-3" style={{ fontFamily: 'var(--font-body)', lineHeight: 1.5 }}>
-          {certification.description}
+          {certification.audit_findings}
         </p>
       )}
 

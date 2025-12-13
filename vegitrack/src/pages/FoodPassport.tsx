@@ -596,7 +596,6 @@ export default function FoodPassport() {
                 {labels.map((label) => (
                   <Tag
                     key={label.id}
-                    color={label.label_color || undefined}
                     style={{
                       backgroundColor: palette.tagBg,
                       border: `1px solid ${palette.tagBorder}`,

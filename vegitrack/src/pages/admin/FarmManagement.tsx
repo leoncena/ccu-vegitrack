@@ -9,24 +9,30 @@ import { toast } from '../../components/ui/sonner'
 import { Spinner } from '../../components/ui'
 import { Combobox } from '../../components/ui/combobox'
 import {
-  getProducerFarm,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../../components/ui/table'
+import {
+  getProducerFarms,
   createFarm,
   updateFarm,
-  getFarmerStory,
-  upsertFarmerStory,
   getFarmingPractices,
   upsertFarmingPractice,
   deleteFarmingPractice,
 } from '../../lib/api'
-import type { Farm, FarmerStory, FarmingPractice } from '../../types/database'
-import { Plus, Trash2 } from 'lucide-react'
+import type { Farm, FarmingPractice } from '../../types/database'
+import { Plus, Trash2, Edit } from 'lucide-react'
 
 export default function FarmManagement() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [farm, setFarm] = useState<Farm | null>(null)
-  const [farmerStory, setFarmerStory] = useState<FarmerStory | null>(null)
+  const [farms, setFarms] = useState<Farm[]>([])
+  const [editingFarmId, setEditingFarmId] = useState<string | null>(null)
   const [farmingPractices, setFarmingPractices] = useState<FarmingPractice[]>([])
 
   // Farm form state
@@ -35,129 +41,182 @@ export default function FarmManagement() {
     full_address: '',
     region: '',
     country: '',
-    coordinates_lat: '',
-    coordinates_lng: '',
-    description: '',
-  })
-
-  // Farmer story form state
-  const [storyData, setStoryData] = useState({
-    farmer_name: '',
-    title: '',
-    story_content: '',
-    quote: '',
+    google_maps_link: '',
+    our_story: '',
+    what_drives_us: [] as string[],
+    life_on_farm: '',
+    looking_ahead: '',
     image_url: '',
-    years_farming: '',
   })
 
-  const loadData = useCallback(async () => {
+  // Icon mapping for farming practices
+  const farmingPracticeIcons: Record<string, string> = {
+    soil_inputs: 'soil',
+    water_management: 'water',
+    pest_control: 'bug',
+    biodiversity: 'leaf',
+    labor_conditions: 'users',
+  }
+
+  const loadFarms = useCallback(async () => {
     if (!user) return
     setLoading(true)
     try {
-      const farmData = await getProducerFarm(user.id)
-      if (farmData) {
-        setFarm(farmData)
-        setFarmData({
-          name: farmData.name || '',
-          full_address: farmData.full_address || '',
-          region: farmData.region || '',
-          country: farmData.country || '',
-          coordinates_lat: farmData.coordinates?.lat?.toString() || '',
-          coordinates_lng: farmData.coordinates?.lng?.toString() || '',
-          description: farmData.description || '',
-        })
-
-        // Load farmer story
-        const story = await getFarmerStory(farmData.id)
-        if (story) {
-          setFarmerStory(story)
-          setStoryData({
-            farmer_name: story.farmer_name || '',
-            title: story.title || '',
-            story_content: story.story_content || '',
-            quote: story.quote || '',
-            image_url: story.image_url || '',
-            years_farming: story.years_farming?.toString() || '',
-          })
-        }
-
-        // Load farming practices
-        const practices = await getFarmingPractices(farmData.id)
-        setFarmingPractices(practices)
-      }
+      const farmsData = await getProducerFarms(user.id)
+      setFarms(farmsData)
     } catch (error) {
-      console.error('Error loading farm data:', error)
-      toast.error('Failed to load farm data')
+      console.error('Error loading farms:', error)
+      toast.error('Failed to load farms')
     } finally {
       setLoading(false)
     }
   }, [user])
 
+  const loadFarmForEditing = useCallback(async (farmId: string) => {
+    try {
+      const farm = farms.find(f => f.id === farmId)
+      if (!farm) return
+
+      // Convert coordinates to Google Maps link if available
+      let googleMapsLink = ''
+      if (farm.coordinates?.lat && farm.coordinates?.lng) {
+        googleMapsLink = `https://www.google.com/maps/place/${farm.coordinates.lat},${farm.coordinates.lng}`
+      }
+      setFarmData({
+        name: farm.name || '',
+        full_address: farm.full_address || '',
+        region: farm.region || '',
+        country: farm.country || '',
+        google_maps_link: googleMapsLink,
+        our_story: (farm as any).our_story || '',
+        what_drives_us: (farm as any).what_drives_us || [],
+        life_on_farm: (farm as any).life_on_farm || '',
+        looking_ahead: (farm as any).looking_ahead || '',
+        image_url: (farm as any).image_url || '',
+      })
+
+      // Load farming practices
+      const practices = await getFarmingPractices(farmId)
+      setFarmingPractices(practices)
+    } catch (error) {
+      console.error('Error loading farm for editing:', error)
+      toast.error('Failed to load farm data')
+    }
+  }, [farms])
+
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadFarms()
+  }, [loadFarms])
+
+  useEffect(() => {
+    if (editingFarmId && editingFarmId !== 'new') {
+      loadFarmForEditing(editingFarmId)
+    } else if (editingFarmId === 'new') {
+      // Reset form for new farm
+      setFarmData({
+        name: '',
+        full_address: '',
+        region: '',
+        country: '',
+        google_maps_link: '',
+        our_story: '',
+        what_drives_us: [],
+        life_on_farm: '',
+        looking_ahead: '',
+        image_url: '',
+      })
+      setFarmingPractices([])
+    } else {
+      // Reset form when not editing
+      setFarmData({
+        name: '',
+        full_address: '',
+        region: '',
+        country: '',
+        google_maps_link: '',
+        our_story: '',
+        what_drives_us: [],
+        life_on_farm: '',
+        looking_ahead: '',
+        image_url: '',
+      })
+      setFarmingPractices([])
+    }
+  }, [editingFarmId, loadFarmForEditing])
+
+  function extractCoordinatesFromGoogleMaps(link: string): { lat: number; lng: number } | null {
+    try {
+      // Try to extract from URL pattern: @lat,lng
+      const match = link.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2]),
+        }
+      }
+      // Try alternative pattern: place/.../@lat,lng
+      const match2 = link.match(/place\/[^@]+@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+      if (match2) {
+        return {
+          lat: parseFloat(match2[1]),
+          lng: parseFloat(match2[2]),
+        }
+      }
+      return null
+    } catch (error) {
+      console.error('Error extracting coordinates:', error)
+      return null
+    }
+  }
 
   async function handleSave() {
     if (!user) return
     setSaving(true)
     try {
-      let farmId = farm?.id
+      // Extract coordinates from Google Maps link
+      let coordinates: { lat: number; lng: number } | null = null
+      if (farmData.google_maps_link) {
+        coordinates = extractCoordinatesFromGoogleMaps(farmData.google_maps_link)
+      }
 
       // Create or update farm
-      const farmPayload: Partial<Omit<Farm, 'id' | 'created_at'>> = {
+      const farmPayload: any = {
         name: farmData.name,
         full_address: farmData.full_address || null,
         region: farmData.region || null,
         country: farmData.country,
-        description: farmData.description || null,
+        coordinates: coordinates,
         distance_km: null,
+        our_story: farmData.our_story || null,
+        what_drives_us: farmData.what_drives_us || null,
+        life_on_farm: farmData.life_on_farm || null,
+        looking_ahead: farmData.looking_ahead || null,
+        image_url: farmData.image_url || null,
       }
 
-      if (farmData.coordinates_lat && farmData.coordinates_lng) {
-        farmPayload.coordinates = {
-          lat: parseFloat(farmData.coordinates_lat),
-          lng: parseFloat(farmData.coordinates_lng),
-        }
-      } else {
-        farmPayload.coordinates = null
-      }
-
-      if (farmId) {
-        await updateFarm(farmId, farmPayload)
+      let farmId: string
+      if (editingFarmId) {
+        await updateFarm(editingFarmId, farmPayload)
+        farmId = editingFarmId
       } else {
         const newFarm = await createFarm(farmPayload as Omit<Farm, 'id' | 'created_at'>)
         farmId = newFarm.id
-        setFarm(newFarm)
-      }
-
-      // Save farmer story
-      if (farmId && (storyData.farmer_name || storyData.title || storyData.story_content)) {
-        await upsertFarmerStory({
-          id: farmerStory?.id,
-          farm_id: farmId,
-          farmer_name: storyData.farmer_name || 'Unknown',
-          title: storyData.title || null,
-          story_content: storyData.story_content || null,
-          quote: storyData.quote || null,
-          image_url: storyData.image_url || null,
-          years_farming: storyData.years_farming ? parseInt(storyData.years_farming) : null,
-        })
       }
 
       // Save farming practices
       for (const practice of farmingPractices) {
         await upsertFarmingPractice({
           id: practice.id,
-          farm_id: farmId!,
+          farm_id: farmId,
           category: practice.category,
-          category_display_name: practice.category_display_name || null,
-          icon_type: practice.icon_type || null,
+          icon_type: farmingPracticeIcons[practice.category] || null,
           practices: practice.practices || [],
         })
       }
 
-      toast.success('Farm information saved successfully!')
-      await loadData()
+      toast.success(editingFarmId ? 'Farm updated successfully!' : 'Farm created successfully!')
+      await loadFarms()
+      setEditingFarmId(null)
     } catch (error) {
       console.error('Error saving farm:', error)
       toast.error('Failed to save farm information')
@@ -166,14 +225,25 @@ export default function FarmManagement() {
     }
   }
 
+  function handleEdit(farmId: string) {
+    setEditingFarmId(farmId)
+  }
+
+  function handleCancel() {
+    setEditingFarmId(null)
+  }
+
+  function handleAddNew() {
+    setEditingFarmId('new')
+  }
+
   function addFarmingPractice() {
     setFarmingPractices([
       ...farmingPractices,
       {
         id: `temp-${Date.now()}`,
-        farm_id: farm?.id || '',
+        farm_id: editingFarmId && editingFarmId !== 'new' ? editingFarmId : '',
         category: 'soil_inputs',
-        category_display_name: null,
         icon_type: null,
         practices: [''],
         created_at: new Date().toISOString(),
@@ -215,6 +285,85 @@ export default function FarmManagement() {
     )
   }
 
+  // Show table view when not editing
+  if (!editingFarmId) {
+    return (
+      <Card>
+        <CardHeader style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Farms</CardTitle>
+          <Button onClick={handleAddNew} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+            <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
+            Add Farm
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {farms.length === 0 ? (
+            <div
+              style={{
+                textAlign: 'center',
+                padding: 'calc(var(--spacing-section) * 2)',
+                fontFamily: 'var(--font-body)',
+                color: 'var(--color-text-light)',
+              }}
+            >
+              <p style={{ marginBottom: 'var(--spacing-card)' }}>No farms registered yet.</p>
+              <Button onClick={handleAddNew} style={{ padding: '4px 8px', color: 'var(--background)' }}>
+                <Plus className="size-4" style={{ stroke: 'var(--background)' }} />
+                <span style={{ color: 'var(--background)' }}>Add Your First Farm</span>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Farm Name</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Region</TableHead>
+                  <TableHead>Country</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead style={{ textAlign: 'right' }}>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {farms.map((farm) => (
+                  <TableRow key={farm.id}>
+                    <TableCell style={{ fontFamily: 'var(--font-body)', fontWeight: 500 }}>
+                      {farm.name}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.full_address || '—'}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.region || '—'}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {farm.country}
+                    </TableCell>
+                    <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                      {new Date(farm.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', gap: 'calc(var(--spacing-card) * 0.5)', justifyContent: 'flex-end' }}>
+                        <Button
+                          onClick={() => handleEdit(farm.id)}
+                          size="icon-sm"
+                          variant="ghost"
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Show form view when editing or no farm exists
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-section) * 2)' }}>
       {/* Farm Information */}
@@ -279,7 +428,7 @@ export default function FarmManagement() {
               }}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
             <div>
               <Label htmlFor="region" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Region</Label>
               <Input
@@ -299,33 +448,12 @@ export default function FarmManagement() {
               />
             </div>
             <div>
-              <Label htmlFor="coordinates_lat" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Latitude</Label>
+              <Label htmlFor="google_maps_link" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Google Maps Link</Label>
               <Input
-                id="coordinates_lat"
-                type="number"
-                step="any"
-                value={farmData.coordinates_lat}
-                onChange={(e) => setFarmData({ ...farmData, coordinates_lat: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
-            </div>
-            <div>
-              <Label htmlFor="coordinates_lng" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Longitude</Label>
-              <Input
-                id="coordinates_lng"
-                type="number"
-                step="any"
-                value={farmData.coordinates_lng}
-                onChange={(e) => setFarmData({ ...farmData, coordinates_lng: e.target.value })}
+                id="google_maps_link"
+                value={farmData.google_maps_link}
+                onChange={(e) => setFarmData({ ...farmData, google_maps_link: e.target.value })}
+                placeholder="Just enter the google maps link, we find the coordinates for you"
                 className="h-[42px] rounded-[8px] border-[1.5px]"
                 style={{
                   fontFamily: 'var(--font-body)',
@@ -340,11 +468,12 @@ export default function FarmManagement() {
             </div>
           </div>
           <div>
-            <Label htmlFor="description" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
+            <Label htmlFor="our_story" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Our story</Label>
             <textarea
-              id="description"
-              value={farmData.description}
-              onChange={(e) => setFarmData({ ...farmData, description: e.target.value })}
+              id="our_story"
+              value={farmData.our_story}
+              onChange={(e) => setFarmData({ ...farmData, our_story: e.target.value })}
+              placeholder="Feel free to tell your farm story here in a small text"
               style={{
                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                 width: '100%',
@@ -359,100 +488,65 @@ export default function FarmManagement() {
               }}
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Farmer Story */}
-      <Card>
-        <CardHeader>
-          <CardTitle style={{ fontFamily: 'var(--font-body)', marginBottom: 'var(--spacing-card)' }}>Farmer Story</CardTitle>
-        </CardHeader>
-        <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
-            <div>
-              <Label htmlFor="farmer_name" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Farmer Name</Label>
-              <Input
-                id="farmer_name"
-                value={storyData.farmer_name}
-                onChange={(e) => setStoryData({ ...storyData, farmer_name: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
+          <div>
+            <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'calc(var(--spacing-card) * 0.5)' }}>
+              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>What drives us</Label>
+              <Button
+                onClick={() => setFarmData({ ...farmData, what_drives_us: [...farmData.what_drives_us, ''] })}
+                size="sm"
+                variant="outline"
+                style={{ padding: '4px 8px' }}
+              >
+                <Plus className="size-4" />
+                Add Point
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="years_farming" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Years Farming</Label>
-              <Input
-                id="years_farming"
-                type="number"
-                value={storyData.years_farming}
-                onChange={(e) => setStoryData({ ...storyData, years_farming: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)' }}>
+              {farmData.what_drives_us.map((item, itemIndex) => (
+                <div key={itemIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
+                  <Input
+                    value={item}
+                    onChange={(e) => {
+                      const updated = [...farmData.what_drives_us]
+                      updated[itemIndex] = e.target.value
+                      setFarmData({ ...farmData, what_drives_us: updated })
+                    }}
+                    placeholder="What drives you and your farm? Feel free to enter some bullet points."
+                    className="h-[42px] rounded-[8px] border-[1.5px]"
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      backgroundColor: 'var(--color-background)',
+                      paddingLeft: 'var(--spacing-card)',
+                      paddingRight: 'var(--spacing-card)',
+                      borderColor: 'var(--color-border)',
+                      color: 'var(--color-text)',
+                    }}
+                  />
+                  <Button
+                    onClick={() => {
+                      const updated = farmData.what_drives_us.filter((_, i) => i !== itemIndex)
+                      setFarmData({ ...farmData, what_drives_us: updated })
+                    }}
+                    size="icon-sm"
+                    variant="ghost"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
           <div>
-            <Label htmlFor="title" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Title</Label>
-            <Input
-              id="title"
-              value={storyData.title}
-              onChange={(e) => setStoryData({ ...storyData, title: e.target.value })}
-              className="h-[42px] rounded-[8px] border-[1.5px]"
-              style={{
-                fontFamily: 'var(--font-body)',
-                backgroundColor: 'var(--color-background)',
-                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                paddingLeft: 'var(--spacing-card)',
-                paddingRight: 'var(--spacing-card)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="quote" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Quote</Label>
-            <Input
-              id="quote"
-              value={storyData.quote}
-              onChange={(e) => setStoryData({ ...storyData, quote: e.target.value })}
-              className="h-[42px] rounded-[8px] border-[1.5px]"
-              style={{
-                fontFamily: 'var(--font-body)',
-                backgroundColor: 'var(--color-background)',
-                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                paddingLeft: 'var(--spacing-card)',
-                paddingRight: 'var(--spacing-card)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="story_content" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Content</Label>
+            <Label htmlFor="life_on_farm" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Life on the farm</Label>
             <textarea
-              id="story_content"
-              value={storyData.story_content}
-              onChange={(e) => setStoryData({ ...storyData, story_content: e.target.value })}
+              id="life_on_farm"
+              value={farmData.life_on_farm}
+              onChange={(e) => setFarmData({ ...farmData, life_on_farm: e.target.value })}
+              placeholder="Feel free to share something about your farm life. E.g. a farmer markets or community events."
               style={{
                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                 width: '100%',
-                minHeight: '150px',
+                minHeight: '100px',
                 padding: 'var(--spacing-card)',
                 borderRadius: '8px',
                 border: '1.5px solid var(--color-border)',
@@ -464,15 +558,37 @@ export default function FarmManagement() {
             />
           </div>
           <div>
-            <Label htmlFor="story_image">Farmer Image</Label>
+            <Label htmlFor="looking_ahead" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Looking ahead</Label>
+            <textarea
+              id="looking_ahead"
+              value={farmData.looking_ahead}
+              onChange={(e) => setFarmData({ ...farmData, looking_ahead: e.target.value })}
+              placeholder="What are your plans for the future?"
+              style={{
+                marginTop: 'calc(var(--spacing-card) * 0.5)',
+                width: '100%',
+                minHeight: '100px',
+                padding: 'var(--spacing-card)',
+                borderRadius: '8px',
+                border: '1.5px solid var(--color-border)',
+                fontFamily: 'var(--font-body)',
+                fontSize: '14px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)',
+              }}
+            />
+          </div>
+          <div>
+            <Label htmlFor="image_url">Farm Image</Label>
             <FileUpload
-              value={storyData.image_url}
-              onChange={(url) => setStoryData({ ...storyData, image_url: url })}
+              value={farmData.image_url}
+              onChange={(url) => setFarmData({ ...farmData, image_url: url })}
               className="mt-2"
             />
           </div>
         </CardContent>
       </Card>
+
 
       {/* Farming Practices */}
       <div>
@@ -488,7 +604,7 @@ export default function FarmManagement() {
             <Card key={index} stroke>
               <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
+                  <div style={{ flex: 1 }}>
                     <div>
                       <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
                       <Combobox
@@ -502,41 +618,6 @@ export default function FarmManagement() {
                         value={practice.category}
                         onValueChange={(value) => updateFarmingPractice(index, 'category', value || '')}
                         placeholder="Select category"
-                      />
-                    </div>
-                    <div>
-                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Display Name</Label>
-                      <Input
-                        value={practice.category_display_name || ''}
-                        onChange={(e) => updateFarmingPractice(index, 'category_display_name', e.target.value)}
-                        className="h-[42px] rounded-[8px] border-[1.5px]"
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          backgroundColor: 'var(--color-background)',
-                          marginTop: 'calc(var(--spacing-card) * 0.5)',
-                          paddingLeft: 'var(--spacing-card)',
-                          paddingRight: 'var(--spacing-card)',
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text)',
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Icon Type</Label>
-                      <Input
-                        value={practice.icon_type || ''}
-                        onChange={(e) => updateFarmingPractice(index, 'icon_type', e.target.value)}
-                        placeholder="e.g. soil, water, bug"
-                        className="h-[42px] rounded-[8px] border-[1.5px]"
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          backgroundColor: 'var(--color-background)',
-                          marginTop: 'calc(var(--spacing-card) * 0.5)',
-                          paddingLeft: 'var(--spacing-card)',
-                          paddingRight: 'var(--spacing-card)',
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text)',
-                        }}
                       />
                     </div>
                   </div>
@@ -604,8 +685,11 @@ export default function FarmManagement() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)' }}>
+        <Button onClick={handleCancel} variant="outline" style={{ padding: '4px 8px' }}>
+          Cancel
+        </Button>
         <Button onClick={handleSave} disabled={saving || !farmData.name || !farmData.country} style={{ padding: '4px 8px', color: 'var(--background)' }}>
-          {saving ? <Spinner className="size-4" /> : 'Save Farm Information'}
+          {saving ? <Spinner className="size-4" /> : editingFarmId === 'new' ? 'Create Farm' : 'Update Farm Information'}
         </Button>
       </div>
     </div>

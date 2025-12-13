@@ -13,6 +13,8 @@ import {
 } from '../../components/ui/table'
 import { getProducerProducts, deleteProduct } from '../../lib/api'
 import type { Product } from '../../types/database'
+
+type ProductWithFarm = Product & { farm_name?: string | null }
 import { Plus, Edit, Trash2 } from 'lucide-react'
 import { Spinner } from '../../components/ui'
 import { toast } from '../../components/ui/sonner'
@@ -21,7 +23,7 @@ export default function ProductsManagement() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<ProductWithFarm[]>([])
 
   const loadProducts = useCallback(async () => {
     if (!user) return
@@ -93,6 +95,7 @@ export default function ProductsManagement() {
               <TableRow>
                 <TableHead>Display ID</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Farm</TableHead>
                 <TableHead>Origin</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead style={{ textAlign: 'right' }}>Actions</TableHead>
@@ -105,6 +108,9 @@ export default function ProductsManagement() {
                     {product.display_id}
                   </TableCell>
                   <TableCell style={{ fontFamily: 'var(--font-body)' }}>{product.name}</TableCell>
+                  <TableCell style={{ fontFamily: 'var(--font-body)' }}>
+                    {product.farm_name || '-'}
+                  </TableCell>
                   <TableCell style={{ fontFamily: 'var(--font-body)' }}>
                     {product.origin_country}
                     {product.origin_region ? `, ${product.origin_region}` : ''}
