@@ -16,26 +16,21 @@ interface FileUploadProps {
 export function FileUpload({ 
   value, 
   onChange, 
-  placeholder = 'https://placehold.co/600x400/EEE/31343C', 
   className,
   onError 
 }: FileUploadProps) {
-  const [preview, setPreview] = useState<string | null>(value || null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   // Initialize better-upload hook (we won't actually use it to upload, just for the UI)
   const { control } = useUploadFiles({
     route: 'images', // This won't be used since we override upload
   })
 
-  // Update preview when value changes (e.g., when editing existing farm)
-  useEffect(() => {
-    if (value && !selectedFile) {
-      setPreview(value)
-    }
-  }, [value, selectedFile])
+  // Derive preview from selected file or value prop
+  const preview = previewUrl || (value && !selectedFile ? value : null)
 
-  const handleFileSelect = useCallback((files: File[], metadata?: Record<string, unknown>) => {
+  const handleFileSelect = useCallback((files: File[]) => {
     if (!files || files.length === 0) return
 
     const file = files[0]
@@ -58,8 +53,8 @@ export function FileUpload({
     }
 
     // Create preview URL
-    const previewUrl = URL.createObjectURL(file)
-    setPreview(previewUrl)
+    const objectUrl = URL.createObjectURL(file)
+    setPreviewUrl(objectUrl)
     setSelectedFile(file)
     onChange?.(file)
   }, [onChange, onError])
@@ -67,11 +62,11 @@ export function FileUpload({
   // Clean up preview URL when component unmounts or file changes
   useEffect(() => {
     return () => {
-      if (preview && preview.startsWith('blob:')) {
-        URL.revokeObjectURL(preview)
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl)
       }
     }
-  }, [preview])
+  }, [previewUrl])
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>

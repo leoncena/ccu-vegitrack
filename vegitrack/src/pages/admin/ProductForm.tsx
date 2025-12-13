@@ -460,7 +460,7 @@ export default function ProductForm() {
                 return { ...r, product_id: id }
               })
             )
-            await supabase.from('recipes').insert(recipesWithImages)
+            await (supabase.from('recipes') as any).insert(recipesWithImages)
           }
         }
         
@@ -485,24 +485,24 @@ export default function ProductForm() {
           
           // Re-upload recipe images with correct product ID
           // Get all recipes for this product (they were just created)
-          const { data: createdRecipes } = await supabase
-            .from('recipes')
+          const { data: createdRecipes } = await (supabase
+            .from('recipes') as any)
             .select('id, title')
             .eq('product_id', newProduct.id)
             .order('created_at', { ascending: true })
           
-          if (createdRecipes && createdRecipes.length === recipes.length) {
+          if (createdRecipes && Array.isArray(createdRecipes) && createdRecipes.length === recipes.length) {
             for (let i = 0; i < recipes.length; i++) {
               const recipeFile = selectedRecipeImageFiles.get(i)
-              if (recipeFile && recipeImageUrls[i] && createdRecipes[i]) {
+              const createdRecipe = createdRecipes[i] as { id: string; title: string } | undefined
+              if (recipeFile && recipeImageUrls[i] && createdRecipe?.id) {
                 try {
                   const correctRecipePath = `recipes/${newProduct.id}-recipe-${i}-${Date.now()}.${recipeFile.name.split('.').pop() || 'jpg'}`
                   const correctRecipeUrl = await uploadImageToStorage(recipeFile, correctRecipePath)
                   // Update the recipe with correct image URL using the created recipe ID
-                  await supabase
-                    .from('recipes')
+                  await (supabase.from('recipes') as any)
                     .update({ image_url: correctRecipeUrl })
-                    .eq('id', createdRecipes[i].id)
+                    .eq('id', createdRecipe.id)
                 } catch (error) {
                   console.error(`Error re-uploading recipe ${i} image with correct path:`, error)
                 }
