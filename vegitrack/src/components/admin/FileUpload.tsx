@@ -1,70 +1,100 @@
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { useUploadFiles } from '@better-upload/client'
+import { UploadDropzone } from '../ui/upload-dropzone'
+import { validateFileSize } from '@/lib/storage'
+import { toast } from '../ui/sonner'
 
 interface FileUploadProps {
   value?: string | null
-  onChange?: (url: string) => void
+  onChange?: (file: File | null) => void
   placeholder?: string
   className?: string
+  onError?: (error: string) => void
 }
 
-export function FileUpload({ value, onChange, placeholder = 'https://placehold.co/600x400/EEE/31343C', className }: FileUploadProps) {
+export function FileUpload({ 
+  value, 
+  onChange, 
+  placeholder = 'https://placehold.co/600x400/EEE/31343C', 
+  className,
+  onError 
+}: FileUploadProps) {
   const [preview, setPreview] = useState<string | null>(value || null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // For now, just use placeholder URL
-      // In the future, this would upload to storage and get the URL
-      const url = placeholder
-      setPreview(url)
-      onChange?.(url)
+  // Initialize better-upload hook (we won't actually use it to upload, just for the UI)
+  const { control } = useUploadFiles({
+    route: 'images', // This won't be used since we override upload
+  })
+
+  // Update preview when value changes (e.g., when editing existing farm)
+  useEffect(() => {
+    if (value && !selectedFile) {
+      setPreview(value)
     }
-  }
+  }, [value, selectedFile])
 
-  const displayUrl = preview || placeholder
+  const handleFileSelect = useCallback((files: File[], metadata?: Record<string, unknown>) => {
+    if (!files || files.length === 0) return
+
+    const file = files[0]
+    
+    // Validate file size
+    const validation = validateFileSize(file)
+    if (!validation.valid) {
+      const errorMsg = validation.error || 'File size validation failed'
+      toast.error(errorMsg)
+      onError?.(errorMsg)
+      return
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      const errorMsg = 'Please select an image file'
+      toast.error(errorMsg)
+      onError?.(errorMsg)
+      return
+    }
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file)
+    setPreview(previewUrl)
+    setSelectedFile(file)
+    onChange?.(file)
+  }, [onChange, onError])
+
+  // Clean up preview URL when component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      if (preview && preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview)
+      }
+    }
+  }, [preview])
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      <div
-        className="relative w-full border-2 border-dashed rounded-lg overflow-hidden"
-        style={{
-          borderColor: 'var(--color-border)',
-          minHeight: '200px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'var(--color-surface)',
-        }}
-      >
-        {displayUrl && (
+      {preview && (
+        <div className="relative w-full rounded-lg overflow-hidden mb-2" style={{ maxHeight: '400px' }}>
           <img
-            src={displayUrl}
+            src={preview}
             alt="Upload preview"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-lg"
             style={{ maxHeight: '400px' }}
           />
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleFileChange}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        />
-        {!displayUrl && (
-          <div
-            className="text-center p-4"
-            style={{ color: 'var(--color-text-light)' }}
-          >
-            <div style={{ fontFamily: 'var(--font-body)', fontSize: '14px' }}>
-              Click to upload image
-            </div>
-          </div>
-        )}
-      </div>
-      <div style={{ fontFamily: 'var(--font-body)', fontSize: '12px', color: 'var(--color-text-light)' }}>
-        Using placeholder image. File upload will be implemented later.
-      </div>
+        </div>
+      )}
+      <UploadDropzone
+        control={control}
+        accept="image/*"
+        description={{
+          maxFiles: 1,
+          maxFileSize: '500KB',
+          fileTypes: 'JPEG, PNG, GIF, WebP',
+        }}
+        uploadOverride={handleFileSelect}
+      />
     </div>
   )
 }

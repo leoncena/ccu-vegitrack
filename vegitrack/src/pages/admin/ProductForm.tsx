@@ -12,6 +12,7 @@ import { DatePicker } from '../../components/admin/DatePicker'
 import { PageHeaderWithBack } from '../../components/layout'
 import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications, getProductLabels, createProduct, updateProduct } from '../../lib/api'
 import { supabase } from '../../lib/supabase'
+import { uploadImageToStorage, generateProductImagePath } from '../../lib/storage'
 import { toast } from '../../components/ui/sonner'
 import { Plus, Trash2, ArrowRight, MapPin } from 'lucide-react'
 import { Spinner } from '../../components/ui'
@@ -95,6 +96,10 @@ export default function ProductForm() {
 
   // Labels state
   const [labels, setLabels] = useState<ProductLabelFormData[]>([])
+
+  // Image file state
+  const [selectedProductImageFile, setSelectedProductImageFile] = useState<File | null>(null)
+  const [selectedRecipeImageFiles, setSelectedRecipeImageFiles] = useState<Map<number, File>>(new Map())
 
   useEffect(() => {
     loadFarms()
@@ -227,6 +232,59 @@ export default function ProductForm() {
     if (!user) return
     setSaving(true)
     try {
+      // Upload product image first if a new file was selected
+      let productImageUrl = productData.image_url
+      if (selectedProductImageFile) {
+        try {
+          if (id && id !== 'new') {
+            // For existing products, upload with product ID
+            const imagePath = generateProductImagePath(id, selectedProductImageFile.name)
+            productImageUrl = await uploadImageToStorage(selectedProductImageFile, imagePath)
+          } else {
+            // For new products, we'll upload after creation
+            // Use a temp path for now
+            const tempProductId = `temp-${Date.now()}`
+            const imagePath = generateProductImagePath(tempProductId, selectedProductImageFile.name)
+            productImageUrl = await uploadImageToStorage(selectedProductImageFile, imagePath)
+          }
+        } catch (error) {
+          console.error('Error uploading product image:', error)
+          toast.error('Failed to upload product image. Please try again.')
+          setSaving(false)
+          return
+        }
+      }
+
+      // For existing products, we'll upload recipe images later in the update flow
+      // For new products, we'll upload with temp paths and re-upload after creation
+      const recipeImageUrls: string[] = []
+      if (id && id !== 'new') {
+        // For existing products, keep existing URLs (images will be uploaded in update flow)
+        for (let i = 0; i < recipes.length; i++) {
+          recipeImageUrls[i] = recipes[i].image_url || ''
+        }
+      } else {
+        // For new products, upload with temp paths
+        for (let i = 0; i < recipes.length; i++) {
+          const recipeFile = selectedRecipeImageFiles.get(i)
+          if (recipeFile) {
+            try {
+              const tempProductId = `temp-${Date.now()}`
+              const recipeImagePath = `recipes/${tempProductId}-recipe-${i}-${Date.now()}.${recipeFile.name.split('.').pop() || 'jpg'}`
+              const uploadedUrl = await uploadImageToStorage(recipeFile, recipeImagePath)
+              recipeImageUrls[i] = uploadedUrl
+            } catch (error) {
+              console.error(`Error uploading recipe ${i} image:`, error)
+              toast.error(`Failed to upload recipe ${i + 1} image. Please try again.`)
+              setSaving(false)
+              return
+            }
+          } else {
+            recipeImageUrls[i] = recipes[i].image_url || ''
+          }
+        }
+      }
+
       // Prepare product data
       const productPayload: any = {
         display_id: productData.display_id,
@@ -240,14 +298,14 @@ export default function ProductForm() {
         price_per_kg: productData.price_per_kg ? parseFloat(productData.price_per_kg) : null,
         transport_distance_km: productData.transport_distance_km ? parseFloat(productData.transport_distance_km) : null,
         emissions_co2e_per_kg: productData.emissions_co2e_per_kg ? parseFloat(productData.emissions_co2e_per_kg) : null,
-        image_url: productData.image_url || null,
+        image_url: productImageUrl || null,
       }
 
       // Prepare related data
       const relatedData: any = {}
 
       if (recipes.length > 0) {
-        relatedData.recipes = recipes.map((r: any) => ({
+        relatedData.recipes = recipes.map((r: any, index: number) => ({
           title: r.title,
           description: r.description || null,
           cultural_origin: r.cultural_origin || null,
@@ -256,7 +314,7 @@ export default function ProductForm() {
           servings: r.servings ? parseInt(r.servings) : null,
           ingredients: r.ingredients.filter((ing: any) => ing.name || ing.amount),
           instructions: r.instructions.filter((inst: string) => inst.trim()),
-          image_url: r.image_url || null,
+          image_url: recipeImageUrls[index] || r.image_url || null,
         }))
       }
 
@@ -306,6 +364,19 @@ export default function ProductForm() {
       if (id && id !== 'new') {
         // Update existing product
         await updateProduct(id, productPayload)
+        
+        // If we uploaded product image with temp path, re-upload with correct product ID
+        if (selectedProductImageFile && productImageUrl) {
+          try {
+            const correctImagePath = generateProductImagePath(id, selectedProductImageFile.name)
+            const correctImageUrl = await uploadImageToStorage(selectedProductImageFile, correctImagePath)
+            await updateProduct(id, { image_url: correctImageUrl })
+            productImageUrl = correctImageUrl
+          } catch (error) {
+            console.error('Error re-uploading product image with correct path:', error)
+            // Continue with the temp URL - it will still work
+          }
+        }
         
         // Update related data - delete existing and insert new
         if (relatedData.labels) {
@@ -372,18 +443,78 @@ export default function ProductForm() {
         if (relatedData.recipes) {
           await supabase.from('recipes').delete().eq('product_id', id)
           if (relatedData.recipes.length > 0) {
-            await supabase.from('recipes').insert(
-              relatedData.recipes.map((r: any) => ({ ...r, product_id: id }))
+            // Upload recipe images with correct product ID before inserting
+            const recipesWithImages = await Promise.all(
+              relatedData.recipes.map(async (r: any, index: number) => {
+                const recipeFile = selectedRecipeImageFiles.get(index)
+                if (recipeFile) {
+                  try {
+                    const recipeImagePath = `recipes/${id}-recipe-${index}-${Date.now()}.${recipeFile.name.split('.').pop() || 'jpg'}`
+                    const uploadedUrl = await uploadImageToStorage(recipeFile, recipeImagePath)
+                    return { ...r, image_url: uploadedUrl, product_id: id }
+                  } catch (error) {
+                    console.error(`Error uploading recipe ${index} image:`, error)
+                    return { ...r, product_id: id }
+                  }
+                }
+                return { ...r, product_id: id }
+              })
             )
+            await supabase.from('recipes').insert(recipesWithImages)
           }
         }
         
         toast.success('Product updated successfully!')
       } else {
         // Create new product
-        await createProduct(productPayload, user.id, relatedData)
+        const newProduct = await createProduct(productPayload, user.id, relatedData)
         toast.success('Product created successfully!')
+        
+        // If we uploaded images with temp paths, re-upload with correct product ID
+        if (newProduct && newProduct.id) {
+          // Re-upload product image with correct ID
+          if (selectedProductImageFile && productImageUrl) {
+            try {
+              const correctImagePath = generateProductImagePath(newProduct.id, selectedProductImageFile.name)
+              const correctImageUrl = await uploadImageToStorage(selectedProductImageFile, correctImagePath)
+              await updateProduct(newProduct.id, { image_url: correctImageUrl })
+            } catch (error) {
+              console.error('Error re-uploading product image with correct path:', error)
+            }
+          }
+          
+          // Re-upload recipe images with correct product ID
+          // Get all recipes for this product (they were just created)
+          const { data: createdRecipes } = await supabase
+            .from('recipes')
+            .select('id, title')
+            .eq('product_id', newProduct.id)
+            .order('created_at', { ascending: true })
+          
+          if (createdRecipes && createdRecipes.length === recipes.length) {
+            for (let i = 0; i < recipes.length; i++) {
+              const recipeFile = selectedRecipeImageFiles.get(i)
+              if (recipeFile && recipeImageUrls[i] && createdRecipes[i]) {
+                try {
+                  const correctRecipePath = `recipes/${newProduct.id}-recipe-${i}-${Date.now()}.${recipeFile.name.split('.').pop() || 'jpg'}`
+                  const correctRecipeUrl = await uploadImageToStorage(recipeFile, correctRecipePath)
+                  // Update the recipe with correct image URL using the created recipe ID
+                  await supabase
+                    .from('recipes')
+                    .update({ image_url: correctRecipeUrl })
+                    .eq('id', createdRecipes[i].id)
+                } catch (error) {
+                  console.error(`Error re-uploading recipe ${i} image with correct path:`, error)
+                }
+              }
+            }
+          }
+        }
       }
+
+      // Clear selected files after successful save
+      setSelectedProductImageFile(null)
+      setSelectedRecipeImageFiles(new Map())
 
       navigate('/admin?tab=products')
     } catch (error: any) {
@@ -708,7 +839,7 @@ export default function ProductForm() {
                   <Label htmlFor="image_url">Product Image</Label>
                   <FileUpload
                     value={productData.image_url}
-                    onChange={(url) => setProductData({ ...productData, image_url: url })}
+                    onChange={(file) => setSelectedProductImageFile(file)}
                     className="mt-2"
                   />
                 </div>
@@ -1036,10 +1167,16 @@ export default function ProductForm() {
                             <Label>Recipe Image</Label>
                             <FileUpload
                               value={recipe.image_url}
-                              onChange={(url) => {
-                                const updated = [...recipes]
-                                updated[recipeIndex].image_url = url
-                                setRecipes(updated)
+                              onChange={(file) => {
+                                if (file) {
+                                  const updatedFiles = new Map(selectedRecipeImageFiles)
+                                  updatedFiles.set(recipeIndex, file)
+                                  setSelectedRecipeImageFiles(updatedFiles)
+                                } else {
+                                  const updatedFiles = new Map(selectedRecipeImageFiles)
+                                  updatedFiles.delete(recipeIndex)
+                                  setSelectedRecipeImageFiles(updatedFiles)
+                                }
                               }}
                               className="mt-2"
                             />

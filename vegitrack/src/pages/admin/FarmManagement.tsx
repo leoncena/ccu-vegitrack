@@ -25,6 +25,7 @@ import {
   deleteFarmingPractice,
 } from '../../lib/api'
 import type { Farm, FarmingPractice } from '../../types/database'
+import { uploadImageToStorage, generateFarmImagePath } from '../../lib/storage'
 import { Plus, Trash2, Edit } from 'lucide-react'
 
 export default function FarmManagement() {
@@ -48,6 +49,7 @@ export default function FarmManagement() {
     looking_ahead: '',
     image_url: '',
   })
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null)
 
   // Icon mapping for farming practices
   const farmingPracticeIcons: Record<string, string> = {
@@ -125,6 +127,7 @@ export default function FarmManagement() {
         image_url: '',
       })
       setFarmingPractices([])
+      setSelectedImageFile(null)
     } else {
       // Reset form when not editing
       setFarmData({
@@ -140,6 +143,7 @@ export default function FarmManagement() {
         image_url: '',
       })
       setFarmingPractices([])
+      setSelectedImageFile(null)
     }
   }, [editingFarmId, loadFarmForEditing])
 
@@ -198,6 +202,22 @@ export default function FarmManagement() {
     if (!user) return
     setSaving(true)
     try {
+      // Upload image first if a new file was selected
+      let imageUrl = farmData.image_url
+      
+      // For existing farms, upload image before updating
+      if (selectedImageFile && editingFarmId && editingFarmId !== 'new' && isValidUUID(editingFarmId)) {
+        try {
+          const imagePath = generateFarmImagePath(editingFarmId, selectedImageFile.name)
+          imageUrl = await uploadImageToStorage(selectedImageFile, imagePath)
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast.error('Failed to upload image. Please try again.')
+          setSaving(false)
+          return
+        }
+      }
+
       // Extract coordinates from Google Maps link
       let coordinates: { lat: number; lng: number } | null = null
       if (farmData.google_maps_link) {
@@ -225,7 +245,7 @@ export default function FarmManagement() {
         what_drives_us: farmData.what_drives_us || null,
         life_on_farm: farmData.life_on_farm || null,
         looking_ahead: farmData.looking_ahead || null,
-        image_url: farmData.image_url || null,
+        image_url: imageUrl || null,
       }
 
       // Explicitly remove id and created_at if they somehow exist
@@ -245,6 +265,21 @@ export default function FarmManagement() {
           throw new Error('Failed to create farm: invalid ID returned')
         }
         farmId = newFarm.id
+        
+        // Upload image after farm creation (for new farms)
+        if (selectedImageFile) {
+          try {
+            const imagePath = generateFarmImagePath(farmId, selectedImageFile.name)
+            const uploadedImageUrl = await uploadImageToStorage(selectedImageFile, imagePath)
+            // Update farm with uploaded image URL
+            await updateFarm(farmId, { image_url: uploadedImageUrl })
+            imageUrl = uploadedImageUrl
+          } catch (error) {
+            console.error('Error uploading image after farm creation:', error)
+            toast.error('Farm created but image upload failed. You can update the image later.')
+            // Continue - farm is created, just without image
+          }
+        }
       }
 
       // Save farming practices (only if we have a valid UUID farmId)
@@ -266,6 +301,7 @@ export default function FarmManagement() {
       toast.success(editingFarmId && editingFarmId !== 'new' ? 'Farm updated successfully!' : 'Farm created successfully!')
       await loadFarms()
       setEditingFarmId(null)
+      setSelectedImageFile(null) // Clear selected file after successful save
     } catch (error) {
       console.error('Error saving farm:', error)
       toast.error('Failed to save farm information')
@@ -631,7 +667,7 @@ export default function FarmManagement() {
             <Label htmlFor="image_url">Farm Image</Label>
             <FileUpload
               value={farmData.image_url}
-              onChange={(url) => setFarmData({ ...farmData, image_url: url })}
+              onChange={(file) => setSelectedImageFile(file)}
               className="mt-2"
             />
           </div>
