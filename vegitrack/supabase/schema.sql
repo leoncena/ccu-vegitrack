@@ -17,7 +17,11 @@ CREATE TABLE IF NOT EXISTS farms (
   country VARCHAR(100) NOT NULL,
   coordinates POINT,
   distance_km DECIMAL(10,2),
-  description TEXT,
+  our_story TEXT,
+  what_drives_us TEXT[],
+  life_on_farm TEXT,
+  looking_ahead TEXT,
+  image_url VARCHAR(500),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -78,8 +82,6 @@ CREATE TABLE IF NOT EXISTS product_labels (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   product_id UUID REFERENCES products(id) ON DELETE CASCADE,
   label_name VARCHAR(100) NOT NULL,
-  label_color VARCHAR(7),
-  icon_type VARCHAR(50),
   blockchain_verified BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -95,7 +97,7 @@ CREATE TABLE IF NOT EXISTS quality_indicators (
   max_score INTEGER DEFAULT 5,
   percentage DECIMAL(5,2),
   description TEXT,
-  recommendation TEXT,
+  shelf_life_remaining_days INTEGER,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -135,7 +137,6 @@ CREATE TABLE IF NOT EXISTS certification_ledger (
   block_hash VARCHAR(66) NOT NULL,
   previous_hash VARCHAR(66),
   cert_type VARCHAR(100) NOT NULL,
-  cert_display_name VARCHAR(255),
   certifying_body VARCHAR(255),
   certifying_body_code VARCHAR(50),
   certificate_id VARCHAR(100),
@@ -143,7 +144,6 @@ CREATE TABLE IF NOT EXISTS certification_ledger (
   expiry_date DATE,
   auditor_name VARCHAR(255),
   audit_findings TEXT,
-  description TEXT,
   timestamp TIMESTAMPTZ NOT NULL,
   blockchain_verified BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
@@ -156,7 +156,6 @@ CREATE TABLE IF NOT EXISTS farming_practices (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   farm_id UUID REFERENCES farms(id) ON DELETE CASCADE,
   category VARCHAR(100) NOT NULL,
-  category_display_name VARCHAR(255),
   icon_type VARCHAR(50),
   practices TEXT[],
   created_at TIMESTAMPTZ DEFAULT now()

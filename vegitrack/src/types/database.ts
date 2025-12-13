@@ -111,7 +111,11 @@ export interface Farm {
   country: string
   coordinates: { lat: number; lng: number } | null
   distance_km: number | null
-  description: string | null
+  our_story?: string | null
+  what_drives_us?: string[] | null
+  life_on_farm?: string | null
+  looking_ahead?: string | null
+  image_url?: string | null
   created_at: string
 }
 
@@ -128,8 +132,6 @@ export interface ProductLabel {
   id: string
   product_id: string
   label_name: string
-  label_color: string | null
-  icon_type: string | null
   blockchain_verified?: boolean | null
   created_at: string
 }
@@ -142,7 +144,7 @@ export interface QualityIndicator {
   max_score: number
   percentage: number | null
   description: string | null
-  recommendation: string | null
+  shelf_life_remaining_days: number | null
   created_at: string
 }
 
@@ -174,7 +176,6 @@ export interface CertificationBlock {
   block_hash: string
   previous_hash: string | null
   cert_type: string
-  cert_display_name: string | null
   certifying_body: string | null
   certifying_body_code: string | null
   certificate_id: string | null
@@ -182,7 +183,6 @@ export interface CertificationBlock {
   expiry_date: string | null
   auditor_name: string | null
   audit_findings: string | null
-  description: string | null
   timestamp: string
   blockchain_verified?: boolean | null
   created_at: string
@@ -192,7 +192,6 @@ export interface FarmingPractice {
   id: string
   farm_id: string
   category: 'soil_inputs' | 'water_management' | 'pest_control' | 'biodiversity' | 'labor_conditions'
-  category_display_name: string | null
   icon_type: string | null
   practices: string[]
   created_at: string

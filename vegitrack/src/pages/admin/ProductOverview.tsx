@@ -98,14 +98,12 @@ export default function ProductOverview() {
           max_score: typeof q.max_score === 'number' ? q.max_score : (q.max_score ? parseFloat(q.max_score) : 5),
           percentage: q.percentage ? parseFloat(q.percentage) : (q.score && q.max_score ? ((q.score / q.max_score) * 100) : null),
           description: q.description || null,
-          recommendation: q.recommendation || null,
         }))
       }
 
       if (formData.certifications.length > 0) {
         relatedData.certifications = formData.certifications.map((c: any) => ({
           cert_type: c.cert_type,
-          cert_display_name: c.cert_display_name || null,
           certifying_body: c.certifying_body || null,
           certifying_body_code: c.certifying_body_code || null,
           certificate_id: c.certificate_id || null,
@@ -113,7 +111,6 @@ export default function ProductOverview() {
           expiry_date: c.expiry_date || null,
           auditor_name: c.auditor_name || null,
           audit_findings: c.audit_findings || null,
-          description: c.description || null,
         }))
       }
 
@@ -284,9 +281,9 @@ export default function ProductOverview() {
                       {formData.certifications.map((cert: any, index: number) => (
                         <Card key={index} stroke>
                           <CardContent style={{ padding: 'var(--spacing-card)', fontFamily: 'var(--font-body)' }}>
-                            <strong>{cert.cert_display_name || cert.cert_type}</strong>
+                            <strong>{cert.cert_type}</strong>
                             {cert.certificate_id && <p>Certificate ID: {cert.certificate_id}</p>}
-                            {cert.description && <p>{cert.description}</p>}
+                            {cert.audit_findings && <p>{cert.audit_findings}</p>}
                           </CardContent>
                         </Card>
                       ))}

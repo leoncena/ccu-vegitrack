@@ -12,13 +12,11 @@ import {
   getProducerFarm,
   createFarm,
   updateFarm,
-  getFarmerStory,
-  upsertFarmerStory,
   getFarmingPractices,
   upsertFarmingPractice,
   deleteFarmingPractice,
 } from '../../lib/api'
-import type { Farm, FarmerStory, FarmingPractice } from '../../types/database'
+import type { Farm, FarmingPractice } from '../../types/database'
 import { Plus, Trash2 } from 'lucide-react'
 
 export default function FarmManagement() {
@@ -26,7 +24,6 @@ export default function FarmManagement() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [farm, setFarm] = useState<Farm | null>(null)
-  const [farmerStory, setFarmerStory] = useState<FarmerStory | null>(null)
   const [farmingPractices, setFarmingPractices] = useState<FarmingPractice[]>([])
 
   // Farm form state
@@ -35,20 +32,22 @@ export default function FarmManagement() {
     full_address: '',
     region: '',
     country: '',
-    coordinates_lat: '',
-    coordinates_lng: '',
-    description: '',
+    google_maps_link: '',
+    our_story: '',
+    what_drives_us: [] as string[],
+    life_on_farm: '',
+    looking_ahead: '',
+    image_url: '',
   })
 
-  // Farmer story form state
-  const [storyData, setStoryData] = useState({
-    farmer_name: '',
-    title: '',
-    story_content: '',
-    quote: '',
-    image_url: '',
-    years_farming: '',
-  })
+  // Icon mapping for farming practices
+  const farmingPracticeIcons: Record<string, string> = {
+    soil_inputs: 'soil',
+    water_management: 'water',
+    pest_control: 'bug',
+    biodiversity: 'leaf',
+    labor_conditions: 'users',
+  }
 
   const loadData = useCallback(async () => {
     if (!user) return
@@ -57,29 +56,23 @@ export default function FarmManagement() {
       const farmData = await getProducerFarm(user.id)
       if (farmData) {
         setFarm(farmData)
+        // Convert coordinates to Google Maps link if available
+        let googleMapsLink = ''
+        if (farmData.coordinates?.lat && farmData.coordinates?.lng) {
+          googleMapsLink = `https://www.google.com/maps/place/${farmData.coordinates.lat},${farmData.coordinates.lng}`
+        }
         setFarmData({
           name: farmData.name || '',
           full_address: farmData.full_address || '',
           region: farmData.region || '',
           country: farmData.country || '',
-          coordinates_lat: farmData.coordinates?.lat?.toString() || '',
-          coordinates_lng: farmData.coordinates?.lng?.toString() || '',
-          description: farmData.description || '',
+          google_maps_link: googleMapsLink,
+          our_story: (farmData as any).our_story || '',
+          what_drives_us: (farmData as any).what_drives_us || [],
+          life_on_farm: (farmData as any).life_on_farm || '',
+          looking_ahead: (farmData as any).looking_ahead || '',
+          image_url: (farmData as any).image_url || '',
         })
-
-        // Load farmer story
-        const story = await getFarmerStory(farmData.id)
-        if (story) {
-          setFarmerStory(story)
-          setStoryData({
-            farmer_name: story.farmer_name || '',
-            title: story.title || '',
-            story_content: story.story_content || '',
-            quote: story.quote || '',
-            image_url: story.image_url || '',
-            years_farming: story.years_farming?.toString() || '',
-          })
-        }
 
         // Load farming practices
         const practices = await getFarmingPractices(farmData.id)
@@ -97,29 +90,56 @@ export default function FarmManagement() {
     loadData()
   }, [loadData])
 
+  function extractCoordinatesFromGoogleMaps(link: string): { lat: number; lng: number } | null {
+    try {
+      // Try to extract from URL pattern: @lat,lng
+      const match = link.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+      if (match) {
+        return {
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2]),
+        }
+      }
+      // Try alternative pattern: place/.../@lat,lng
+      const match2 = link.match(/place\/[^@]+@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
+      if (match2) {
+        return {
+          lat: parseFloat(match2[1]),
+          lng: parseFloat(match2[2]),
+        }
+      }
+      return null
+    } catch (error) {
+      console.error('Error extracting coordinates:', error)
+      return null
+    }
+  }
+
   async function handleSave() {
     if (!user) return
     setSaving(true)
     try {
       let farmId = farm?.id
 
+      // Extract coordinates from Google Maps link
+      let coordinates: { lat: number; lng: number } | null = null
+      if (farmData.google_maps_link) {
+        coordinates = extractCoordinatesFromGoogleMaps(farmData.google_maps_link)
+      }
+
       // Create or update farm
-      const farmPayload: Partial<Omit<Farm, 'id' | 'created_at'>> = {
+      const farmPayload: any = {
         name: farmData.name,
         full_address: farmData.full_address || null,
         region: farmData.region || null,
         country: farmData.country,
-        description: farmData.description || null,
+        coordinates: coordinates,
         distance_km: null,
-      }
-
-      if (farmData.coordinates_lat && farmData.coordinates_lng) {
-        farmPayload.coordinates = {
-          lat: parseFloat(farmData.coordinates_lat),
-          lng: parseFloat(farmData.coordinates_lng),
-        }
-      } else {
-        farmPayload.coordinates = null
+        our_story: farmData.our_story || null,
+        what_drives_us: farmData.what_drives_us || null,
+        life_on_farm: farmData.life_on_farm || null,
+        looking_ahead: farmData.looking_ahead || null,
+        image_url: farmData.image_url || null,
       }
 
       if (farmId) {
@@ -130,28 +150,14 @@ export default function FarmManagement() {
         setFarm(newFarm)
       }
 
-      // Save farmer story
-      if (farmId && (storyData.farmer_name || storyData.title || storyData.story_content)) {
-        await upsertFarmerStory({
-          id: farmerStory?.id,
-          farm_id: farmId,
-          farmer_name: storyData.farmer_name || 'Unknown',
-          title: storyData.title || null,
-          story_content: storyData.story_content || null,
-          quote: storyData.quote || null,
-          image_url: storyData.image_url || null,
-          years_farming: storyData.years_farming ? parseInt(storyData.years_farming) : null,
-        })
-      }
-
       // Save farming practices
       for (const practice of farmingPractices) {
         await upsertFarmingPractice({
           id: practice.id,
           farm_id: farmId!,
           category: practice.category,
-          category_display_name: practice.category_display_name || null,
-          icon_type: practice.icon_type || null,
+          category_display_name: null, // Inferred from category
+          icon_type: farmingPracticeIcons[practice.category] || null,
           practices: practice.practices || [],
         })
       }
@@ -279,7 +285,7 @@ export default function FarmManagement() {
               }}
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
             <div>
               <Label htmlFor="region" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Region</Label>
               <Input
@@ -299,33 +305,12 @@ export default function FarmManagement() {
               />
             </div>
             <div>
-              <Label htmlFor="coordinates_lat" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Latitude</Label>
+              <Label htmlFor="google_maps_link" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Google Maps Link</Label>
               <Input
-                id="coordinates_lat"
-                type="number"
-                step="any"
-                value={farmData.coordinates_lat}
-                onChange={(e) => setFarmData({ ...farmData, coordinates_lat: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
-            </div>
-            <div>
-              <Label htmlFor="coordinates_lng" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Longitude</Label>
-              <Input
-                id="coordinates_lng"
-                type="number"
-                step="any"
-                value={farmData.coordinates_lng}
-                onChange={(e) => setFarmData({ ...farmData, coordinates_lng: e.target.value })}
+                id="google_maps_link"
+                value={farmData.google_maps_link}
+                onChange={(e) => setFarmData({ ...farmData, google_maps_link: e.target.value })}
+                placeholder="Just enter the google maps link, we find the coordinates for you"
                 className="h-[42px] rounded-[8px] border-[1.5px]"
                 style={{
                   fontFamily: 'var(--font-body)',
@@ -340,11 +325,12 @@ export default function FarmManagement() {
             </div>
           </div>
           <div>
-            <Label htmlFor="description" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
+            <Label htmlFor="our_story" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Our story</Label>
             <textarea
-              id="description"
-              value={farmData.description}
-              onChange={(e) => setFarmData({ ...farmData, description: e.target.value })}
+              id="our_story"
+              value={farmData.our_story}
+              onChange={(e) => setFarmData({ ...farmData, our_story: e.target.value })}
+              placeholder="Feel free to tell your farm story here in a small text"
               style={{
                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                 width: '100%',
@@ -359,100 +345,65 @@ export default function FarmManagement() {
               }}
             />
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Farmer Story */}
-      <Card>
-        <CardHeader>
-          <CardTitle style={{ fontFamily: 'var(--font-body)', marginBottom: 'var(--spacing-card)' }}>Farmer Story</CardTitle>
-        </CardHeader>
-        <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
-            <div>
-              <Label htmlFor="farmer_name" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Farmer Name</Label>
-              <Input
-                id="farmer_name"
-                value={storyData.farmer_name}
-                onChange={(e) => setStoryData({ ...storyData, farmer_name: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
+          <div>
+            <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'calc(var(--spacing-card) * 0.5)' }}>
+              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>What drives us</Label>
+              <Button
+                onClick={() => setFarmData({ ...farmData, what_drives_us: [...farmData.what_drives_us, ''] })}
+                size="sm"
+                variant="outline"
+                style={{ padding: '4px 8px' }}
+              >
+                <Plus className="size-4" />
+                Add Point
+              </Button>
             </div>
-            <div>
-              <Label htmlFor="years_farming" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Years Farming</Label>
-              <Input
-                id="years_farming"
-                type="number"
-                value={storyData.years_farming}
-                onChange={(e) => setStoryData({ ...storyData, years_farming: e.target.value })}
-                className="h-[42px] rounded-[8px] border-[1.5px]"
-                style={{
-                  fontFamily: 'var(--font-body)',
-                  backgroundColor: 'var(--color-background)',
-                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                  paddingLeft: 'var(--spacing-card)',
-                  paddingRight: 'var(--spacing-card)',
-                  borderColor: 'var(--color-border)',
-                  color: 'var(--color-text)',
-                }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)' }}>
+              {farmData.what_drives_us.map((item, itemIndex) => (
+                <div key={itemIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
+                  <Input
+                    value={item}
+                    onChange={(e) => {
+                      const updated = [...farmData.what_drives_us]
+                      updated[itemIndex] = e.target.value
+                      setFarmData({ ...farmData, what_drives_us: updated })
+                    }}
+                    placeholder="What drives you and your farm? Feel free to enter some bullet points."
+                    className="h-[42px] rounded-[8px] border-[1.5px]"
+                    style={{
+                      fontFamily: 'var(--font-body)',
+                      backgroundColor: 'var(--color-background)',
+                      paddingLeft: 'var(--spacing-card)',
+                      paddingRight: 'var(--spacing-card)',
+                      borderColor: 'var(--color-border)',
+                      color: 'var(--color-text)',
+                    }}
+                  />
+                  <Button
+                    onClick={() => {
+                      const updated = farmData.what_drives_us.filter((_, i) => i !== itemIndex)
+                      setFarmData({ ...farmData, what_drives_us: updated })
+                    }}
+                    size="icon-sm"
+                    variant="ghost"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
           </div>
           <div>
-            <Label htmlFor="title" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Title</Label>
-            <Input
-              id="title"
-              value={storyData.title}
-              onChange={(e) => setStoryData({ ...storyData, title: e.target.value })}
-              className="h-[42px] rounded-[8px] border-[1.5px]"
-              style={{
-                fontFamily: 'var(--font-body)',
-                backgroundColor: 'var(--color-background)',
-                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                paddingLeft: 'var(--spacing-card)',
-                paddingRight: 'var(--spacing-card)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="quote" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Quote</Label>
-            <Input
-              id="quote"
-              value={storyData.quote}
-              onChange={(e) => setStoryData({ ...storyData, quote: e.target.value })}
-              className="h-[42px] rounded-[8px] border-[1.5px]"
-              style={{
-                fontFamily: 'var(--font-body)',
-                backgroundColor: 'var(--color-background)',
-                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                paddingLeft: 'var(--spacing-card)',
-                paddingRight: 'var(--spacing-card)',
-                borderColor: 'var(--color-border)',
-                color: 'var(--color-text)',
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="story_content" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Story Content</Label>
+            <Label htmlFor="life_on_farm" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Life on the farm</Label>
             <textarea
-              id="story_content"
-              value={storyData.story_content}
-              onChange={(e) => setStoryData({ ...storyData, story_content: e.target.value })}
+              id="life_on_farm"
+              value={farmData.life_on_farm}
+              onChange={(e) => setFarmData({ ...farmData, life_on_farm: e.target.value })}
+              placeholder="Feel free to share something about your farm life. E.g. a farmer markets or community events."
               style={{
                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                 width: '100%',
-                minHeight: '150px',
+                minHeight: '100px',
                 padding: 'var(--spacing-card)',
                 borderRadius: '8px',
                 border: '1.5px solid var(--color-border)',
@@ -464,15 +415,37 @@ export default function FarmManagement() {
             />
           </div>
           <div>
-            <Label htmlFor="story_image">Farmer Image</Label>
+            <Label htmlFor="looking_ahead" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Looking ahead</Label>
+            <textarea
+              id="looking_ahead"
+              value={farmData.looking_ahead}
+              onChange={(e) => setFarmData({ ...farmData, looking_ahead: e.target.value })}
+              placeholder="What are your plans for the future?"
+              style={{
+                marginTop: 'calc(var(--spacing-card) * 0.5)',
+                width: '100%',
+                minHeight: '100px',
+                padding: 'var(--spacing-card)',
+                borderRadius: '8px',
+                border: '1.5px solid var(--color-border)',
+                fontFamily: 'var(--font-body)',
+                fontSize: '14px',
+                backgroundColor: 'var(--color-background)',
+                color: 'var(--color-text)',
+              }}
+            />
+          </div>
+          <div>
+            <Label htmlFor="image_url">Farm Image</Label>
             <FileUpload
-              value={storyData.image_url}
-              onChange={(url) => setStoryData({ ...storyData, image_url: url })}
+              value={farmData.image_url}
+              onChange={(url) => setFarmData({ ...farmData, image_url: url })}
               className="mt-2"
             />
           </div>
         </CardContent>
       </Card>
+
 
       {/* Farming Practices */}
       <div>
@@ -488,7 +461,7 @@ export default function FarmManagement() {
             <Card key={index} stroke>
               <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--spacing-card)' }}>
+                  <div style={{ flex: 1 }}>
                     <div>
                       <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
                       <Combobox
@@ -502,41 +475,6 @@ export default function FarmManagement() {
                         value={practice.category}
                         onValueChange={(value) => updateFarmingPractice(index, 'category', value || '')}
                         placeholder="Select category"
-                      />
-                    </div>
-                    <div>
-                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Display Name</Label>
-                      <Input
-                        value={practice.category_display_name || ''}
-                        onChange={(e) => updateFarmingPractice(index, 'category_display_name', e.target.value)}
-                        className="h-[42px] rounded-[8px] border-[1.5px]"
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          backgroundColor: 'var(--color-background)',
-                          marginTop: 'calc(var(--spacing-card) * 0.5)',
-                          paddingLeft: 'var(--spacing-card)',
-                          paddingRight: 'var(--spacing-card)',
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text)',
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Icon Type</Label>
-                      <Input
-                        value={practice.icon_type || ''}
-                        onChange={(e) => updateFarmingPractice(index, 'icon_type', e.target.value)}
-                        placeholder="e.g. soil, water, bug"
-                        className="h-[42px] rounded-[8px] border-[1.5px]"
-                        style={{
-                          fontFamily: 'var(--font-body)',
-                          backgroundColor: 'var(--color-background)',
-                          marginTop: 'calc(var(--spacing-card) * 0.5)',
-                          paddingLeft: 'var(--spacing-card)',
-                          paddingRight: 'var(--spacing-card)',
-                          borderColor: 'var(--color-border)',
-                          color: 'var(--color-text)',
-                        }}
                       />
                     </div>
                   </div>

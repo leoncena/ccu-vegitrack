@@ -10,7 +10,8 @@ import { Slider } from '../../components/ui/slider'
 import { FileUpload } from '../../components/admin/FileUpload'
 import { DatePicker } from '../../components/admin/DatePicker'
 import { PageHeaderWithBack } from '../../components/layout'
-import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications, createProduct, updateProduct } from '../../lib/api'
+import { getProductById, getAllFarms, getRecipes, getQualityIndicators, getCertifications, getProductLabels, createProduct, updateProduct } from '../../lib/api'
+import { supabase } from '../../lib/supabase'
 import { toast } from '../../components/ui/sonner'
 import { Plus, Trash2, ArrowRight, MapPin } from 'lucide-react'
 import { Spinner } from '../../components/ui'
@@ -32,18 +33,16 @@ interface RecipeFormData {
 interface QualityIndicatorFormData {
   id?: string
   indicator_type: 'freshness' | 'ripeness' | 'shelf_life'
-  score: number
-  max_score: number
-  percentage: string
+  score?: number
+  max_score?: number
+  percentage?: string
   description: string
-  recommendation: string
   shelf_life_remaining_days?: number
 }
 
 interface CertificationFormData {
   id?: string
   cert_type: string
-  cert_display_name: string
   certifying_body: string
   certifying_body_code: string
   certificate_id: string
@@ -51,15 +50,13 @@ interface CertificationFormData {
   expiry_date: string
   auditor_name: string
   audit_findings: string
-  description: string
 }
 
-interface FarmingPracticeFormData {
+interface ProductLabelFormData {
   id?: string
-  category: string
-  icon_type: string
-  practices: string[]
+  label_name: string
 }
+
 
 export default function ProductForm() {
   const { id } = useParams()
@@ -96,8 +93,8 @@ export default function ProductForm() {
   // Certifications state
   const [certifications, setCertifications] = useState<CertificationFormData[]>([])
 
-  // Farming practices state
-  const [farmingPractices, setFarmingPractices] = useState<FarmingPracticeFormData[]>([])
+  // Labels state
+  const [labels, setLabels] = useState<ProductLabelFormData[]>([])
 
   useEffect(() => {
     loadFarms()
@@ -165,18 +162,26 @@ export default function ProductForm() {
           }))
         )
 
+        // Load labels
+        const labelsData = await getProductLabels(id)
+        setLabels(
+          labelsData.map(l => ({
+            id: l.id,
+            label_name: l.label_name || '',
+          }))
+        )
+
         // Load quality indicators
         const qualityData = await getQualityIndicators(id)
         setQualityIndicators(
           qualityData.map(q => ({
             id: q.id,
             indicator_type: q.indicator_type,
-            score: q.score || 0,
-            max_score: q.max_score || 5,
-            percentage: q.percentage?.toString() || '',
+            score: q.indicator_type !== 'shelf_life' ? (q.score || 0) : undefined,
+            max_score: q.indicator_type !== 'shelf_life' ? (q.max_score || 5) : undefined,
+            percentage: q.indicator_type !== 'shelf_life' ? (q.percentage?.toString() || '') : undefined,
             description: q.description || '',
-            recommendation: q.recommendation || '',
-            shelf_life_remaining_days: q.indicator_type === 'shelf_life' ? (q.score || 0) : undefined,
+            shelf_life_remaining_days: q.indicator_type === 'shelf_life' ? (q.shelf_life_remaining_days || 0) : undefined,
           }))
         )
 
@@ -186,7 +191,6 @@ export default function ProductForm() {
           certData.map(c => ({
             id: c.id,
             cert_type: c.cert_type,
-            cert_display_name: c.cert_display_name || '',
             certifying_body: c.certifying_body || '',
             certifying_body_code: c.certifying_body_code || '',
             certificate_id: c.certificate_id || '',
@@ -194,7 +198,6 @@ export default function ProductForm() {
             expiry_date: c.expiry_date || '',
             auditor_name: c.auditor_name || '',
             audit_findings: c.audit_findings || '',
-            description: c.description || '',
           }))
         )
       }
@@ -205,7 +208,7 @@ export default function ProductForm() {
     }
   }
 
-  const tabs = ['product-info', 'recipes', 'certifications', 'farming']
+  const tabs = ['product-info', 'recipes', 'certifications']
   const isLastTab = currentTab === tabs[tabs.length - 1]
 
   function handleContinue() {
@@ -257,21 +260,39 @@ export default function ProductForm() {
         }))
       }
 
-      if (qualityIndicators.length > 0) {
-        relatedData.qualityIndicators = qualityIndicators.map((q: any) => ({
-          indicator_type: q.indicator_type,
-          score: typeof q.score === 'number' ? q.score : (q.score ? parseFloat(q.score) : null),
-          max_score: typeof q.max_score === 'number' ? q.max_score : (q.max_score ? parseFloat(q.max_score) : 5),
-          percentage: q.percentage ? parseFloat(q.percentage) : (q.score && q.max_score ? ((q.score / q.max_score) * 100) : null),
-          description: q.description || null,
-          recommendation: q.recommendation || null,
+      if (labels.length > 0) {
+        relatedData.labels = labels.map((l: any) => ({
+          label_name: l.label_name || null,
         }))
+      }
+
+      if (qualityIndicators.length > 0) {
+        relatedData.qualityIndicators = qualityIndicators.map((q: any) => {
+          if (q.indicator_type === 'shelf_life') {
+            return {
+              indicator_type: q.indicator_type,
+              score: null,
+              max_score: null,
+              percentage: null,
+              description: q.description || null,
+              shelf_life_remaining_days: q.shelf_life_remaining_days ? parseInt(q.shelf_life_remaining_days.toString()) : null,
+            }
+          } else {
+            return {
+              indicator_type: q.indicator_type,
+              score: typeof q.score === 'number' ? q.score : (q.score ? parseFloat(q.score) : null),
+              max_score: typeof q.max_score === 'number' ? q.max_score : (q.max_score ? parseFloat(q.max_score) : 5),
+              percentage: q.percentage ? parseFloat(q.percentage) : (q.score && q.max_score ? ((q.score / q.max_score) * 100) : null),
+              description: q.description || null,
+              shelf_life_remaining_days: null,
+            }
+          }
+        })
       }
 
       if (certifications.length > 0) {
         relatedData.certifications = certifications.map((c: any) => ({
           cert_type: c.cert_type,
-          cert_display_name: c.cert_display_name || null,
           certifying_body: c.certifying_body || null,
           certifying_body_code: c.certifying_body_code || null,
           certificate_id: c.certificate_id || null,
@@ -279,13 +300,84 @@ export default function ProductForm() {
           expiry_date: c.expiry_date || null,
           auditor_name: c.auditor_name || null,
           audit_findings: c.audit_findings || null,
-          description: c.description || null,
         }))
       }
 
       if (id && id !== 'new') {
         // Update existing product
         await updateProduct(id, productPayload)
+        
+        // Update related data - delete existing and insert new
+        if (relatedData.labels) {
+          await supabase.from('product_labels').delete().eq('product_id', id)
+          if (relatedData.labels.length > 0) {
+            await supabase.from('product_labels').insert(
+              relatedData.labels.map((l: any) => ({ ...l, product_id: id }))
+            )
+          }
+        }
+        
+        if (relatedData.qualityIndicators) {
+          await supabase.from('quality_indicators').delete().eq('product_id', id)
+          if (relatedData.qualityIndicators.length > 0) {
+            await supabase.from('quality_indicators').insert(
+              relatedData.qualityIndicators.map((q: any) => {
+                if (q.indicator_type === 'shelf_life') {
+                  return {
+                    indicator_type: q.indicator_type,
+                    product_id: id,
+                    score: null,
+                    max_score: null,
+                    percentage: null,
+                    description: q.description || null,
+                    shelf_life_remaining_days: q.shelf_life_remaining_days || null,
+                  }
+                } else {
+                  return {
+                    indicator_type: q.indicator_type,
+                    product_id: id,
+                    score: typeof q.score === 'number' ? q.score : (q.score ? parseFloat(q.score) : null),
+                    max_score: typeof q.max_score === 'number' ? q.max_score : (q.max_score ? parseFloat(q.max_score) : 5),
+                    percentage: q.percentage ? parseFloat(q.percentage) : (q.score && q.max_score ? ((q.score / q.max_score) * 100) : null),
+                    description: q.description || null,
+                    shelf_life_remaining_days: null,
+                  }
+                }
+              })
+            )
+          }
+        }
+        
+        if (relatedData.certifications) {
+          await supabase.from('certification_ledger').delete().eq('product_id', id)
+          if (relatedData.certifications.length > 0) {
+            const now = new Date().toISOString()
+            let previousHash: string | null = null
+            for (let i = 0; i < relatedData.certifications.length; i++) {
+              const cert = relatedData.certifications[i]
+              const blockHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+              await supabase.from('certification_ledger').insert({
+                ...cert,
+                product_id: id,
+                block_index: i,
+                block_hash: blockHash,
+                previous_hash: previousHash,
+                timestamp: now,
+              })
+              previousHash = blockHash
+            }
+          }
+        }
+        
+        if (relatedData.recipes) {
+          await supabase.from('recipes').delete().eq('product_id', id)
+          if (relatedData.recipes.length > 0) {
+            await supabase.from('recipes').insert(
+              relatedData.recipes.map((r: any) => ({ ...r, product_id: id }))
+            )
+          }
+        }
+        
         toast.success('Product updated successfully!')
       } else {
         // Create new product
@@ -323,6 +415,19 @@ export default function ProductForm() {
     setRecipes(recipes.filter((_, i) => i !== index))
   }
 
+  function addLabel() {
+    setLabels([
+      ...labels,
+      {
+        label_name: '',
+      },
+    ])
+  }
+
+  function removeLabel(index: number) {
+    setLabels(labels.filter((_, i) => i !== index))
+  }
+
   function addQualityIndicator() {
     setQualityIndicators([
       ...qualityIndicators,
@@ -332,7 +437,6 @@ export default function ProductForm() {
         max_score: 5,
         percentage: '',
         description: '',
-        recommendation: '',
       },
     ])
   }
@@ -346,7 +450,6 @@ export default function ProductForm() {
       ...certifications,
       {
         cert_type: '',
-        cert_display_name: '',
         certifying_body: '',
         certifying_body_code: '',
         certificate_id: '',
@@ -354,7 +457,6 @@ export default function ProductForm() {
         expiry_date: '',
         auditor_name: '',
         audit_findings: '',
-        description: '',
       },
     ])
   }
@@ -363,20 +465,6 @@ export default function ProductForm() {
     setCertifications(certifications.filter((_, i) => i !== index))
   }
 
-  function addFarmingPractice() {
-    setFarmingPractices([
-      ...farmingPractices,
-      {
-        category: 'soil_inputs',
-        icon_type: '',
-        practices: [''],
-      },
-    ])
-  }
-
-  function removeFarmingPractice(index: number) {
-    setFarmingPractices(farmingPractices.filter((_, i) => i !== index))
-  }
 
   if (loading) {
     return (
@@ -408,14 +496,13 @@ export default function ProductForm() {
             <TabsTrigger value="product-info">Product Info</TabsTrigger>
             <TabsTrigger value="recipes">Recipes</TabsTrigger>
             <TabsTrigger value="certifications">Certifications & Quality</TabsTrigger>
-            <TabsTrigger value="farming">Farming Practices</TabsTrigger>
           </TabsList>
 
           {/* Product Info Tab */}
           <TabsContent value="product-info" style={{ marginTop: 0 }}>
             <Card>
               <CardHeader>
-                <CardTitle style={{ fontFamily: 'var(--font-body)' }}>Product Information</CardTitle>
+                <CardTitle style={{ fontFamily: 'var(--font-body)', marginBottom: 'var(--spacing-card)' }}>Product Information</CardTitle>
               </CardHeader>
               <CardContent style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
@@ -624,6 +711,51 @@ export default function ProductForm() {
                     onChange={(url) => setProductData({ ...productData, image_url: url })}
                     className="mt-2"
                   />
+                </div>
+                <div>
+                  <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'calc(var(--spacing-card) * 0.5)' }}>
+                    <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Labels</Label>
+                    <Button onClick={addLabel} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
+                      <Plus className="size-4" />
+                      Add Label
+                    </Button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)' }}>
+                    {labels.map((label, labelIndex) => (
+                      <div key={labelIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
+                        <Input
+                          value={label.label_name}
+                          onChange={(e) => {
+                            const updated = [...labels]
+                            updated[labelIndex].label_name = e.target.value
+                            setLabels(updated)
+                          }}
+                          placeholder='The most important labels you want to highlight, e.g. "Bio" or "Fair Trade"'
+                          className="h-[42px] rounded-[8px] border-[1.5px]"
+                          style={{
+                            fontFamily: 'var(--font-body)',
+                            backgroundColor: 'var(--color-background)',
+                            paddingLeft: 'var(--spacing-card)',
+                            paddingRight: 'var(--spacing-card)',
+                            borderColor: 'var(--color-border)',
+                            color: 'var(--color-text)',
+                          }}
+                        />
+                        <Button
+                          onClick={() => removeLabel(labelIndex)}
+                          size="icon-sm"
+                          variant="ghost"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {labels.length === 0 && (
+                      <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', fontSize: '14px', fontStyle: 'italic' }}>
+                        No labels added yet. Click "Add Label" to get started.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -962,9 +1094,18 @@ export default function ProductForm() {
                               value={indicator.indicator_type}
                               onValueChange={(value) => {
                                 const updated = [...qualityIndicators]
-                                updated[index].indicator_type = value as any
-                                // Reset shelf_life_remaining_days if type changes
-                                if (value !== 'shelf_life') {
+                                const newType = value as any
+                                updated[index].indicator_type = newType
+                                // Reset fields when type changes
+                                if (newType === 'shelf_life') {
+                                  updated[index].score = undefined
+                                  updated[index].max_score = undefined
+                                  updated[index].percentage = undefined
+                                  updated[index].shelf_life_remaining_days = 0
+                                } else {
+                                  updated[index].score = 0
+                                  updated[index].max_score = 5
+                                  updated[index].percentage = ''
                                   updated[index].shelf_life_remaining_days = undefined
                                 }
                                 setQualityIndicators(updated)
@@ -972,41 +1113,47 @@ export default function ProductForm() {
                               placeholder="Select type"
                             />
                           </div>
-                          <div>
-                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>
-                              Score: {indicator.score} / {indicator.max_score}
-                            </Label>
-                            <div style={{ marginTop: 'calc(var(--spacing-card) * 0.5)', padding: '0 var(--spacing-card)' }}>
-                              <Slider
-                                value={[indicator.score]}
-                                onValueChange={(values) => {
+                          {indicator.indicator_type === 'shelf_life' ? (
+                            <div>
+                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Days Remaining</Label>
+                              <Input
+                                type="number"
+                                value={indicator.shelf_life_remaining_days || ''}
+                                onChange={(e) => {
                                   const updated = [...qualityIndicators]
-                                  updated[index].score = values[0]
-                                  updated[index].percentage = ((values[0] / indicator.max_score) * 100).toFixed(2)
+                                  updated[index].shelf_life_remaining_days = e.target.value ? parseInt(e.target.value) : 0
                                   setQualityIndicators(updated)
                                 }}
-                                min={0}
-                                max={indicator.max_score}
-                                step={0.1}
+                                placeholder="Enter days remaining"
+                                className="h-[42px] rounded-[8px] border-[1.5px]"
+                                style={{
+                                  fontFamily: 'var(--font-body)',
+                                  backgroundColor: 'var(--color-background)',
+                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
+                                  paddingLeft: 'var(--spacing-card)',
+                                  paddingRight: 'var(--spacing-card)',
+                                  borderColor: 'var(--color-border)',
+                                  color: 'var(--color-text)',
+                                }}
                               />
                             </div>
-                          </div>
-                          {indicator.indicator_type === 'shelf_life' && (
+                          ) : (
                             <div>
                               <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>
-                                Shelf Life Remaining (days): {indicator.shelf_life_remaining_days || 0}
+                                Score: {indicator.score || 0} / {indicator.max_score || 5}
                               </Label>
                               <div style={{ marginTop: 'calc(var(--spacing-card) * 0.5)', padding: '0 var(--spacing-card)' }}>
                                 <Slider
-                                  value={[indicator.shelf_life_remaining_days || 0]}
+                                  value={[indicator.score || 0]}
                                   onValueChange={(values) => {
                                     const updated = [...qualityIndicators]
-                                    updated[index].shelf_life_remaining_days = values[0]
+                                    updated[index].score = values[0]
+                                    updated[index].percentage = ((values[0] / (indicator.max_score || 5)) * 100).toFixed(2)
                                     setQualityIndicators(updated)
                                   }}
                                   min={0}
-                                  max={30}
-                                  step={1}
+                                  max={indicator.max_score || 5}
+                                  step={0.1}
                                 />
                               </div>
                             </div>
@@ -1020,27 +1167,7 @@ export default function ProductForm() {
                                 updated[index].description = e.target.value
                                 setQualityIndicators(updated)
                               }}
-                              className="h-[42px] rounded-[8px] border-[1.5px]"
-                              style={{
-                                fontFamily: 'var(--font-body)',
-                                backgroundColor: 'var(--color-background)',
-                                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                paddingLeft: 'var(--spacing-card)',
-                                paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-border)',
-                                color: 'var(--color-text)',
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Recommendation</Label>
-                            <Input
-                              value={indicator.recommendation}
-                              onChange={(e) => {
-                                const updated = [...qualityIndicators]
-                                updated[index].recommendation = e.target.value
-                                setQualityIndicators(updated)
-                              }}
+                              placeholder={indicator.indicator_type === 'shelf_life' ? 'e.g. Best consumed within 5 days' : 'e.g. perfect ripeness in 3 days'}
                               className="h-[42px] rounded-[8px] border-[1.5px]"
                               style={{
                                 fontFamily: 'var(--font-body)',
@@ -1086,49 +1213,54 @@ export default function ProductForm() {
                     <Card key={index} stroke>
                       <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', gap: 'var(--spacing-card)' }}>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
-                            <div>
-                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Certification Type *</Label>
-                              <Input
-                                value={cert.cert_type}
-                                onChange={(e) => {
-                                  const updated = [...certifications]
-                                  updated[index].cert_type = e.target.value
-                                  setCertifications(updated)
-                                }}
-                                className="h-[42px] rounded-[8px] border-[1.5px]"
-                                style={{
-                                  fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'var(--color-background)',
-                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                  paddingLeft: 'var(--spacing-card)',
-                                  paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-border)',
-                                  color: 'var(--color-text)',
-                                }}
-                              />
-                            </div>
-                            <div>
-                              <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Display Name</Label>
-                              <Input
-                                value={cert.cert_display_name}
-                                onChange={(e) => {
-                                  const updated = [...certifications]
-                                  updated[index].cert_display_name = e.target.value
-                                  setCertifications(updated)
-                                }}
-                                className="h-[42px] rounded-[8px] border-[1.5px]"
-                                style={{
-                                  fontFamily: 'var(--font-body)',
-                                  backgroundColor: 'var(--color-background)',
-                                  marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                  paddingLeft: 'var(--spacing-card)',
-                                  paddingRight: 'var(--spacing-card)',
-                                  borderColor: 'var(--color-border)',
-                                  color: 'var(--color-text)',
-                                }}
-                              />
-                            </div>
+                          <div>
+                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Certification Type *</Label>
+                            <Combobox
+                              options={[
+                                // Organic Certifications
+                                { value: 'EU Organic', label: 'EU Organic' },
+                                { value: 'USDA Organic', label: 'USDA Organic' },
+                                { value: 'Bio Suisse', label: 'Bio Suisse' },
+                                { value: 'Demeter', label: 'Demeter (Biodynamic)' },
+                                { value: 'Soil Association Organic', label: 'Soil Association Organic' },
+                                { value: 'AB (Agriculture Biologique)', label: 'AB (Agriculture Biologique)' },
+                                { value: 'JAS Organic', label: 'JAS Organic (Japan)' },
+                                { value: 'Australian Certified Organic', label: 'Australian Certified Organic' },
+                                // Fair Trade & Social Responsibility
+                                { value: 'Fair Trade Certified', label: 'Fair Trade Certified' },
+                                { value: 'Fair Labor Certified', label: 'Fair Labor Certified' },
+                                { value: 'Fair for Life', label: 'Fair for Life' },
+                                { value: 'Rainforest Alliance', label: 'Rainforest Alliance' },
+                                { value: 'UTZ Certified', label: 'UTZ Certified' },
+                                // Sustainability & Environmental
+                                { value: 'Carbon Trust Certified', label: 'Carbon Trust Certified' },
+                                { value: 'LEAF Marque', label: 'LEAF Marque' },
+                                { value: 'GlobalG.A.P.', label: 'GlobalG.A.P.' },
+                                { value: 'SCS Sustainably Grown', label: 'SCS Sustainably Grown' },
+                                { value: 'MSC Certified', label: 'MSC Certified (Marine Stewardship)' },
+                                { value: 'ASC Certified', label: 'ASC Certified (Aquaculture)' },
+                                // Food Safety & Quality
+                                { value: 'BRC Global Standards', label: 'BRC Global Standards' },
+                                { value: 'IFS Food Standard', label: 'IFS Food Standard' },
+                                { value: 'GFSI Recognized', label: 'GFSI Recognized (Global Food Safety)' },
+                                { value: 'SQF Certified', label: 'SQF Certified (Safe Quality Food)' },
+                                // Regional & Specialty
+                                { value: 'Protected Designation of Origin (PDO)', label: 'Protected Designation of Origin (PDO)' },
+                                { value: 'Protected Geographical Indication (PGI)', label: 'Protected Geographical Indication (PGI)' },
+                                { value: 'Traditional Specialty Guaranteed (TSG)', label: 'Traditional Specialty Guaranteed (TSG)' },
+                                { value: 'Non-GMO Project Verified', label: 'Non-GMO Project Verified' },
+                                { value: 'Kosher Certified', label: 'Kosher Certified' },
+                                { value: 'Halal Certified', label: 'Halal Certified' },
+                                { value: 'Local Certified', label: 'Local Certified' },
+                              ]}
+                              value={cert.cert_type}
+                              onValueChange={(value) => {
+                                const updated = [...certifications]
+                                updated[index].cert_type = value || ''
+                                setCertifications(updated)
+                              }}
+                              placeholder="Select certification type"
+                            />
                           </div>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
                             <div>
@@ -1140,6 +1272,7 @@ export default function ProductForm() {
                                   updated[index].certifying_body = e.target.value
                                   setCertifications(updated)
                                 }}
+                                placeholder="e.g. Fair Labor Association"
                                 className="h-[42px] rounded-[8px] border-[1.5px]"
                                 style={{
                                   fontFamily: 'var(--font-body)',
@@ -1251,29 +1384,7 @@ export default function ProductForm() {
                                 updated[index].audit_findings = e.target.value
                                 setCertifications(updated)
                               }}
-                              style={{
-                                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                width: '100%',
-                                minHeight: '80px',
-                                padding: 'var(--spacing-card)',
-                                borderRadius: '8px',
-                                border: '1.5px solid var(--color-border)',
-                                fontFamily: 'var(--font-body)',
-                                fontSize: '14px',
-                                backgroundColor: 'var(--color-background)',
-                                color: 'var(--color-text)',
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Description</Label>
-                            <textarea
-                              value={cert.description}
-                              onChange={(e) => {
-                                const updated = [...certifications]
-                                updated[index].description = e.target.value
-                                setCertifications(updated)
-                              }}
+                              placeholder="E.g. Workers receive above minimum wage, proper housing provided for seasonal workers, no child labor observed."
                               style={{
                                 marginTop: 'calc(var(--spacing-card) * 0.5)',
                                 width: '100%',
@@ -1309,133 +1420,6 @@ export default function ProductForm() {
             </div>
           </TabsContent>
 
-          {/* Farming Practices Tab */}
-          <TabsContent value="farming">
-            <div>
-              <div className="flex-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-card)' }}>
-                <h3 style={{ fontFamily: 'var(--font-body)', margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Farming Practices</h3>
-                <Button onClick={addFarmingPractice} size="sm" variant="outline" style={{ padding: '4px 8px' }}>
-                  <Plus className="size-4" />
-                  Add Practice
-                </Button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-                {farmingPractices.map((practice, index) => (
-                  <Card key={index} stroke>
-                    <CardContent style={{ padding: 'var(--spacing-card)', display: 'flex', gap: 'var(--spacing-card)' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-card)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-card)' }}>
-                          <div>
-                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Category</Label>
-                            <Combobox
-                              options={[
-                                { value: 'soil_inputs', label: 'Soil & Inputs' },
-                                { value: 'water_management', label: 'Water Management' },
-                                { value: 'pest_control', label: 'Pest Control' },
-                                { value: 'biodiversity', label: 'Biodiversity' },
-                                { value: 'labor_conditions', label: 'Labor Conditions' },
-                              ]}
-                              value={practice.category}
-                              onValueChange={(value) => {
-                                const updated = [...farmingPractices]
-                                updated[index].category = value || ''
-                                setFarmingPractices(updated)
-                              }}
-                              placeholder="Select category"
-                            />
-                          </div>
-                          <div>
-                            <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Icon Type</Label>
-                            <Input
-                              value={practice.icon_type}
-                              onChange={(e) => {
-                                const updated = [...farmingPractices]
-                                updated[index].icon_type = e.target.value
-                                setFarmingPractices(updated)
-                              }}
-                              placeholder="e.g. soil, water, bug"
-                              className="h-[42px] rounded-[8px] border-[1.5px]"
-                              style={{
-                                fontFamily: 'var(--font-body)',
-                                backgroundColor: 'var(--color-background)',
-                                marginTop: 'calc(var(--spacing-card) * 0.5)',
-                                paddingLeft: 'var(--spacing-card)',
-                                paddingRight: 'var(--spacing-card)',
-                                borderColor: 'var(--color-border)',
-                                color: 'var(--color-text)',
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <Label style={{ fontFamily: 'var(--font-body)', color: 'var(--color-primary)' }}>Practices</Label>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.5)', marginTop: 'calc(var(--spacing-card) * 0.5)' }}>
-                            {practice.practices.map((item, itemIndex) => (
-                              <div key={itemIndex} style={{ display: 'flex', gap: 'var(--spacing-card)', alignItems: 'center' }}>
-                                <Input
-                                  value={item}
-                                  onChange={(e) => {
-                                    const updated = [...farmingPractices]
-                                    updated[index].practices[itemIndex] = e.target.value
-                                    setFarmingPractices(updated)
-                                  }}
-                                  className="h-[42px] rounded-[8px] border-[1.5px]"
-                                  style={{
-                                    fontFamily: 'var(--font-body)',
-                                    backgroundColor: 'var(--color-background)',
-                                    paddingLeft: 'var(--spacing-card)',
-                                    paddingRight: 'var(--spacing-card)',
-                                    borderColor: 'var(--color-border)',
-                                    color: 'var(--color-text)',
-                                  }}
-                                />
-                                <Button
-                                  onClick={() => {
-                                    const updated = [...farmingPractices]
-                                    updated[index].practices = updated[index].practices.filter((_, i) => i !== itemIndex)
-                                    setFarmingPractices(updated)
-                                  }}
-                                  size="icon-sm"
-                                  variant="ghost"
-                                >
-                                  <Trash2 className="size-4" />
-                                </Button>
-                              </div>
-                            ))}
-                            <Button
-                              onClick={() => {
-                                const updated = [...farmingPractices]
-                                updated[index].practices.push('')
-                                setFarmingPractices(updated)
-                              }}
-                              size="sm"
-                              variant="outline"
-                              style={{ alignSelf: 'flex-start', padding: '4px 8px' }}
-                            >
-                              <Plus className="size-4" />
-                              Add Practice Item
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => removeFarmingPractice(index)}
-                        size="icon-sm"
-                        variant="ghost"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-                {farmingPractices.length === 0 && (
-                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)', textAlign: 'center', paddingTop: '4px', paddingBottom: '4px', paddingLeft: 'var(--spacing-section)', paddingRight: 'var(--spacing-section)', verticalAlign: 'middle' }}>
-                    No farming practices added yet. Click "Add Practice" to get started.
-                  </p>
-                )}
-              </div>
-            </div>
-          </TabsContent>
         </Tabs>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--spacing-card)', marginTop: 'calc(var(--spacing-section) * 2)' }}>

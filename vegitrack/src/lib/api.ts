@@ -610,18 +610,27 @@ export async function createProduct(
     if (relatedData.qualityIndicators?.length && product) {
       await (supabase.from('quality_indicators') as any).insert(
         relatedData.qualityIndicators.map((indicator: any) => {
-          const indicatorData: any = {
-            ...indicator,
-            product_id: product.id,
-            score: typeof indicator.score === 'string' ? parseFloat(indicator.score) : indicator.score,
-            max_score: typeof indicator.max_score === 'string' ? parseFloat(indicator.max_score) : (indicator.max_score || 5),
-            percentage: indicator.percentage ? parseFloat(indicator.percentage) : ((indicator.score / (indicator.max_score || 5)) * 100),
+          if (indicator.indicator_type === 'shelf_life') {
+            return {
+              indicator_type: indicator.indicator_type,
+              product_id: product.id,
+              score: null,
+              max_score: null,
+              percentage: null,
+              description: indicator.description || null,
+              shelf_life_remaining_days: indicator.shelf_life_remaining_days || null,
+            }
+          } else {
+            return {
+              indicator_type: indicator.indicator_type,
+              product_id: product.id,
+              score: typeof indicator.score === 'string' ? parseFloat(indicator.score) : indicator.score,
+              max_score: typeof indicator.max_score === 'string' ? parseFloat(indicator.max_score) : (indicator.max_score || 5),
+              percentage: indicator.percentage ? parseFloat(indicator.percentage) : ((indicator.score / (indicator.max_score || 5)) * 100),
+              description: indicator.description || null,
+              shelf_life_remaining_days: null,
+            }
           }
-          // Remove shelf_life_remaining_days if not shelf_life type (it's not a DB field)
-          if (indicator.indicator_type !== 'shelf_life') {
-            delete indicatorData.shelf_life_remaining_days
-          }
-          return indicatorData
         })
       )
     }
