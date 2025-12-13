@@ -1208,3 +1208,4 @@ INSERT INTO alternative_products (product_id, alternative_id, reason, sort_order
 -- END OF SEED DATA
 -- ============================================
 
+-- .
