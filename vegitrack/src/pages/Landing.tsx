@@ -7,8 +7,6 @@ import carrotIcon from '../assets/wallpaper/carrot.svg'
 import asparagusIcon from '../assets/wallpaper/asparagus.svg'
 import lemonIcon from '../assets/wallpaper/Lemon.svg'
 import tomatoIcon from '../assets/wallpaper/tomato.svg'
-import strawberryIcon from '../assets/wallpaper/strawberry.svg'
-import caleIcon from '../assets/wallpaper/cale.svg'
 import { MenuToggleButton } from '../components/layout/MenuToggleButton'
 
 export default function Landing() {

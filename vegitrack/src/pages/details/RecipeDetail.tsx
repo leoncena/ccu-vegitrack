@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
 import { Spinner, IconButton, BookmarkIcon, toast } from '../../components/ui'
 import { getRecipeById } from '../../lib/api'
@@ -8,7 +8,6 @@ import { useUserData } from '../../contexts/UserDataContext'
 
 export default function RecipeDetail() {
   const { id, recipeId } = useParams()
-  const navigate = useNavigate()
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
