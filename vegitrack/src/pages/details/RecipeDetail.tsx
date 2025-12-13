@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { DebugFooter, PageHeaderWithBack } from '../../components/layout'
-import { Spinner, IconButton, BookmarkIcon } from '../../components/ui'
+import { Spinner, IconButton, BookmarkIcon, toast } from '../../components/ui'
 import { getRecipeById } from '../../lib/api'
 import type { Recipe } from '../../types/database'
 import { useUserData } from '../../contexts/UserDataContext'
@@ -28,6 +28,39 @@ export default function RecipeDetail() {
     }
     load()
   }, [recipeId])
+
+  const handleAddToShoppingList = async () => {
+    if (!recipe) return
+
+    const ingredientsList = recipe.ingredients
+      .map(i => `- ${i.name}: ${i.amount}`)
+      .join('\n')
+    
+    const text = `Shopping List for ${recipe.title}:\n\n${ingredientsList}`
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Shopping List: ${recipe.title}`,
+          text: text,
+        })
+      } else {
+        await navigator.clipboard.writeText(text)
+        toast.success('Ingredients copied to clipboard!')
+      }
+    } catch (err) {
+      console.error('Error sharing:', err)
+      // Fallback to clipboard if share fails or is cancelled (e.g. user aborted)
+      if ((err as Error).name !== 'AbortError') {
+         try {
+            await navigator.clipboard.writeText(text)
+            toast.success('Ingredients copied to clipboard!')
+         } catch (clipboardErr) {
+            toast.error('Failed to add to shopping list')
+         }
+      }
+    }
+  }
 
   return (
     <div
@@ -217,7 +250,7 @@ export default function RecipeDetail() {
           </section>
 
           <button
-            onClick={() => navigate(`/product/${id}/recipes`)}
+            onClick={handleAddToShoppingList}
             style={{
               marginTop: 'calc(var(--spacing-section) * 0.75)',
               width: '100%',
@@ -231,7 +264,7 @@ export default function RecipeDetail() {
               cursor: 'pointer',
             }}
           >
-            Back to Cultural Recipes
+            Add ingredients to shopping list
           </button>
         </div>
       )}

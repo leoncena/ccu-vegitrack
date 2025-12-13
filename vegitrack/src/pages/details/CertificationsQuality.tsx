@@ -121,27 +121,28 @@ export default function CertificationsQuality() {
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 'calc(var(--spacing-card) * 0.6)',
+          gap: 'calc(var(--spacing-card) * 0.5)',
           backgroundColor: 'var(--color-surface)',
           borderRadius: 'var(--radius-card)',
-          padding: 'calc(var(--spacing-section) * 1.2)',
-          marginTop: 'calc(var(--spacing-section) * 1.2)',
-          marginBottom: 'calc(var(--spacing-section) * 1.2)',
+          padding: 'calc(var(--spacing-section) * 1.5)',
+          marginTop: 'calc(var(--spacing-section) * 1.5)',
+          marginBottom: 'calc(var(--spacing-section) * 1.5)',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--spacing-card) * 0.6)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(var(--spacing-card) * 0.5)' }}>
           <VerifiedBadge size="md" />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.2)' }}>
-            <span style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-text)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(var(--spacing-card) * 0.25)' }}>
+            <span className="text-xs" style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-text)' }}>
               Supply chain events anchored on VegiChain
             </span>
-            <span style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
+            <span className="text-xs" style={{ fontFamily: 'var(--font-body)', color: 'var(--color-text-light)' }}>
               Harvest, packaging, cold-chain handoffs, and store arrival are hashed blocks to expose tampering.
             </span>
           </div>
         </div>
         <Link
           to="/blockchain/assurance"
+          className="text-xs"
           style={{
             fontFamily: 'var(--font-body)',
             color: 'var(--color-primary)',

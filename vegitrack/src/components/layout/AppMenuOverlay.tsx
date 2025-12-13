@@ -25,6 +25,11 @@ export function AppMenuOverlay() {
     [location.pathname],
   )
 
+  const isAdminRoute = useMemo(
+    () => location.pathname.startsWith('/admin'),
+    [location.pathname],
+  )
+
   useEffect(() => {
     if (isProductOrRecipeRoute && isOpen) {
       close()
@@ -79,31 +84,41 @@ export function AppMenuOverlay() {
         inset: 0,
         backgroundColor: 'rgba(0,0,0,0.25)',
         display: 'flex',
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
         zIndex: 60,
       }}
       onClick={close}
     >
       <div
-        role="dialog"
-        aria-label="Main menu"
-        onClick={(e) => e.stopPropagation()}
         style={{
-          width: 'min(320px, calc(100vw - calc(var(--spacing-section) * 1.2) * 2))',
-          minWidth: '232px',
-          maxWidth: 'calc(var(--spacing-page) * 12)',
-          maxHeight: 'calc(100vh - calc(var(--spacing-section) * 1.2) * 2)',
-          backgroundColor: '#C3CBBC',
-          margin: 'calc(var(--spacing-section) * 0.6)',
-          padding: 'calc(var(--spacing-section) * 1.5)',
+          width: '100%',
+          maxWidth: isAdminRoute ? '100%' : '430px',
+          height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          gap: 'calc(var(--spacing-card) * 1.5)',
-          boxShadow: '-12px 0 32px rgba(0,0,0,0.12)',
-          overflowY: 'auto',
+          justifyContent: 'flex-end',
+          position: 'relative',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div
+          role="dialog"
+          aria-label="Main menu"
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: 'min(320px, calc(100vw - calc(var(--spacing-section) * 1.2) * 2))',
+            minWidth: '232px',
+            maxWidth: 'calc(var(--spacing-page) * 12)',
+            maxHeight: 'calc(100vh - calc(var(--spacing-section) * 1.2) * 2)',
+            backgroundColor: '#C3CBBC',
+            margin: 'calc(var(--spacing-section) * 0.6)',
+            padding: 'calc(var(--spacing-section) * 1.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'calc(var(--spacing-card) * 1.5)',
+            boxShadow: '-12px 0 32px rgba(0,0,0,0.12)',
+            overflowY: 'auto',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div
             style={{
               fontFamily: 'var(--font-body)',
@@ -200,7 +215,6 @@ export function AppMenuOverlay() {
                 color: 'black',
               }}
             >
-              {getLanguageLabel(language)}
             </span>
             <div
               style={{
@@ -278,6 +292,7 @@ export function AppMenuOverlay() {
             </Link>
           )}
         </div>
+      </div>
       </div>
     </div>
   )
