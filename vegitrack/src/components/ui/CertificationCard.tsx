@@ -35,7 +35,12 @@ export function CertificationCard({
               className="shrink-0 w-10 h-10 flex items-center justify-center"
             >
               {logoType === 'emoji' ? (
-                <span className="text-xl">{logo}</span>
+                <span 
+                  className="text-xl"
+                  style={logo === '✓' ? { color: 'var(--color-primary)' } : undefined}
+                >
+                  {logo}
+                </span>
               ) : (
                 <img 
                   src={logo} 

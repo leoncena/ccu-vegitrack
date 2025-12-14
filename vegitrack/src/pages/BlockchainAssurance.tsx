@@ -61,7 +61,8 @@ export default function BlockchainAssurance() {
           display: 'flex',
           flexDirection: 'column',
           gap: 'calc(var(--spacing-section) * 1.2)',
-          paddingInline: 'calc(var(--spacing-section) * 0.8)',
+          paddingLeft: '10%',
+          paddingRight: '10%',
           paddingBottom: 'calc(var(--spacing-section) * 1.2)',
         }}
       >
@@ -112,7 +113,7 @@ export default function BlockchainAssurance() {
 
           <AccordionItem value="limits" style={accordionItemStyle}>
             <AccordionTrigger style={{ fontFamily: 'var(--font-body)', fontWeight: 600, color: 'var(--color-text)', fontSize: '15px' }}>
-              What is not guaranteed (honest limits)
+              What is not guaranteed<br />(honest limits)
             </AccordionTrigger>
             <AccordionContent>
               <ul style={listStyle}>

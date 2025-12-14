@@ -222,3 +222,4 @@ main().catch((err) => {
   console.error('Failed to generate QR codes:', err)
   process.exit(1)
 })
+
