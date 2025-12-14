@@ -17,19 +17,28 @@ function getArg(flag) {
   return process.argv[idx + 1]
 }
 
+const url = getArg('--url')
 const productId = getArg('--product') || getArg('--product-id')
 const qrId = getArg('--qr') || getArg('--qr-id') || 'QR-SAMPLE'
 const baseUrl = getArg('--base-url') || 'http://localhost:5173'
 const outfile = getArg('--out') || `${qrId}.png`
 
-if (!productId) {
-  console.error('Missing required --product <product-uuid>')
-  process.exit(1)
-}
+let targetUrl
+let payload
 
-const payload = {
-  qr_id: qrId,
-  product_id: productId,
+// If URL is provided, use it directly; otherwise use the old format
+if (url) {
+  targetUrl = url
+  payload = url
+} else if (productId) {
+  targetUrl = `${baseUrl}/product/${productId}`
+  payload = {
+    qr_id: qrId,
+    product_id: productId,
+  }
+} else {
+  console.error('Missing required --url <url> or --product <product-uuid>')
+  process.exit(1)
 }
 
 const outputDir = path.isAbsolute(outfile)
@@ -42,18 +51,26 @@ const outPath = path.isAbsolute(outfile)
   ? outfile
   : path.join(outputDir, outfile)
 
+// Generate filename for txt file (same name as QR but with .txt extension)
+const txtPath = outPath.replace(/\.(png|jpg|jpeg)$/i, '.txt')
+
 async function main() {
-  console.log('Generating QR code with payload:', payload)
-  await QRCode.toFile(outPath, JSON.stringify(payload), {
+  console.log('Generating QR code for URL:', targetUrl)
+  
+  // Generate QR code - use URL directly if it's a string, otherwise JSON stringify
+  const qrData = typeof payload === 'string' ? payload : JSON.stringify(payload)
+  await QRCode.toFile(outPath, qrData, {
     errorCorrectionLevel: 'M',
     type: 'png',
     width: 400,
   })
 
-  const targetUrl = `${baseUrl}/product/${productId}`
-  console.log('Saved QR to:', outPath)
-  console.log('When scanned, app will parse JSON payload and navigate to:', targetUrl)
-  console.log('Preview payload:', JSON.stringify(payload))
+  // Save payload as .txt file
+  fs.writeFileSync(txtPath, targetUrl, 'utf-8')
+
+  console.log('Saved QR code to:', outPath)
+  console.log('Saved payload to:', txtPath)
+  console.log('URL:', targetUrl)
 }
 
 main().catch((err) => {
