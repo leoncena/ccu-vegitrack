@@ -36,7 +36,11 @@ export function PageHeaderWithBack({
     if (onBack) {
       onBack()
     } else {
-      navigate(backTo)
+      if (typeof backTo === 'number') {
+        navigate(backTo)
+      } else {
+        navigate(backTo)
+      }
     }
   }
 

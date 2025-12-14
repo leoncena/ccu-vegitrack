@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { PageHeaderWithBack } from '../components/layout/PageHeaderWithBack'
 import { VerifiedBadge } from '../components/features/VegiChain'
