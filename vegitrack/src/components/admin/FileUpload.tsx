@@ -71,7 +71,7 @@ export function FileUpload({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {preview && (
-        <div className="relative w-full rounded-lg overflow-hidden mb-2" style={{ maxHeight: '400px' }}>
+        <div className="relative w-full rounded-lg overflow-hidden mb-2" style={{ maxHeight: '400px', marginTop: 'var(--spacing-card)' }}>
           <img
             src={preview}
             alt="Upload preview"

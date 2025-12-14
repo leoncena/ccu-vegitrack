@@ -1163,7 +1163,7 @@ export default function ProductForm() {
                               </Button>
                             </div>
                           </div>
-                          <div>
+                          <div style={{ marginBottom: 'var(--spacing-card)' }}>
                             <Label>Recipe Image</Label>
                             <FileUpload
                               value={recipe.image_url}
