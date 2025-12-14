@@ -142,61 +142,64 @@ export default function Start() {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Start Scanning Button */}
-      <div className="flex justify-center" style={{ marginBottom: 'var(--spacing-card)' }}>
-        <Button
-          onClick={() => navigate('/scan')}
-          variant="default"
-          className="h-[56px] w-[216px] text-[18px]"
-        >
-          {t('start.cta')}
-        </Button>
-      </div>
+      {/* Start Scanning Button and Login/User info */}
+      <div style={{ marginBottom: 'calc(3 * var(--spacing-card))' }}>
+        {/* Start Scanning Button */}
+        <div className="flex justify-center" style={{ marginBottom: 'var(--spacing-card)' }}>
+          <Button
+            onClick={() => navigate('/scan')}
+            variant="default"
+            className="h-[56px] w-[216px] text-[18px]"
+          >
+            {t('start.cta')}
+          </Button>
+        </div>
 
-      {/* Login/User info */}
-      {user ? (
-        <div className="text-center">
-          <p 
+        {/* Login/User info */}
+        {user ? (
+          <div className="text-center">
+            <p 
+              style={{ 
+                fontFamily: 'var(--font-body)',
+                fontSize: '12px',
+                color: 'var(--color-text-light)',
+              }}
+            >
+              {t('start.signedInAs', { email: user.email })}{' '}
+              <button
+                onClick={handleLogout}
+                style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '12px',
+                  color: 'var(--color-primary)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                {t('start.logout')}
+              </button>
+            </p>
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate('/auth', { state: { from: '/start' } })}
+            className="text-center underline"
             style={{ 
               fontFamily: 'var(--font-body)',
               fontSize: '12px',
-              color: 'var(--color-text-light)',
+              color: 'var(--color-text)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              width: '100%',
             }}
           >
-            {t('start.signedInAs', { email: user.email })}{' '}
-            <button
-              onClick={handleLogout}
-              style={{
-                fontFamily: 'var(--font-body)',
-                fontSize: '12px',
-                color: 'var(--color-primary)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-              }}
-            >
-              {t('start.logout')}
-            </button>
-          </p>
-        </div>
-      ) : (
-        <button
-          onClick={() => navigate('/auth', { state: { from: '/start' } })}
-          className="text-center underline"
-          style={{ 
-            fontFamily: 'var(--font-body)',
-            fontSize: '12px',
-            color: 'var(--color-text)',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            width: '100%',
-          }}
-        >
-          {t('start.loginRegister')}
-        </button>
-      )}
+            {t('start.loginRegister')}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

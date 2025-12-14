@@ -222,8 +222,8 @@ interface VerifiedBadgeProps {
 
 export function VerifiedBadge({ size = 'md' }: VerifiedBadgeProps) {
   const styles = {
-    sm: 'px-2 py-0.5 text-[10px]',
-    md: 'px-3 py-1 text-xs',
+    sm: 'text-[9px]',
+    md: 'text-[10px]',
   }
 
   return (
@@ -236,13 +236,18 @@ export function VerifiedBadge({ size = 'md' }: VerifiedBadgeProps) {
         borderRadius: 'var(--radius-button)',
         fontFamily: 'var(--font-body)',
         fontWeight: 600,
-        whiteSpace: 'nowrap',
+        minWidth: 'fit-content',
+        padding: '8px',
       }}
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
       </svg>
-      Verified on VegiChain
+      <span>
+        <span style={{ whiteSpace: 'nowrap' }}>Verified on</span>
+        <br />
+        VegiChain
+      </span>
     </span>
   )
 }

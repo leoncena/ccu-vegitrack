@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom'
-import { IconButton, BackIcon } from '../ui/IconButton'
+import { IconButton, BackIcon, CloseIcon } from '../ui/IconButton'
 
 interface PageHeaderWithBackProps {
   /** Text or ReactNode to display in the center of the header */
   title: React.ReactNode
   /** Optional callback for back button. If not provided, navigates to '/start' */
   onBack?: () => void
-  /** Optional custom back route. Defaults to '/start' */
-  backTo?: string
+  /** Optional custom back route. Can be a string path or number for history navigation. Defaults to '/start' */
+  backTo?: string | number
+  /** Show close button instead of back arrow */
+  closeButton?: boolean
   /** Optional className for the header container */
   className?: string
   /** Optional inline styles for the header container */
@@ -22,6 +24,7 @@ export function PageHeaderWithBack({
   title,
   onBack,
   backTo = '/start',
+  closeButton = false,
   className = '',
   style,
   marginBottom = 'calc(2 * 1.125em)',
@@ -47,8 +50,8 @@ export function PageHeaderWithBack({
         ...style,
       }}
     >
-      <IconButton label="Go back" onClick={handleBack} className="text-(--color-primary)">
-        <BackIcon size={24} />
+      <IconButton label={closeButton ? 'Close' : 'Go back'} onClick={handleBack} className="text-(--color-primary)">
+        {closeButton ? <CloseIcon size={24} /> : <BackIcon size={24} />}
       </IconButton>
       <div
         className="absolute left-1/2 -translate-x-1/2 text-[18px] leading-tight tracking-tight whitespace-nowrap px-2"

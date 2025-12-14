@@ -5,7 +5,8 @@ import { getProductById, getProductByDisplayId, getProductLabels, getAlternative
 import { supabase } from '../lib/supabase'
 import type { Product, ProductLabel, Farm } from '../types/database'
 import { Tag, Spinner } from '../components/ui'
-import { PageWrapper, PageHeader, DebugFooter } from '../components/layout'
+import { PageWrapper, PageHeaderWithBack, DebugFooter } from '../components/layout'
+import { IconButton, BookmarkIcon } from '../components/ui/IconButton'
 import { useUserData } from '../contexts/UserDataContext'
 import { useTranslation } from '../lib/i18n'
 
@@ -294,7 +295,7 @@ export default function FoodPassport() {
   if (error || !product) {
     return (
       <PageWrapper>
-        <PageHeader backTo="/scan" closeButton />
+        <PageHeaderWithBack title="" backTo="/scan" closeButton />
         <div className="flex flex-col items-center justify-center px-6 pt-20">
           <div className="text-6xl mb-4">🔍</div>
           <h1 
@@ -333,16 +334,22 @@ export default function FoodPassport() {
       className="relative"
       style={{
         backgroundColor: palette.background,
+        paddingTop: '20px',
         paddingBottom: 'calc(var(--spacing-page) * 2.5)',
       }}
     >
-      <PageHeader
+      <PageHeaderWithBack
+        title={t('food.productId', { id: product.display_id })}
         backTo={fromProductId ? `/product/${fromProductId}` : '/scan'}
         closeButton={!fromProductId}
-        center={t('food.productId', { id: product.display_id })}
-        showBookmark
-        isBookmarked={isBookmarked}
-        onBookmarkClick={handleBookmark}
+        rightActions={
+          <IconButton
+            label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            onClick={handleBookmark}
+          >
+            <BookmarkIcon filled={isBookmarked} />
+          </IconButton>
+        }
       />
 
       {/* Background Icons */}
@@ -532,7 +539,7 @@ export default function FoodPassport() {
                         fontFamily: 'var(--font-body)',
                       }}
                     >
-                      Secured by Blockchain
+                      Verified on VegiChain
                     </span>
                     <span
                       aria-hidden

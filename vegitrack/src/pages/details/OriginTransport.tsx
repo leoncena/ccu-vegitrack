@@ -355,18 +355,31 @@ export default function OriginTransport() {
       </div>
 
       {mapsLinks ? (
-        <div className="flex gap-3 mb-6" style={{ flexWrap: 'wrap' }}>
+        <div 
+          className="flex mb-6" 
+          style={{ 
+            gap: 'var(--spacing-card)',
+            justifyContent: 'center',
+            alignItems: 'stretch',
+          }}
+        >
           <a
             href={mapsLinks.google}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 text-sm"
+            className="text-sm"
             style={{
+              flex: 1,
               backgroundColor: 'var(--color-primary)',
               color: 'white',
               borderRadius: 'var(--radius-md)',
               fontFamily: 'var(--font-body)',
               textDecoration: 'none',
+              padding: '4px 4px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             Open in Google Maps
@@ -375,14 +388,20 @@ export default function OriginTransport() {
             href={mapsLinks.apple}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 text-sm"
+            className="text-sm"
             style={{
+              flex: 1,
               backgroundColor: 'var(--color-card)',
               color: 'var(--color-text)',
               borderRadius: 'var(--radius-md)',
               fontFamily: 'var(--font-body)',
               textDecoration: 'none',
               border: '1px solid var(--color-primary-light)',
+              padding: '4px 8px',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
             Open in Apple Maps

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { PageWrapper } from '../components/layout/PageWrapper'
 import { PageHeaderWithBack } from '../components/layout/PageHeaderWithBack'
 import { VerifiedBadge } from '../components/features/VegiChain'
@@ -43,19 +43,18 @@ const sourceLinkStyle: React.CSSProperties = {
 }
 
 export default function BlockchainAssurance() {
-  const navigate = useNavigate()
-
   return (
     <PageWrapper
       style={{
         backgroundColor: 'var(--color-surface-light-green-back)',
         minHeight: '100vh',
+        paddingTop: '20px',
         paddingBottom: 'calc(var(--spacing-page) * 2)',
       }}
     >
       <PageHeaderWithBack 
         title="Blockchain Assurance" 
-        onBack={() => navigate(-1)}
+        backTo={-1}
       />
 
       <div
@@ -220,39 +219,6 @@ export default function BlockchainAssurance() {
                   <a href="https://doi.org/10.1109/ACCESS.2024.3506510" style={sourceLinkStyle} target="_blank" rel="noopener noreferrer">Read Article</a>
                 </li>
               </ul>
-              <div style={{ display: 'flex', gap: 'calc(var(--spacing-card) * 0.8)', marginTop: 'calc(var(--spacing-card) * 0.8)' }}>
-                <Link
-                  to="/scan"
-                  style={{
-                    padding: 'calc(var(--spacing-card) * 0.9) calc(var(--spacing-card) * 1.4)',
-                    backgroundColor: 'var(--color-primary)',
-                    color: 'white',
-                    borderRadius: 'var(--radius-button)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                  }}
-                >
-                  Scan a product
-                </Link>
-                <Link
-                  to="/start"
-                  style={{
-                    padding: 'calc(var(--spacing-card) * 0.9) calc(var(--spacing-card) * 1.4)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--color-primary)',
-                    borderRadius: 'var(--radius-button)',
-                    border: '1px solid var(--color-primary)',
-                    textDecoration: 'none',
-                    fontFamily: 'var(--font-body)',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                  }}
-                >
-                  Browse products
-                </Link>
-              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
