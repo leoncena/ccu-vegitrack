@@ -226,6 +226,14 @@ export default function FoodPassport() {
 
   const daysSinceHarvest = getDaysSinceHarvest()
 
+  // Function to get emission color based on value
+  const getEmissionColor = (emissionValue: number | null | undefined): string => {
+    if (!emissionValue) return '#C7D4C0' // Default stat background
+    if (emissionValue <= 1.3) return '#C8E6C9' // Green
+    if (emissionValue > 1.3 && emissionValue <= 2.6) return '#FFE0B2' // Orange
+    return '#FFCDD2' // Red
+  }
+
   const stats = useMemo(
     () => [
       {
@@ -260,6 +268,7 @@ export default function FoodPassport() {
           </svg>
         ),
         value: product?.emissions_co2e_per_kg ? `${product.emissions_co2e_per_kg} kg CO₂/kg` : '—',
+        backgroundColor: getEmissionColor(product?.emissions_co2e_per_kg),
       },
       {
         label: t('food.stat.price'),
@@ -649,21 +658,23 @@ export default function FoodPassport() {
               className="grid grid-cols-4 gap-2 w-full"
               style={{ marginTop: 'calc(var(--spacing-section) * 0.3)' }}
             >
-              {stats.map((item, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    backgroundColor: palette.statBg,
-                    borderRadius: 'calc(var(--spacing-page) * 1.2)',
-                    minHeight: 'calc(var(--spacing-section) * 3.5)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: 'calc(var(--spacing-card) * 0.55)',
-                    gap: 'calc(var(--spacing-card) * 0.25)',
-                  }}
-                >
+              {stats.map((item, idx) => {
+                const statItem = item as typeof item & { backgroundColor?: string }
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      backgroundColor: statItem.backgroundColor || palette.statBg,
+                      borderRadius: 'calc(var(--spacing-page) * 1.2)',
+                      minHeight: 'calc(var(--spacing-section) * 3.5)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 'calc(var(--spacing-card) * 0.55)',
+                      gap: 'calc(var(--spacing-card) * 0.25)',
+                    }}
+                  >
                   {item.icon}
                   <span
                     style={{
@@ -690,7 +701,8 @@ export default function FoodPassport() {
                     {item.value}
                   </span>
                 </div>
-              ))}
+                )
+              })}
             </div>
 
             <div
