@@ -58,7 +58,7 @@ All broken URLs are Unsplash image URLs that return 404. The issue appears to be
 - The same broken Unsplash URL (`photo-1605027990121-166a3b6b9a0b`) is used for multiple recipes (Lychee, Mango recipes)
 - Another broken Unsplash URL (`photo-1615485925510-7df3f25e0b0a`) is used for some Roasted Asparagus recipes
 
-## Recommended Actions
+## Recommended Actions 
 
 1. Replace broken Unsplash URLs with valid image URLs
 2. Consider using a more reliable image hosting solution or Supabase Storage for recipe images
