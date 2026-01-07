@@ -55,7 +55,7 @@ export default function Landing() {
     <div 
       className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center"
       style={{ 
-        backgroundColor: '#752828', // Red-brownish passport cover
+        backgroundColor: '#297528ff', // Green passport cover to match branding
         width: '100%',
         padding: 'var(--spacing-page)',
         color: '#E8E1D4', // Gold/Cream text
