@@ -50,6 +50,7 @@ npm run dev
 ## Deployment
 
 Deployed on **Vercel** with environment variables configured in the project settings.
+Live app url: https://vegitrack.vercel.app
 
 ---
 
