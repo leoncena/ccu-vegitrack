@@ -84,8 +84,7 @@ export default function Scanning() {
           marginBottom: 'calc(2 * var(--spacing-card))',
         }}
       >
-        Scan a Product
-        {t('scan.title')}
+                {t('scan.title')}
       </h1>
     ),
     [t],
